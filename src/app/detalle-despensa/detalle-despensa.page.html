@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/despensa"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ nombreDespensa || 'Despensa' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Botón flotante para agregar producto -->
+  <ion-button
+    class="boton-flotante"
+    shape="round"
+    fill="solid"
+    color="primary"
+    (click)="abrirModalAgregarProducto()"
+  >
+    <ion-icon name="add" slot="icon-only"></ion-icon>
+  </ion-button>
+
+  <!-- Lista de productos -->
+  <ion-list *ngIf="productos.length; else sinProductos" style="margin-top: 2rem;">
+    <ion-list-header>Productos</ion-list-header>
+    <ion-item *ngFor="let p of productos" [ngClass]="{
+      'producto-vencido': esVencido(p.fecha_vencimiento),
+      'producto-pronto-vencer': esProntoAVencer(p.fecha_vencimiento)
+    }">
+      <ion-label>
+        <h2>{{ p.productos.nombre }}</h2>
+        <p>Categoría: {{ p.productos.categoria || 'Sin categoría' }}</p>
+        <p>Fecha vencimiento: {{ p.fecha_vencimiento | date:'shortDate' }}</p>
+        <p>Stock: {{ p.stock }}</p>
+      </ion-label>
+
+      <ion-button
+        fill="clear"
+        size="small"
+        slot="end"
+        (click)="abrirPopover($event, p)"
+      >
+        <ion-icon name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <ng-template #sinProductos>
+    <p style="text-align: center; margin-top: 2rem;">No hay productos en esta despensa</p>
+  </ng-template>
+
+</ion-content>

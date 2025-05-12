@@ -1,0 +1,7 @@
+{
+  "name": "despensaGO",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

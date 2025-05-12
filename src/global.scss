@@ -1,0 +1,83 @@
+/* Core Ionic Styles */
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+
+/* Optional Utilities */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/* Palette: Blanco + Naranjo */
+:root {
+  --ion-background-color: #ffffff;
+  --ion-text-color: #1e1e1e;
+
+  --ion-color-primary: #f28c28;
+  --ion-color-primary-rgb: 242, 140, 40;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #d97d23;
+  --ion-color-primary-tint: #f49c43;
+
+  --ion-toolbar-background: #ffffff;
+  --ion-item-background: #f9f9f9;
+  --ion-border-color: #e0e0e0;
+
+  --ion-color-step-50: #fafafa;
+  --ion-color-step-100: #f0f0f0;
+  --ion-color-step-150: #e5e5e5;
+  --ion-color-step-200: #d9d9d9;
+}
+
+/* Global Text */
+body {
+  font-family: 'system-ui', sans-serif;
+  font-size: 16px;
+  background-color: var(--ion-background-color);
+  color: var(--ion-text-color);
+}
+
+/* Floating Button */
+.boton-flotante {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 999;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Cards, Modals, etc. */
+ion-item {
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+}
+
+ion-modal.modal-centrado::part(content) {
+  width: 90vw;
+  max-width: 400px;
+  max-height: 90vh;
+  margin: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: var(--ion-background-color);
+
+  /* Evita desenfoque */
+  backdrop-filter: none;
+  filter: none;
+  transform: none;
+
+  /* Texto nítido */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

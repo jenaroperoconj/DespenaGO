@@ -1,0 +1,20 @@
+.producto-vencido {
+  --background: #ffe5e5;
+  color: #c70000;
+  font-weight: bold;
+}
+
+.producto-pronto-vencer {
+  --background: #fff8e1;
+  color: #b57f00;
+  font-weight: 500;
+}
+.boton-flotante {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  border-radius: 50%;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
