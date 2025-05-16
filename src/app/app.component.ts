@@ -151,7 +151,8 @@ export class AppComponent implements OnInit {
       { title: 'Recetas', url: '/recipes', icon: 'home' },
       { title: 'Mi Carrito', url: '/shopping-cart', icon: 'home' },
       { title: 'Perfil', url: '/profile', icon: 'home' },
-      { title: 'Notificaiones', url: '/notifications', icon: 'home' },
+      { title: 'Notificaciones', url: '/notifications', icon: 'home' },
+      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'home' },
       { 
         title: 'Cerrar sesión',
         url: '/login',

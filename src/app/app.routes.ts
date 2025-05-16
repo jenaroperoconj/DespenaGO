@@ -47,4 +47,9 @@ export const routes: Routes = [
     path: 'recipes',
     loadComponent: () => import('./recipes/recipes.page').then( m => m.RecipesPage)
   },
+  {
+    path: 'escaneo-boleta',
+    loadComponent: () => import('./escaneo-boleta/escaneo-boleta.page').then( m => m.EscaneoBoletaPage)
+  },
+
 ];
