@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,14 +14,18 @@ import {
   IonList,
   IonListHeader,
   IonButtons,
-  IonBackButton
+  IonBackButton,
+  IonCardContent,
+  IonCardTitle,
+  IonCardHeader,
+  IonCard,
+  IonInput,
+  IonPopover,
+  PopoverController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
-import { AgregarProductoModal } from './agregar-producto.modal';
-import { EditarProductoModal } from './editar-producto.modal';
 import { PopoverOpcionesComponent } from '../popover-opciones/popover-opciones.component';
 import { ModalController } from '@ionic/angular';
-import { PopoverController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-detalle-despensa',
@@ -45,6 +48,12 @@ import { PopoverController } from '@ionic/angular/standalone';
     IonIcon,
     IonButtons,
     IonBackButton,
+    IonCardContent,
+    IonCardTitle,
+    IonCardHeader,
+    IonCard,
+    IonInput,
+    IonPopover
   ]
 })
 export class DetalleDespensaPage implements OnInit {
@@ -52,6 +61,21 @@ export class DetalleDespensaPage implements OnInit {
   nombreProducto: string = '';
   error: string | null = null;
   nombreDespensa: string = '';
+
+  mostrarFormularioAgregar: boolean = false;
+  mostrarFormularioEditar: boolean = false;
+
+  productoEditar: any = null;
+
+  nuevoProducto = {
+    nombre: '',
+    categoria: '',
+    origen: '',
+    fecha_vencimiento: '',
+    stock: 1
+  };
+
+  productoOpciones: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -84,34 +108,115 @@ export class DetalleDespensaPage implements OnInit {
     }
   }
 
-  async abrirModalAgregarProducto() {
-    const modal = await this.modalCtrl.create({
-      component: AgregarProductoModal,
-      componentProps: {
-        despensaId: this.despensaId
-      }
-    });
+  async onPopoverAccion(accion: 'editar' | 'consumir' | 'eliminar', producto: any) {
+    // Cierra el popover si está abierto
+    await this.popoverCtrl.dismiss();
 
-    modal.onDidDismiss().then((res) => {
-      if (res.data === true) {
-        this.cargarProductos();
-      }
-    });
+    switch (accion) {
+      case 'editar':
+        this.abrirFormularioEditarProducto(producto);
+        break;
 
-    await modal.present();
+      case 'consumir':
+        this.abrirFormularioConsumirProducto(producto);
+        break;
+
+      case 'eliminar':
+        this.confirmarEliminarProducto(producto);
+        break;
+    }
   }
 
-  async abrirModalEditarProducto(producto: any) {
-    const modal = await this.modalCtrl.create({
-      component: EditarProductoModal,
-      componentProps: { producto }
-    });
+  async abrirFormularioConsumirProducto(producto: any) {
+    if (producto.stock <= 0) {
+      alert('No hay stock disponible para consumir.');
+      return;
+    }
 
-    modal.onDidDismiss().then((res) => {
-      if (res.data === true) this.cargarProductos();
-    });
+    try {
+      await this.supabase.client
+        .from('producto_despensa')
+        .update({ stock: producto.stock - 1 })
+        .eq('id', producto.id);
 
-    await modal.present();
+      this.productoOpciones = null;
+      await this.cargarProductos();
+    } catch (err: any) {
+      console.error('Error al consumir producto:', err.message);
+    }
+  }
+
+  async confirmarEliminarProducto(producto: any) {
+    if (confirm(`¿Eliminar el producto "${producto.productos.nombre}"?`)) {
+      try {
+        await this.supabase.eliminarProductoDeDespensa(producto.id);
+        this.productoOpciones = null;
+        await this.cargarProductos();
+      } catch (err: any) {
+        console.error('Error al eliminar producto:', err.message);
+      }
+    }
+  }
+  
+  abrirFormularioAgregarProducto() {
+    this.mostrarFormularioAgregar = true;
+    this.nuevoProducto = {
+      nombre: '',
+      categoria: '',
+      origen: '',
+      fecha_vencimiento: '',
+      stock: 1
+    };
+  }
+
+  async agregarProducto() {
+    try {
+      await this.supabase.agregarProductoADespensa(this.despensaId, this.nuevoProducto);
+      this.mostrarFormularioAgregar = false;
+      await this.cargarProductos();
+    } catch (err: any) {
+      this.error = err.message;
+    }
+  }
+
+  abrirFormularioEditarProducto(producto: any) {
+    this.mostrarFormularioEditar = true;
+    this.productoEditar = JSON.parse(JSON.stringify(producto));
+  }
+
+  async guardarCambiosEditarProducto() {
+    try {
+      // 1. Actualiza producto_despensa
+      const { error: errorDespensa } = await this.supabase.client
+        .from('producto_despensa')
+        .update({
+          fecha_vencimiento: this.productoEditar.fecha_vencimiento,
+          stock: this.productoEditar.stock
+        })
+        .eq('id', this.productoEditar.id);
+
+      if (errorDespensa) throw errorDespensa;
+
+      // 2. Actualiza productos
+      const { error: errorProducto } = await this.supabase.client
+        .from('productos')
+        .update({
+          nombre: this.productoEditar.productos.nombre,
+          categoria: this.productoEditar.productos.categoria,
+          origen: this.productoEditar.productos.origen
+        })
+        .eq('id', this.productoEditar.productos.id);
+
+      if (errorProducto) throw errorProducto;
+
+      // 3. Cierra el formulario y recarga
+      this.mostrarFormularioEditar = false;
+      this.productoEditar = null;
+      await this.cargarProductos();
+    } catch (err: any) {
+      console.error('Error al editar producto:', err);
+      this.error = 'Error al editar producto: ' + err.message;
+    }
   }
 
   async abrirPopover(ev: Event, producto: any) {

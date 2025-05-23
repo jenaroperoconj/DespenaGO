@@ -1,7 +1,9 @@
+// UNUSED FILE
+
 import { Component, Input } from '@angular/core';
 import { ModalController} from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SupabaseService } from 'src/app/core/supabase.service';
 import { 
   IonContent, 
@@ -18,6 +20,7 @@ import {
 @Component({
   standalone: true,
   imports: [
+    ReactiveFormsModule,
     CommonModule, 
     FormsModule,
     IonContent, 

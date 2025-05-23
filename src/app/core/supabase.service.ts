@@ -166,6 +166,19 @@ export class SupabaseService {
   }
 
   async eliminarDespensa(despensaId: string) {
+    // 1. Eliminar productos asociados
+    await this.supabase
+      .from('producto_despensa')
+      .delete()
+      .eq('despensa_id', despensaId);
+
+    // 2. Eliminar accesos asociados
+    await this.supabase
+      .from('accesos_despensa')
+      .delete()
+      .eq('despensa_id', despensaId);
+
+    // 3. Eliminar la despensa en sí
     const { error } = await this.supabase
       .from('despensas')
       .delete()
