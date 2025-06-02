@@ -1,3 +1,6 @@
+/* Shared Components */
+@use "theme/shared-components.scss";
+
 /* Core Ionic Styles */
 @import "@ionic/angular/css/core.css";
 @import "@ionic/angular/css/normalize.css";
@@ -90,4 +93,231 @@ ion-modal.modal-centrado::part(content) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Estilos para Alertas del Sistema de Stock Agotado */
+.alert-success {
+  --background: var(--ion-color-success);
+  --color: var(--ion-color-success-contrast);
+}
+
+.alert-success .alert-wrapper {
+  background: var(--ion-color-success);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(158, 193, 163, 0.3);
+}
+
+.alert-success .alert-head {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-success .alert-title {
+  color: white;
+  font-weight: 600;
+}
+
+.alert-success .alert-message {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.alert-success .alert-button {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alert-success .alert-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.alert-error {
+  --background: var(--ion-color-danger);
+  --color: var(--ion-color-danger-contrast);
+}
+
+.alert-error .alert-wrapper {
+  background: var(--ion-color-danger);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(235, 68, 90, 0.3);
+}
+
+.alert-error .alert-head {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-error .alert-title {
+  color: white;
+  font-weight: 600;
+}
+
+.alert-error .alert-message {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.alert-error .alert-button {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alert-error .alert-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Alerta personalizada para stock agotado */
+.alert-stock-agotado .alert-wrapper {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--ion-color-warning);
+}
+
+.alert-stock-agotado .alert-head {
+  background: linear-gradient(135deg, var(--ion-color-warning), var(--ion-color-warning-shade));
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  padding: 16px 20px 12px;
+}
+
+.alert-stock-agotado .alert-title {
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0;
+}
+
+.alert-stock-agotado .alert-message {
+  color: var(--ion-color-dark);
+  line-height: 1.6;
+  font-size: 16px;
+  padding: 16px 20px;
+}
+
+.alert-stock-agotado .alert-button-group {
+  padding: 12px 20px 20px;
+  gap: 8px;
+}
+
+.alert-stock-agotado .alert-button {
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 12px 20px;
+  min-height: 44px;
+}
+
+.alert-stock-agotado .alert-button.alert-button-role-cancel {
+  background: var(--ion-color-light);
+  color: var(--ion-color-medium);
+  border: 1px solid var(--ion-color-medium);
+}
+
+.alert-stock-agotado .alert-button:not(.alert-button-role-cancel) {
+  background: var(--ion-color-primary);
+  color: white;
+}
+
+/* Animación para alertas */
+@keyframes alertSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.alert-wrapper {
+  animation: alertSlideIn 0.3s ease-out;
+}
+
+/* ===== SHARED COMPONENT STYLES ===== */
+/* Estilos reutilizables para componentes */
+
+.hero-section {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  padding: 2rem 1.5rem 3rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+  color: white;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  &::before {
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+  }
+
+  &::after {
+    bottom: -30%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0 0 1.5rem;
+}
+
+/* Botones primarios globales */
+.primary-button {
+  --background: var(--ion-color-primary);
+  --background-hover: var(--ion-color-primary-shade);
+  --color: white;
+  --border-radius: 16px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3);
+}
+
+.secondary-button {
+  --color: var(--ion-color-primary);
+  --border-radius: 16px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Items de formulario globales */
+.form-item {
+  border-radius: 16px;
+  background: var(--ion-color-step-50);
+  border: 1px solid var(--ion-border-color);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+
+  &.item-has-focus {
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  }
 }

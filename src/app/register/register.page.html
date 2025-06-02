@@ -1,26 +1,100 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Registrarse</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="register-content">
+  <!-- Hero Section similar al Login -->
+  <div class="register-hero-section">
+    <div class="register-hero-content">
+      <div class="app-logo">
+        <ion-icon name="leaf-outline" class="logo-icon"></ion-icon>
+      </div>
+      <h1 class="hero-title">¡Únete a DespensaGO!</h1>
+      <p class="hero-subtitle">Crea tu cuenta y comienza a gestionar tu despensa</p>
+    </div>
+  </div>
 
-<ion-content class="ion-padding">
-  <ion-item>
-    <ion-label position="floating">Nombre</ion-label>
-    <ion-input [(ngModel)]="nombre" type="text"></ion-input>
-  </ion-item>
+  <!-- Register Form -->
+  <div class="register-form-container">
+    <div class="register-form">
+      <h2 class="form-title">Crear Cuenta</h2>
+      
+      <ion-item class="register-item form-item" lines="none">
+        <ion-label position="floating">Nombre</ion-label>
+        <ion-input 
+          [(ngModel)]="nombre" 
+          type="text"
+          required
+          class="register-input">
+        </ion-input>
+      </ion-item>
 
-  <ion-item>
-    <ion-label position="floating">Email</ion-label>
-    <ion-input [(ngModel)]="email" type="email"></ion-input>
-  </ion-item>
+      <ion-item class="register-item form-item" lines="none">
+        <ion-label position="floating">Email</ion-label>
+        <ion-input 
+          [(ngModel)]="email" 
+          type="email"
+          required
+          class="register-input">
+        </ion-input>
+      </ion-item>      <ion-item class="register-item form-item" lines="none">
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input 
+          [(ngModel)]="password" 
+          [type]="showPassword ? 'text' : 'password'"
+          required
+          class="register-input">
+        </ion-input>
+        <ion-button 
+          fill="clear" 
+          slot="end" 
+          (click)="togglePasswordVisibility()"
+          class="password-toggle-button">
+          <ion-icon 
+            slot="icon-only" 
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'">
+          </ion-icon>
+        </ion-button>
+      </ion-item>
 
-  <ion-item>
-    <ion-label position="floating">Contraseña</ion-label>
-    <ion-input [(ngModel)]="password" type="password"></ion-input>
-  </ion-item>
+      <ion-item class="register-item form-item" lines="none">
+        <ion-label position="floating">Confirmar Contraseña</ion-label>
+        <ion-input 
+          [(ngModel)]="confirmPassword" 
+          [type]="showConfirmPassword ? 'text' : 'password'"
+          required
+          class="register-input">
+        </ion-input>
+        <ion-button 
+          fill="clear" 
+          slot="end" 
+          (click)="toggleConfirmPasswordVisibility()"
+          class="password-toggle-button">
+          <ion-icon 
+            slot="icon-only" 
+            [name]="showConfirmPassword ? 'eye-off-outline' : 'eye-outline'">
+          </ion-icon>
+        </ion-button>
+      </ion-item><div class="button-container">
+        <ion-button 
+          expand="block" 
+          class="register-primary-button primary-button"
+          (click)="registrarse()"
+          [disabled]="isLoading">
+          <span *ngIf="!isLoading">Crear Cuenta</span>
+          <span *ngIf="isLoading">Creando cuenta...</span>
+        </ion-button>        <ion-button 
+          expand="block" 
+          fill="clear" 
+          class="register-secondary-button secondary-button"
+          (click)="goToLogin()"
+          [disabled]="isLoading">
+          ¿Ya tienes cuenta? Inicia sesión
+        </ion-button>
+      </div>
 
-  <ion-button expand="block" (click)="registrarse()">Registrarse</ion-button>
-
-  <p *ngIf="error" style="color: red;">{{ error }}</p>
+      <div class="error-container" *ngIf="error">
+        <ion-chip color="danger" class="error-chip">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <ion-label>{{ error }}</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+  </div>
 </ion-content>
