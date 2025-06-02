@@ -26,8 +26,17 @@ import {
   IonFabButton,
   PopoverController,
   AlertController
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonChip,
+  IonFab,
+  IonFabButton,
+  PopoverController,
+  AlertController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
+import { CarritoService } from 'src/app/core/carrito.service';
 import { CarritoService } from 'src/app/core/carrito.service';
 import { PopoverOpcionesComponent } from '../popover-opciones/popover-opciones.component';
 import { ModalController } from '@ionic/angular';
@@ -60,8 +69,7 @@ import {
   templateUrl: './detalle-despensa.page.html',
   styleUrls: ['./detalle-despensa.page.scss'],
   standalone: true,
-  providers: [ModalController],
-  imports: [
+  providers: [ModalController],  imports: [
     CommonModule,
     FormsModule,
     IonContent,
@@ -78,6 +86,13 @@ import {
     IonCardContent,
     IonCard,
     IonInput,
+    IonPopover,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonChip,
+    IonFab,
+    IonFabButton
     IonPopover,
     IonGrid,
     IonRow,
@@ -148,6 +163,7 @@ export class DetalleDespensaPage implements OnInit {
     this.cargarProductos();
     this.cargarNombreDespensa();
     this.cargarPermisos();
+    this.cargarPermisos();
   }
 
   producto = {
@@ -168,8 +184,13 @@ export class DetalleDespensaPage implements OnInit {
       this.error = err.message;
     }
   }
-
   async onPopoverAccion(accion: 'editar' | 'consumir' | 'eliminar', producto: any) {
+    // Verificar permisos antes de permitir acciones
+    if ((accion === 'editar' || accion === 'eliminar') && !this.puedeEditar) {
+      await this.mostrarError('No tienes permisos para realizar esta acción');
+      return;
+    }
+
     // Verificar permisos antes de permitir acciones
     if ((accion === 'editar' || accion === 'eliminar') && !this.puedeEditar) {
       await this.mostrarError('No tienes permisos para realizar esta acción');
@@ -193,7 +214,6 @@ export class DetalleDespensaPage implements OnInit {
         break;
     }
   }
-
   async abrirFormularioConsumirProducto(producto: any) {
     if (producto.stock <= 0) {
       // Si el stock ya está en 0, ofrecer agregar a lista de compras directamente
@@ -344,6 +364,28 @@ export class DetalleDespensaPage implements OnInit {
       this.nombreDespensa = data.nombre;
     } catch (err: any) {
       console.error('Error al obtener nombre de despensa:', err.message);
+    }
+  }
+
+  async cargarPermisos() {
+    try {
+      // Obtener el rol del usuario en esta despensa
+      this.rolUsuario = await this.supabase.obtenerRolEnDespensa(this.despensaId);
+      this.esPropietario = await this.supabase.esPropietarioDespensa(this.despensaId);
+      
+      // Determinar permisos según el rol
+      this.puedeEditar = this.rolUsuario === 'propietario' || this.rolUsuario === 'editor';
+      
+      console.log('Permisos cargados:', {
+        rol: this.rolUsuario,
+        puedeEditar: this.puedeEditar,
+        esPropietario: this.esPropietario
+      });
+    } catch (err: any) {
+      console.error('Error al cargar permisos:', err.message);
+      // Por defecto, asumir que no puede editar si hay error
+      this.puedeEditar = false;
+      this.esPropietario = false;
     }
   }
 

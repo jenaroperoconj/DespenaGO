@@ -28,6 +28,10 @@ import {
 import { register } from 'swiper/element/bundle';
 register();
 
+// Registrar Swiper
+import { register } from 'swiper/element/bundle';
+register();
+
 addIcons({
   'ellipsis-horizontal': ellipsisHorizontal,
   'create-outline': createOutline,

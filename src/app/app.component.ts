@@ -10,6 +10,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SupabaseService } from './core/supabase.service';
 import { InvitacionesPendientesModal } from './invitaciones/invitaciones-pendientes.modal';
+import { InvitacionesPendientesModal } from './invitaciones/invitaciones-pendientes.modal';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonApp,
@@ -23,6 +24,7 @@ import {
   IonRouterOutlet,
   IonRouterLink
 } from '@ionic/angular/standalone';
+import { ModalController } from '@ionic/angular/standalone';
 import { ModalController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -68,6 +70,7 @@ import {
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   providers: [ModalController],
+  providers: [ModalController],
   imports: [
     RouterLink,
     RouterLinkActive,
@@ -88,6 +91,7 @@ export class AppComponent implements OnInit {
   public appPages: AppPage[] = [];
   public nombreUsuario: string = '';
   public correoUsuario: string = '';  constructor(
+  public correoUsuario: string = '';  constructor(
     private supabaseService: SupabaseService,
     private router: Router,
     private modalCtrl: ModalController  ) {addIcons({
@@ -101,6 +105,32 @@ export class AppComponent implements OnInit {
       cartOutline, cartSharp,
       logOutOutline, logOutSharp,
       logInOutline, logInSharp,
+      homeOutline, homeSharp,
+      gridOutline,
+      restaurantOutline, restaurantSharp,
+      bagHandleOutline, bagHandleSharp,
+      personOutline, personSharp,
+      notificationsOutline, notificationsSharp,
+      scanOutline, scanSharp,
+      storefrontOutline, storefrontSharp,
+      leafOutline,
+      chevronDownCircleOutline,
+      bagOutline,
+      addOutline,
+      closeOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      saveOutline,
+      basketOutline,
+      pricetagOutline,
+      calendarOutline,
+      cubeOutline,
+      ellipsisVertical,
+      createOutline,
+      removeOutline,
+      timeOutline,
+      flashOutline,
+      refreshOutline
       homeOutline, homeSharp,
       gridOutline,
       restaurantOutline, restaurantSharp,
@@ -157,7 +187,18 @@ export class AppComponent implements OnInit {
       this.setMenu();
     }    this.supabaseService.client.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session);
+    }    this.supabaseService.client.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session);
       this.loggedIn = !!session;
+      
+      if (this.loggedIn && session) {
+        // Usuario se ha autenticado
+        await this.obtenerDatosUsuario();
+      } else {
+        // Usuario se ha desautenticado
+        this.limpiarDatosUsuario();
+      }
+      
       
       if (this.loggedIn && session) {
         // Usuario se ha autenticado
@@ -174,7 +215,16 @@ export class AppComponent implements OnInit {
     try {
       const { data: user } = await this.supabaseService.getUser();
       const id = user?.user?.id;
+    try {
+      const { data: user } = await this.supabaseService.getUser();
+      const id = user?.user?.id;
 
+      if (id) {
+        const { data, error } = await this.supabaseService.client
+          .from('usuarios')
+          .select('nombre, email')
+          .eq('id', id)
+          .single();
       if (id) {
         const { data, error } = await this.supabaseService.client
           .from('usuarios')
@@ -204,11 +254,34 @@ export class AppComponent implements OnInit {
     this.nombreUsuario = '';
     this.correoUsuario = '';
     console.log('Datos de usuario limpiados');
+        if (!error && data) {
+          this.nombreUsuario = data.nombre;
+          this.correoUsuario = data.email;
+          console.log('Datos de usuario obtenidos:', { nombre: this.nombreUsuario, correo: this.correoUsuario });
+        } else {
+          console.error('Error al obtener datos del usuario:', error);
+          this.limpiarDatosUsuario();
+        }
+      } else {
+        console.log('No hay ID de usuario');
+        this.limpiarDatosUsuario();
+      }
+    } catch (error) {
+      console.error('Error en obtenerDatosUsuario:', error);
+      this.limpiarDatosUsuario();
+    }
+  }
+
+  limpiarDatosUsuario() {
+    this.nombreUsuario = '';
+    this.correoUsuario = '';
+    console.log('Datos de usuario limpiados');
   }
 
   async refreshMenu() {
     this.loggedIn = await this.supabaseService.isLoggedIn();
     this.setMenu();
+  }  setMenu() {
   }  setMenu() {
     this.appPages = this.loggedIn
       ? [
@@ -233,6 +306,7 @@ export class AppComponent implements OnInit {
         title: 'Cerrar sesión',
         url: '/login',
         icon: 'log-out-outline',
+        icon: 'log-out-outline',
         action: async () => {
           await this.logout();
           const menu = document.querySelector('ion-menu');
@@ -242,7 +316,38 @@ export class AppComponent implements OnInit {
     ]
   : [
       { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
+      { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
     ];
+  }async logout() {
+    try {
+      console.log('Iniciando proceso de logout...');
+      await this.supabaseService.logout();
+      this.loggedIn = false;
+      this.limpiarDatosUsuario();
+      this.setMenu();
+      
+      // Navegar al login con un parámetro para indicar que se cerró sesión
+      this.router.navigate(['/login'], { queryParams: { logout: 'true' } });
+      console.log('Logout completado exitosamente');
+    } catch (error) {      console.error('Error al cerrar sesión:', error);
+    }
+  }
+
+  // Método para abrir modal de invitaciones pendientes
+  async abrirInvitacionesPendientes() {
+    try {
+      console.log('📧 Abriendo modal de invitaciones desde menú');
+      
+      const modal = await this.modalCtrl.create({
+        component: InvitacionesPendientesModal,
+        cssClass: 'modal-centrado'
+      });
+
+      await modal.present();
+      
+    } catch (error: any) {
+      console.error('❌ Error abriendo modal de invitaciones:', error);
+    }
   }async logout() {
     try {
       console.log('Iniciando proceso de logout...');

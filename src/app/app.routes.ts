@@ -47,5 +47,9 @@ export const routes: Routes = [
     path: 'lista-compras/:id',
     loadComponent: () => import('./lista-compras/lista-compras.page').then( m => m.ListaComprasPage)
   },
+  {
+    path: 'lista-deseos',
+    loadComponent: () => import('./lista-deseos/lista-deseos.page').then( m => m.ListaDeseosPage)
+  },
 
 ];
