@@ -27,30 +27,6 @@ export class SupabaseService {
         }
       }
     });
-  }  async signUp(email: string, password: string, nombre: string) {
-    const { data, error } = await this.supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login?verified=true`,
-        data: {
-          nombre: nombre
-        }
-      }
-    });
-
-  async signUp(email: string, password: string, nombre: string) {
-    const { data, error } = await this.supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login?verified=true`,
-        data: {
-          nombre: nombre
-        }
-      }
-    });
-
     if (error) {
       // Manejo específico para diferentes tipos de errores
       if (error.message.includes('User already registered')) {
