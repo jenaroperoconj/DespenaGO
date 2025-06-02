@@ -195,4 +195,191 @@ export class SupabaseService {
 
     if (error) throw error;
   }
+
+  /**
+   * Actualiza el stock de un producto en producto_despensa
+   */
+  async actualizarStockProducto(productoDespensaId: string, nuevoStock: number) {
+    const { error } = await this.supabase
+      .from('producto_despensa')
+      .update({ stock: nuevoStock })
+      .eq('id', productoDespensaId);
+
+    if (error) throw error;
+  }
+  /**
+   * Reduce el stock de un producto y retorna el nuevo stock
+   */
+  async reducirStockProducto(productoDespensaId: string, cantidadReducir: number): Promise<number> {
+    // Primero obtener el stock actual
+    const { data: producto, error: errorConsulta } = await this.supabase
+      .from('producto_despensa')
+      .select('stock')
+      .eq('id', productoDespensaId)
+      .single();
+
+    if (errorConsulta) throw errorConsulta;
+
+    const nuevoStock = Math.max(0, producto.stock - cantidadReducir);
+    
+    // Actualizar el stock
+    const { error: errorUpdate } = await this.supabase
+      .from('producto_despensa')
+      .update({ stock: nuevoStock })
+      .eq('id', productoDespensaId);
+
+    if (errorUpdate) throw errorUpdate;
+
+    return nuevoStock;
+  }
+
+  /**
+   * Obtiene productos próximos a vencer de todas las despensas del usuario
+   */  async obtenerProductosProximosAVencer(diasLimite: number = 7): Promise<any[]> {
+    const user = await this.supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    if (!userId) throw new Error('No autenticado');
+
+    // Calcular fecha límite
+    const hoy = new Date();
+    const fechaLimite = new Date(hoy);
+    fechaLimite.setDate(hoy.getDate() + diasLimite);
+
+    const { data, error } = await this.supabase
+      .from('producto_despensa')
+      .select(`
+        id,
+        stock,
+        fecha_vencimiento,
+        productos (
+          id,
+          nombre,
+          categoria,
+          origen
+        ),
+        despensas!inner (
+          id,
+          nombre,
+          accesos_despensa!inner (
+            usuario_id
+          )
+        )
+      `)
+      .eq('despensas.accesos_despensa.usuario_id', userId)
+      .not('fecha_vencimiento', 'is', null)
+      .lte('fecha_vencimiento', fechaLimite.toISOString().split('T')[0])
+      .gte('fecha_vencimiento', hoy.toISOString().split('T')[0])
+      .gt('stock', 0)
+      .order('fecha_vencimiento', { ascending: true })
+      .limit(10);
+
+    if (error) throw error;
+    console.log('Datos de productos próximos a vencer:', data);
+    return data || [];
+  }
+
+  /**
+   * Obtiene estadísticas del usuario (productos totales, despensas, etc.)
+   */
+  async obtenerEstadisticasUsuario(): Promise<{
+    totalProductos: number;
+    totalDespensas: number;
+    productosVencidos: number;
+    productosProximosVencer: number;
+  }> {
+    const user = await this.supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    if (!userId) throw new Error('No autenticado');
+
+    const hoy = new Date();
+    const fechaLimite = new Date(hoy);
+    fechaLimite.setDate(hoy.getDate() + 7);
+
+    // Obtener productos del usuario
+    const { data: productos, error } = await this.supabase
+      .from('producto_despensa')
+      .select(`
+        stock,
+        fecha_vencimiento,
+        despensas!inner (
+          accesos_despensa!inner (
+            usuario_id
+          )
+        )
+      `)
+      .eq('despensas.accesos_despensa.usuario_id', userId)
+      .gt('stock', 0);
+
+    if (error) throw error;
+
+    // Obtener despensas del usuario
+    const { data: despensas, error: errorDespensas } = await this.supabase
+      .from('accesos_despensa')
+      .select('despensa_id')
+      .eq('usuario_id', userId);
+
+    if (errorDespensas) throw errorDespensas;
+
+    const totalProductos = productos?.length || 0;
+    const totalDespensas = despensas?.length || 0;
+    
+    let productosVencidos = 0;
+    let productosProximosVencer = 0;
+
+    productos?.forEach(p => {
+      if (p.fecha_vencimiento) {
+        const fechaVenc = new Date(p.fecha_vencimiento);
+        if (fechaVenc < hoy) {
+          productosVencidos++;
+        } else if (fechaVenc <= fechaLimite) {
+          productosProximosVencer++;
+        }
+      }
+    });
+
+    return {
+      totalProductos,
+      totalDespensas,
+      productosVencidos,
+      productosProximosVencer
+    };
+  }
+
+  /**
+   * Obtiene productos con bajo stock (menos de 3 unidades)
+   */  async obtenerProductosBajoStock(limite: number = 3): Promise<any[]> {
+    const user = await this.supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    if (!userId) throw new Error('No autenticado');
+
+    const { data, error } = await this.supabase
+      .from('producto_despensa')
+      .select(`
+        id,
+        stock,
+        fecha_vencimiento,
+        productos (
+          id,
+          nombre,
+          categoria,
+          origen
+        ),
+        despensas!inner (
+          id,
+          nombre,
+          accesos_despensa!inner (
+            usuario_id
+          )
+        )
+      `)
+      .eq('despensas.accesos_despensa.usuario_id', userId)
+      .lte('stock', limite)
+      .gt('stock', 0)
+      .order('stock', { ascending: true })
+      .limit(8);
+
+    if (error) throw error;
+    console.log('Datos de productos bajo stock:', data);
+    return data || [];
+  }
 }

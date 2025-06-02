@@ -36,7 +36,14 @@ import {
   bookmarkOutline, bookmarkSharp,
   logOutOutline, logOutSharp,
   logInOutline, logInSharp,
-  homeOutline, homeSharp
+  homeOutline, homeSharp,
+  gridOutline,
+  restaurantOutline,
+  bagHandleOutline,
+  personOutline,
+  notificationsOutline,
+  scanOutline,
+  storefrontOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -71,8 +78,7 @@ export class AppComponent implements OnInit {
   constructor(
     private supabaseService: SupabaseService,
     private router: Router
-  ) {
-    addIcons({
+  ) {    addIcons({
       mailOutline, mailSharp,
       paperPlaneOutline, paperPlaneSharp,
       heartOutline, heartSharp,
@@ -82,7 +88,14 @@ export class AppComponent implements OnInit {
       bookmarkOutline, bookmarkSharp,
       logOutOutline, logOutSharp,
       logInOutline, logInSharp,
-      homeOutline, homeSharp
+      homeOutline, homeSharp,
+      gridOutline,
+      restaurantOutline,
+      bagHandleOutline,
+      personOutline,
+      notificationsOutline,
+      scanOutline,
+      storefrontOutline
     });
   }
 
@@ -141,22 +154,21 @@ export class AppComponent implements OnInit {
   async refreshMenu() {
     this.loggedIn = await this.supabaseService.isLoggedIn();
     this.setMenu();
-  }
-
-  setMenu() {
+  }  setMenu() {
     this.appPages = this.loggedIn
       ? [
-      { title: 'Inicio', url: '/home', icon: 'home' },
-      { title: 'Despensas', url: '/despensa', icon: 'home' },
-      { title: 'Recetas', url: '/recipes', icon: 'home' },
-      { title: 'Mi Carrito', url: '/shopping-cart', icon: 'home' },
-      { title: 'Perfil', url: '/profile', icon: 'home' },
-      { title: 'Notificaciones', url: '/notifications', icon: 'home' },
-      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'home' },
+      { title: 'Inicio', url: '/home', icon: 'home-outline' },
+      { title: 'Mis Despensas', url: '/despensa', icon: 'storefront-outline' },
+      { title: 'Lista de Deseos', url: '/lista-deseos', icon: 'heart-outline' },
+      { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
+      { title: 'Mi Carrito', url: '/shopping-cart', icon: 'bag-handle-outline' },
+      { title: 'Perfil', url: '/profile', icon: 'person-outline' },
+      { title: 'Notificaciones', url: '/notifications', icon: 'notifications-outline' },
+      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'scan-outline' },
       { 
         title: 'Cerrar sesión',
         url: '/login',
-        icon: 'log-out',
+        icon: 'log-out-outline',
         action: async () => {
           await this.logout();
           const menu = document.querySelector('ion-menu');
@@ -165,7 +177,7 @@ export class AppComponent implements OnInit {
       }
     ]
   : [
-      { title: 'Iniciar sesión', url: '/login', icon: 'log-in' }
+      { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
     ];
   }
 

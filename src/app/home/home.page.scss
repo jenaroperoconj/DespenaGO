@@ -1,0 +1,43 @@
+.hero-section{background:linear-gradient(135deg,var(--ion-color-primary),var(--ion-color-secondary));padding:2rem 1.5rem 3rem;margin-bottom:1rem;position:relative;overflow:hidden;color:white;&::before,&::after{content:'';position:absolute;background:rgba(255,255,255,0.1);border-radius:50%}&::before{top:-50%;right:-20%;width:200px;height:200px}&::after{bottom:-30%;left:-10%;width:150px;height:150px}}
+.hero-content{position:relative;z-index:2;text-align:center}
+.hero-title{font-size:2rem;font-weight:700;margin:0 0 0.5rem}
+.hero-subtitle{font-size:1.1rem;opacity:0.9;margin:0 0 1.5rem}
+.hero-stats{display:flex;justify-content:center;gap:2rem;margin-top:1rem}
+.stat-item{display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;opacity:0.9;ion-icon{font-size:1.2rem}}
+
+.stats-grid{padding:0 1rem;margin-bottom:1rem}
+.stat-card{margin:0;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:transform 0.2s ease;&:hover{transform:translateY(-2px)}ion-card-content{padding:1.5rem 1rem;display:flex;align-items:center;gap:1rem}.stat-icon ion-icon{font-size:2.5rem}.stat-info h3{font-size:1.8rem;font-weight:700;margin:0}.stat-info p{margin:0;font-size:0.9rem;opacity:0.8}&.success{--ion-card-background:#d4edda;color:#155724;.stat-icon ion-icon{color:#28a745}}&.warning{--ion-card-background:#fff3cd;color:#856404;.stat-icon ion-icon{color:#ffc107}}&.danger{--ion-card-background:#f8d7da;color:#721c24;.stat-icon ion-icon{color:#dc3545}}}
+
+.section-container{padding:0 1rem;margin-bottom:2rem;animation:slideUp 0.5s ease-out}
+.section-header{margin-bottom:1rem;h2{display:flex;align-items:center;gap:0.5rem;font-size:1.4rem;font-weight:600;margin:0 0 0.25rem;color:var(--ion-color-dark);ion-icon{font-size:1.5rem;color:var(--ion-color-primary)}}p{margin:0;color:var(--ion-color-medium);font-size:0.9rem}}
+
+.carousel-container{margin:0 -1rem;padding-bottom:0.5rem}
+.productos-carousel{padding:0 1rem;overflow:visible}
+.producto-card{margin:0;border-radius:16px;min-height:160px;height:auto;box-shadow:0 3px 10px rgba(0,0,0,0.1);transition:transform 0.2s ease;&:hover{transform:translateY(-2px)}&.stock-bajo{border-left:4px solid var(--ion-color-warning)}&.proximo-vencer{border-left:4px solid var(--ion-color-danger)}ion-card-content{padding:1rem;height:100%;display:flex;flex-direction:column;justify-content:space-between;min-height:140px}.producto-emoji{font-size:1.8rem;text-align:center;margin-bottom:0.5rem;line-height:1}h4{font-size:0.85rem;font-weight:600;margin:0 0 0.5rem;line-height:1.2;max-height:2.4rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-wrap:break-word}.despensa-name{font-size:0.75rem;color:var(--ion-color-medium);margin:0 0 0.5rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.producto-info{display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-top:auto}.producto-info .stock{color:var(--ion-color-medium)}}
+
+.action-card{margin:0;border-radius:16px;height:120px;box-shadow:0 3px 10px rgba(0,0,0,0.1);transition:all 0.2s ease;cursor:pointer;&:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,0.15)}ion-card-content{padding:1.5rem 1rem;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center}.action-icon{font-size:2.5rem;color:var(--ion-color-primary);margin-bottom:0.5rem}h3{font-size:1rem;font-weight:600;margin:0 0 0.25rem}p{font-size:0.8rem;color:var(--ion-color-medium);margin:0}}
+
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--ion-color-medium);.empty-icon{font-size:4rem;margin-bottom:1rem;opacity:0.5}h3{font-size:1.4rem;font-weight:600;margin:0 0 0.5rem;color:var(--ion-color-dark)}p{margin:0 0 2rem;font-size:1rem;line-height:1.5}}
+
+ion-header ion-toolbar{--background:transparent;--border-width:0;--color:var(--ion-color-primary);ion-title{font-weight:700;font-size:1.3rem}ion-button{--color:var(--ion-color-primary);position:relative;ion-badge{position:absolute;top:-5px;right:-5px;font-size:0.7rem;min-width:18px;height:18px}}}
+ion-fab-button{--box-shadow:0 4px 16px rgba(var(--ion-color-primary-rgb),0.4);--border-radius:16px}
+
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.section-container:nth-child(2){animation-delay:0.1s}
+.section-container:nth-child(3){animation-delay:0.2s}
+.section-container:nth-child(4){animation-delay:0.3s}
+
+@media (max-width:576px){
+.hero-title{font-size:1.6rem}
+.hero-stats{gap:1rem;font-size:0.8rem}
+.stat-card ion-card-content{padding:1rem 0.8rem;gap:0.8rem}
+.stat-card .stat-info h3{font-size:1.5rem}
+.action-card{height:100px}
+.action-card .action-icon{font-size:2rem}
+.action-card h3{font-size:0.9rem}
+.producto-card{min-height:170px}
+.producto-card ion-card-content{padding:0.8rem;min-height:150px}
+.producto-card h4{font-size:0.8rem;max-height:2.8rem}
+.producto-card .despensa-name{font-size:0.7rem}
+.producto-card .producto-emoji{font-size:1.6rem}
+}
