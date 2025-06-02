@@ -12,7 +12,7 @@ export class CarritoService {
     private alertController: AlertController
   ) {}
   /**
-   * Detecta si el stock está agotado y muestra alerta para agregar a lista de compras
+   * Detecta si el stock está agotado y muestra alerta para agregar a lista de comprass
    * @param productoDespensaId ID del registro en producto_despensa
    * @param stock Stock actual del producto
    * @param despensaId ID de la despensa
