@@ -9,15 +9,13 @@ type AppPage = {
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SupabaseService } from './core/supabase.service';
+import { InvitacionesPendientesModal } from './invitaciones/invitaciones-pendientes.modal';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonApp,
   IonSplitPane,
   IonMenu,
   IonContent,
-  IonList,
-  IonListHeader,
-  IonNote,
   IonMenuToggle,
   IonItem,
   IonIcon,
@@ -25,6 +23,7 @@ import {
   IonRouterOutlet,
   IonRouterLink
 } from '@ionic/angular/standalone';
+import { ModalController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   mailOutline, mailSharp,
@@ -36,13 +35,39 @@ import {
   bookmarkOutline, bookmarkSharp,
   logOutOutline, logOutSharp,
   logInOutline, logInSharp,
-  homeOutline, homeSharp
+  homeOutline, homeSharp,
+  gridOutline,
+  restaurantOutline, restaurantSharp,
+  bagHandleOutline, bagHandleSharp,  personOutline, personSharp,
+  notificationsOutline, notificationsSharp,
+  scanOutline, scanSharp,
+  storefrontOutline, storefrontSharp,
+  leafOutline,
+  chevronDownCircleOutline,
+  bagOutline,
+  addOutline,
+  closeOutline,
+  cartOutline, cartSharp,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  saveOutline,
+  basketOutline,
+  pricetagOutline,
+  calendarOutline,
+  cubeOutline,
+  ellipsisVertical,
+  createOutline,
+  removeOutline,
+  timeOutline,
+  flashOutline,
+  refreshOutline
 } from 'ionicons/icons';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
+  providers: [ModalController],
   imports: [
     RouterLink,
     RouterLinkActive,
@@ -50,9 +75,6 @@ import {
     IonSplitPane,
     IonMenu,
     IonContent,
-    IonList,
-    IonListHeader,
-    IonNote,
     IonMenuToggle,
     IonItem,
     IonIcon,
@@ -64,15 +86,11 @@ import {
 export class AppComponent implements OnInit {
   public loggedIn: boolean = false;
   public appPages: AppPage[] = [];
-  public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
   public nombreUsuario: string = '';
-  public correoUsuario: string = '';
-
-  constructor(
+  public correoUsuario: string = '';  constructor(
     private supabaseService: SupabaseService,
-    private router: Router
-  ) {
-    addIcons({
+    private router: Router,
+    private modalCtrl: ModalController  ) {addIcons({
       mailOutline, mailSharp,
       paperPlaneOutline, paperPlaneSharp,
       heartOutline, heartSharp,
@@ -80,9 +98,35 @@ export class AppComponent implements OnInit {
       trashOutline, trashSharp,
       warningOutline, warningSharp,
       bookmarkOutline, bookmarkSharp,
+      cartOutline, cartSharp,
       logOutOutline, logOutSharp,
       logInOutline, logInSharp,
-      homeOutline, homeSharp
+      homeOutline, homeSharp,
+      gridOutline,
+      restaurantOutline, restaurantSharp,
+      bagHandleOutline, bagHandleSharp,
+      personOutline, personSharp,
+      notificationsOutline, notificationsSharp,
+      scanOutline, scanSharp,
+      storefrontOutline, storefrontSharp,
+      leafOutline,
+      chevronDownCircleOutline,
+      bagOutline,
+      addOutline,
+      closeOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      saveOutline,
+      basketOutline,
+      pricetagOutline,
+      calendarOutline,
+      cubeOutline,
+      ellipsisVertical,
+      createOutline,
+      removeOutline,
+      timeOutline,
+      flashOutline,
+      refreshOutline
     });
   }
 
@@ -111,52 +155,83 @@ export class AppComponent implements OnInit {
         await this.obtenerDatosUsuario();
       }
       this.setMenu();
-    }
-
-    this.supabaseService.client.auth.onAuthStateChange(async (_event, session) => {
+    }    this.supabaseService.client.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session);
       this.loggedIn = !!session;
-      if (this.loggedIn) await this.obtenerDatosUsuario();
+      
+      if (this.loggedIn && session) {
+        // Usuario se ha autenticado
+        await this.obtenerDatosUsuario();
+      } else {
+        // Usuario se ha desautenticado
+        this.limpiarDatosUsuario();
+      }
+      
       this.setMenu();
     });
   }
-
   async obtenerDatosUsuario() {
-    const { data: user } = await this.supabaseService.getUser();
-    const id = user?.user?.id;
+    try {
+      const { data: user } = await this.supabaseService.getUser();
+      const id = user?.user?.id;
 
-    if (id) {
-      const { data, error } = await this.supabaseService.client
-        .from('usuarios')
-        .select('nombre, email')
-        .eq('id', id)
-        .single();
+      if (id) {
+        const { data, error } = await this.supabaseService.client
+          .from('usuarios')
+          .select('nombre, email')
+          .eq('id', id)
+          .single();
 
-      if (!error && data) {
-        this.nombreUsuario = data.nombre;
-        this.correoUsuario = data.email;
+        if (!error && data) {
+          this.nombreUsuario = data.nombre;
+          this.correoUsuario = data.email;
+          console.log('Datos de usuario obtenidos:', { nombre: this.nombreUsuario, correo: this.correoUsuario });
+        } else {
+          console.error('Error al obtener datos del usuario:', error);
+          this.limpiarDatosUsuario();
+        }
+      } else {
+        console.log('No hay ID de usuario');
+        this.limpiarDatosUsuario();
       }
+    } catch (error) {
+      console.error('Error en obtenerDatosUsuario:', error);
+      this.limpiarDatosUsuario();
     }
+  }
+
+  limpiarDatosUsuario() {
+    this.nombreUsuario = '';
+    this.correoUsuario = '';
+    console.log('Datos de usuario limpiados');
   }
 
   async refreshMenu() {
     this.loggedIn = await this.supabaseService.isLoggedIn();
     this.setMenu();
-  }
-
-  setMenu() {
+  }  setMenu() {
     this.appPages = this.loggedIn
       ? [
-      { title: 'Inicio', url: '/home', icon: 'home' },
-      { title: 'Despensas', url: '/despensa', icon: 'home' },
-      { title: 'Recetas', url: '/recipes', icon: 'home' },
-      { title: 'Mi Carrito', url: '/shopping-cart', icon: 'home' },
-      { title: 'Perfil', url: '/profile', icon: 'home' },
-      { title: 'Notificaciones', url: '/notifications', icon: 'home' },
-      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'home' },
+      { title: 'Inicio', url: '/home', icon: 'home-outline' },
+      { title: 'Mis Despensas', url: '/despensa', icon: 'storefront-outline' },
+      { 
+        title: 'Invitaciones',
+        url: '',
+        icon: 'mail-outline',
+        action: async () => {
+          await this.abrirInvitacionesPendientes();
+          const menu = document.querySelector('ion-menu');
+          menu?.close();
+        }
+      },      { title: 'Lista de Compras', url: '/lista-compras', icon: 'cart-outline' },
+      { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
+      { title: 'Perfil', url: '/profile', icon: 'person-outline' },
+      { title: 'Notificaciones', url: '/notifications', icon: 'notifications-outline' },
+      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'scan-outline' },
       { 
         title: 'Cerrar sesión',
         url: '/login',
-        icon: 'log-out',
+        icon: 'log-out-outline',
         action: async () => {
           await this.logout();
           const menu = document.querySelector('ion-menu');
@@ -165,14 +240,37 @@ export class AppComponent implements OnInit {
       }
     ]
   : [
-      { title: 'Iniciar sesión', url: '/login', icon: 'log-in' }
+      { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
     ];
+  }async logout() {
+    try {
+      console.log('Iniciando proceso de logout...');
+      await this.supabaseService.logout();
+      this.loggedIn = false;
+      this.limpiarDatosUsuario();
+      this.setMenu();
+      
+      // Navegar al login con un parámetro para indicar que se cerró sesión
+      this.router.navigate(['/login'], { queryParams: { logout: 'true' } });
+      console.log('Logout completado exitosamente');
+    } catch (error) {      console.error('Error al cerrar sesión:', error);
+    }
   }
 
-  async logout() {
-    await this.supabaseService.logout();
-    this.loggedIn = false;
-    this.setMenu();
-    this.router.navigate(['/login']);
+  // Método para abrir modal de invitaciones pendientes
+  async abrirInvitacionesPendientes() {
+    try {
+      console.log('📧 Abriendo modal de invitaciones desde menú');
+      
+      const modal = await this.modalCtrl.create({
+        component: InvitacionesPendientesModal,
+        cssClass: 'modal-centrado'
+      });
+
+      await modal.present();
+      
+    } catch (error: any) {
+      console.error('❌ Error abriendo modal de invitaciones:', error);
+    }
   }
 }

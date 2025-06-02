@@ -1,119 +1,130 @@
+// Sidebar Hero Section
+.sidebar-hero-section {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  padding: 2rem 1rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -15%;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: -10%;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+}
+
+.sidebar-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.app-logo {
+  margin-bottom: 1rem;
+  
+  .logo-icon {
+    font-size: 3rem;
+    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  }
+}
+
+.hero-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.user-info {
+  margin-top: 1rem;
+  
+  .user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    opacity: 0.95;
+  }
+  
+  .user-email {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.8;
+  }
+}
+
+// Sidebar Menu
+.sidebar-menu {
+  padding: 1rem 0.5rem;
+}
+
+.sidebar-item {
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --min-height: 52px;
+  margin: 0.25rem 0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    --background: rgba(var(--ion-color-primary-rgb), 0.08);
+  }
+  
+  ion-icon {
+    font-size: 1.4rem;
+    color: var(--ion-color-medium);
+    margin-right: 1rem;
+  }
+  
+  ion-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  &.selected {
+    --background: rgba(var(--ion-color-primary-rgb), 0.12);
+    --color: var(--ion-color-primary);
+    
+    ion-icon {
+      color: var(--ion-color-primary);
+    }
+    
+    ion-label {
+      font-weight: 600;
+    }
+  }
+}
+
+// Menu Content
 ion-menu ion-content {
-  --background: var(--ion-item-background, var(--ion-background-color, #fff));
+  --background: var(--ion-background-color, #fff);
 }
 
-ion-menu.md ion-content {
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --padding-top: 20px;
-  --padding-bottom: 20px;
+// Platform-specific adjustments
+ion-menu.md {
+  .sidebar-menu {
+    padding: 1rem 0.5rem;
+  }
 }
 
-ion-menu.md ion-list {
-  padding: 20px 0;
-}
-
-ion-menu.md ion-note {
-  margin-bottom: 30px;
-}
-
-ion-menu.md ion-list-header,
-ion-menu.md ion-note {
-  padding-left: 10px;
-}
-
-ion-menu.md ion-list#inbox-list {
-  border-bottom: 1px solid var(--ion-background-color-step-150, #d7d8da);
-}
-
-ion-menu.md ion-list#inbox-list ion-list-header {
-  font-size: 22px;
-  font-weight: 600;
-
-  min-height: 20px;
-}
-
-ion-menu.md ion-list#labels-list ion-list-header {
-  font-size: 16px;
-
-  margin-bottom: 18px;
-
-  color: #757575;
-
-  min-height: 26px;
-}
-
-ion-menu.md ion-item {
-  --padding-start: 10px;
-  --padding-end: 10px;
-  border-radius: 4px;
-}
-
-ion-menu.md ion-item.selected {
-  --background: rgba(var(--ion-color-primary-rgb), 0.14);
-}
-
-ion-menu.md ion-item.selected ion-icon {
-  color: var(--ion-color-primary);
-}
-
-ion-menu.md ion-item ion-icon {
-  color: #616e7e;
-}
-
-ion-menu.md ion-item ion-label {
-  font-weight: 500;
-}
-
-ion-menu.ios ion-content {
-  --padding-bottom: 20px;
-}
-
-ion-menu.ios ion-list {
-  padding: 20px 0 0 0;
-}
-
-ion-menu.ios ion-note {
-  line-height: 24px;
-  margin-bottom: 20px;
-}
-
-ion-menu.ios ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --min-height: 50px;
-}
-
-ion-menu.ios ion-item.selected ion-icon {
-  color: var(--ion-color-primary);
-}
-
-ion-menu.ios ion-item ion-icon {
-  font-size: 24px;
-  color: #73849a;
-}
-
-ion-menu.ios ion-list#labels-list ion-list-header {
-  margin-bottom: 8px;
-}
-
-ion-menu.ios ion-list-header,
-ion-menu.ios ion-note {
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-ion-menu.ios ion-note {
-  margin-bottom: 8px;
-}
-
-ion-note {
-  display: inline-block;
-  font-size: 16px;
-
-  color: var(--ion-color-medium-shade);
-}
-
-ion-item.selected {
-  --color: var(--ion-color-primary);
+ion-menu.ios {
+  .sidebar-menu {
+    padding: 1rem 0.5rem;
+  }
 }

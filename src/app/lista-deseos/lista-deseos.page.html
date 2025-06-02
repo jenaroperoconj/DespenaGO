@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Lista de Compras</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Refresher -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content
+      pullingIcon="arrow-down-outline"
+      pullingText="Desliza para actualizar"
+      refreshingSpinner="circles"
+      refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="hero-icon">
+        <ion-icon name="cart-outline"></ion-icon>
+      </div>
+      <h1 class="hero-title">Lista de Compras</h1>
+      <p class="hero-subtitle">Selecciona una despensa para ver su lista de compras</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <ion-icon name="home-outline"></ion-icon>
+          <span>{{ despensas.length }} despensas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <p>Cargando despensas...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <ion-card *ngIf="error" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="clear" color="light" (click)="cargarDespensas()">
+        Reintentar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista de despensas -->
+  <div class="despensas-container" *ngIf="!loading && !error && despensas.length > 0">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let item of despensas">
+          <ion-card class="despensa-card" button (click)="irAListaComprasDespensa(item.despensas.id)">
+            <ion-card-content>
+              <div class="card-main-content">
+                <div class="despensa-icon">
+                  <ion-icon name="bag-outline"></ion-icon>
+                </div>
+                <div class="despensa-details">
+                  <h3>{{ item.despensas.nombre }}</h3>
+                  <div class="despensa-info">
+                    <ion-chip class="role-chip" [color]="getRoleColor(item.rol)">
+                      <ion-icon [name]="getRoleIcon(item.rol)"></ion-icon>
+                      <ion-label>{{ item.rol }}</ion-label>
+                    </ion-chip>
+                    <div class="action-info">
+                      <ion-icon name="list-outline"></ion-icon>
+                      <span>Ver lista de compras</span>
+                    </div>
+                  </div>
+                  <p class="created-date">{{ item.despensas.created_at | date: 'dd/MM/yyyy' }}</p>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-state" *ngIf="!loading && !error && despensas.length === 0">
+    <div class="empty-icon">
+      <ion-icon name="home-outline"></ion-icon>
+    </div>
+    <h3>No tienes despensas</h3>
+    <p>Crea tu primera despensa para comenzar a usar las listas de compras</p>
+    <ion-button class="primary-button" routerLink="/despensa">
+      <ion-icon name="add-outline" slot="start"></ion-icon>
+      Ir a Mis Despensas
+    </ion-button>
+  </div>
+</ion-content>
