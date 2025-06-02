@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"args": [],
+			"command": "ionic serve",
+			"group": "build",
+			"isBackground": true,
+			"label": "Serve Development Server",
+			"problemMatcher": [],
+			"type": "shell"
+		}
+	]
+}

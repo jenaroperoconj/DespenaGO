@@ -3,52 +3,77 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { 
-  IonItem, 
-  IonLabel, 
-  IonButton, 
-  IonList,
-  IonListHeader,
-  IonPopover,
   IonIcon,
   IonCardContent,
-  IonCardTitle,
-  IonCardHeader,
   IonCard,
   IonInput,
   IonContent,
   IonTitle,
   IonToolbar,
   IonHeader,
+  IonButtons,
+  IonMenuButton,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonChip,
+  IonFab,
+  IonFabButton,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonPopover,
   PopoverController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
 import { ModalController, AlertController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { 
+  storefrontOutline, 
+  homeOutline, 
+  listOutline, 
+  addOutline, 
+  ellipsisHorizontal,
+  createOutline,
+  trashOutline,
+  closeOutline,
+  saveOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  personOutline,
+  shieldOutline,
+  eyeOutline, ellipsisVertical, cubeOutline, archiveOutline, bagOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-despensa',
   templateUrl: './despensa.page.html',
   styleUrls: ['./despensa.page.scss'],
   providers: [ModalController],
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     CommonModule,
     FormsModule,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonList,
-    IonListHeader,
     IonIcon,
-    IonPopover,
     IonCardContent,
-    IonCardTitle,
-    IonCardHeader,
     IonCard,
     IonInput,
     IonContent,
     IonTitle,
     IonToolbar,
-    IonHeader
+    IonHeader,
+    IonButtons,
+    IonMenuButton,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonChip,
+    IonFab,
+    IonFabButton,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonPopover
   ]
 })
 export class DespensaPage implements OnInit {
@@ -60,24 +85,36 @@ export class DespensaPage implements OnInit {
   mostrarFormularioEditar: boolean = false;
   nombreEditar: string = '';
   despensaIdEditar: string = '';
-
   constructor(
     private supabaseService: SupabaseService, 
     private router: Router, 
     private modalCtrl: ModalController, 
     private alertCtrl: AlertController, 
     private popoverCtrl: PopoverController
-  ) {}
-
+  ) {
+    addIcons({storefrontOutline,homeOutline,bagOutline,ellipsisVertical,createOutline,trashOutline,addOutline,closeOutline,checkmarkCircleOutline,alertCircleOutline,saveOutline,archiveOutline,cubeOutline,listOutline,ellipsisHorizontal,personOutline,shieldOutline,eyeOutline});
+  }
   async crearDespensa() {
+    if (!this.nombre.trim()) {
+      this.error = 'El nombre de la despensa es requerido';
+      return;
+    }
+
     try {
+      this.error = null;
       await this.supabaseService.crearDespensa(this.nombre);
       this.success = true;
-      this.error = null;
       this.nombre = '';
-      this.mostrarFormularioCrear = false;
+      
+      // Cerrar modal después de 1 segundo
+      setTimeout(() => {
+        this.mostrarFormularioCrear = false;
+        this.success = false;
+      }, 1000);
+      
       await this.cargarDespensas();
     } catch (err: any) {
+      this.success = false;
       this.error = err.message || 'Error al crear despensa';
     }
   }
@@ -162,8 +199,55 @@ export class DespensaPage implements OnInit {
         ]
       });
 
-      await alert.present();
-    }, 300);
+      await alert.present();    }, 300);
     
+  }
+
+  getRoleColor(rol: string): string {
+    switch (rol) {
+      case 'owner':
+        return 'primary';
+      case 'admin':
+        return 'secondary';
+      case 'viewer':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
+
+  getRoleIcon(rol: string): string {
+    switch (rol) {
+      case 'owner':
+        return 'shield-outline';
+      case 'admin':
+        return 'person-outline';
+      case 'viewer':
+        return 'eye-outline';
+      default:
+        return 'person-outline';
+    }
+  }
+  cerrarFormularios() {
+    this.mostrarFormularioCrear = false;
+    this.mostrarFormularioEditar = false;
+    this.error = null;
+    this.success = false;
+  }
+
+  // Método específico para abrir el modal de crear despensa
+  abrirModalCrear() {
+    this.error = null;
+    this.success = false;
+    this.nombre = '';
+    this.mostrarFormularioCrear = true;
+  }
+
+  // Método para manejar el click del overlay
+  onOverlayClick(event: Event) {
+    // Solo cerrar si se hizo click directamente en el overlay, no en el contenido del modal
+    if (event.target === event.currentTarget) {
+      this.cerrarFormularios();
+    }
   }
 }

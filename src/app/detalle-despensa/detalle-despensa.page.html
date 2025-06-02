@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/despensa"></ion-back-button>
@@ -7,142 +7,283 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="detalle-despensa-content" [scrollEvents]="true">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="despensa-hero-icon">
+        <ion-icon name="basket-outline"></ion-icon>
+      </div>
+      <h1 class="hero-title">{{ nombreDespensa || 'Despensa' }}</h1>
+      <p class="hero-subtitle">Gestiona tus productos almacenados</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <ion-icon name="bag-outline"></ion-icon>
+          <span>{{ productos.length }} productos</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Botón flotante para agregar producto -->
-  <ion-button
-    class="boton-flotante"
-    shape="round"
-    fill="solid"
-    color="primary"
-    (click)="abrirFormularioAgregarProducto()"
-  >
-    <ion-icon name="add" slot="icon-only"></ion-icon>
-  </ion-button>
+  <!-- Lista de Productos -->
+  <div class="productos-container" *ngIf="productos.length; else emptyState">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let p of productos">
+          <ion-card class="producto-card" [ngClass]="{
+            'producto-vencido': esVencido(p.fecha_vencimiento),
+            'producto-pronto-vencer': esProntoAVencer(p.fecha_vencimiento)
+          }">
+            <ion-card-content>
+              <div class="card-main-content">
+                <div class="producto-icon">
+                  <ion-icon name="basket-outline"></ion-icon>
+                </div>
+                <div class="producto-details">
+                  <h3>{{ p.productos.nombre }}</h3>
+                  <div class="producto-info">
+                    <ion-chip class="categoria-chip" color="medium">
+                      <ion-icon name="pricetag-outline"></ion-icon>
+                      <ion-label>{{ p.productos.categoria || 'Sin categoría' }}</ion-label>
+                    </ion-chip>
+                    <p class="vencimiento-date">
+                      <ion-icon name="calendar-outline"></ion-icon>
+                      Vence: {{ p.fecha_vencimiento | date:'dd/MM/yyyy' }}
+                    </p>
+                    <p class="stock-info">
+                      <ion-icon name="cube-outline"></ion-icon>
+                      Stock: {{ p.stock }} unidades
+                    </p>
+                  </div>
+                </div>
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  class="options-button"
+                  [id]="'menu-producto-' + p.id"
+                  (click)="$event.stopPropagation()">
+                  <ion-icon name="ellipsis-vertical"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-card-content>
 
-  <!-- Lista de productos -->
-  <ion-list *ngIf="productos.length; else sinProductos" style="margin-top: 2rem;">
-    <ion-list-header>Productos</ion-list-header>
-    
-    <ng-container *ngFor="let p of productos">
-      <ion-item [ngClass]="{
-        'producto-vencido': esVencido(p.fecha_vencimiento),
-        'producto-pronto-vencer': esProntoAVencer(p.fecha_vencimiento)
-      }">
-        <ion-label>
-          <h2>{{ p.productos.nombre }}</h2>
-          <p>Categoría: {{ p.productos.categoria || 'Sin categoría' }}</p>
-          <p>Fecha vencimiento: {{ p.fecha_vencimiento | date:'shortDate' }}</p>
-          <p>Stock: {{ p.stock }}</p>
-        </ion-label>
+            <!-- Popover de opciones -->
+            <ion-popover
+              [trigger]="'menu-producto-' + p.id"
+              triggerAction="click"
+              [showBackdrop]="false">
+              <ng-template>
+                <ion-list class="popover-list">
+                  <ion-item button (click)="onPopoverAccion('editar', p)">
+                    <ion-icon name="create-outline" slot="start"></ion-icon>
+                    <ion-label>Editar</ion-label>
+                  </ion-item>
+                  <ion-item button (click)="onPopoverAccion('consumir', p)">
+                    <ion-icon name="remove-outline" slot="start"></ion-icon>
+                    <ion-label>Consumir</ion-label>
+                  </ion-item>
+                  <ion-item button class="danger" (click)="onPopoverAccion('eliminar', p)">
+                    <ion-icon name="trash-outline" slot="start"></ion-icon>
+                    <ion-label>Eliminar</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ng-template>
+            </ion-popover>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 
-        <!-- Botón que lanza el popover -->
-        <ion-button
-          fill="clear"
-          size="small"
-          slot="end"
-          [id]="'menu-producto-' + p.id"
-        >
-          <ion-icon name="ellipsis-vertical"></ion-icon>
-        </ion-button>
-      </ion-item>
-
-      <!-- Popover debe estar fuera del ion-item -->
-      <ion-popover
-        [trigger]="'menu-producto-' + p.id"
-        triggerAction="click"
-        [showBackdrop]="false"
-      >
-        <ng-template>
-          <ion-list>
-            <ion-item button (click)="onPopoverAccion('editar', p)">
-              <ion-icon slot="start" name="create-outline"></ion-icon>
-              <ion-label>Editar</ion-label>
-            </ion-item>
-            <ion-item button (click)="onPopoverAccion('consumir', p)">
-              <ion-icon slot="start" name="remove-outline"></ion-icon>
-              <ion-label>Consumir</ion-label>
-            </ion-item>
-            <ion-item button color="danger" (click)="onPopoverAccion('eliminar', p)">
-              <ion-icon slot="start" name="trash-outline"></ion-icon>
-              <ion-label>Eliminar</ion-label>
-            </ion-item>
-          </ion-list>
-        </ng-template>
-      </ion-popover>
-    </ng-container>
-  </ion-list>
-
-  <ng-template #sinProductos>
-    <p style="text-align: center; margin-top: 2rem;">No hay productos en esta despensa</p>
-  </ng-template>
-
+  <!-- Estado vacío -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <ion-icon name="basket-outline"></ion-icon>
+      </div>
+      <h3>No hay productos</h3>
+      <p>Agrega tu primer producto para comenzar a gestionar tu despensa</p>
+      <ion-button class="primary-button" (click)="abrirFormularioAgregarProducto()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Agregar Primer Producto
+      </ion-button>
+    </div>  </ng-template>
 </ion-content>
 
-<!-- Fondo difuminado -->
+<!-- FAB Button - Posición fija fuera del ion-content -->
+<ion-fab vertical="bottom" horizontal="end">
+  <ion-fab-button color="primary" (click)="abrirFormularioAgregarProducto()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Overlay difuminado -->
 <div 
   class="overlay-blur" 
-  *ngIf="mostrarFormularioAgregar || (mostrarFormularioEditar && productoEditar)">
+  *ngIf="mostrarFormularioAgregar || mostrarFormularioEditar"
+  (click)="onOverlayClick($event)">
 </div>
 
 <!-- Formulario para agregar producto -->
-<ion-card *ngIf="mostrarFormularioAgregar" class="formulario-superior">
-  <ion-card-header>
-    <ion-card-title>Agregar Producto</ion-card-title>
-  </ion-card-header>
-  <ion-card-content>
-    <ion-item>
-      <ion-label position="floating">Nombre</ion-label>
-      <ion-input [(ngModel)]="nuevoProducto.nombre" name="nombre" required></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Categoría</ion-label>
-      <ion-input [(ngModel)]="nuevoProducto.categoria" name="categoria"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Origen</ion-label>
-      <ion-input [(ngModel)]="nuevoProducto.origen" name="origen"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Fecha vencimiento</ion-label>
-      <ion-input [(ngModel)]="nuevoProducto.fecha_vencimiento" name="fecha_vencimiento" type="date"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Stock</ion-label>
-      <ion-input [(ngModel)]="nuevoProducto.stock" name="stock" type="number" min="1"></ion-input>
-    </ion-item>
-    <ion-button expand="block" (click)="agregarProducto()">Agregar</ion-button>
-    <ion-button expand="block" fill="clear" color="medium" (click)="mostrarFormularioAgregar = false">Cancelar</ion-button>
-  </ion-card-content>
-</ion-card>
+<div class="form-modal" *ngIf="mostrarFormularioAgregar">
+  <div class="form-container" (click)="$event.stopPropagation()">
+    <div class="form-header">
+      <h2>Nuevo Producto</h2>
+      <ion-button fill="clear" (click)="mostrarFormularioAgregar = false">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </div>
+    
+    <div class="form-content">
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Nombre del producto</ion-label>
+        <ion-input 
+          [(ngModel)]="nuevoProducto.nombre" 
+          required
+          placeholder="Ej: Arroz integral">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Categoría</ion-label>
+        <ion-input 
+          [(ngModel)]="nuevoProducto.categoria"
+          placeholder="Ej: Cereales">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Origen</ion-label>
+        <ion-input 
+          [(ngModel)]="nuevoProducto.origen"
+          placeholder="Ej: Supermercado XYZ">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Fecha de vencimiento</ion-label>
+        <ion-input 
+          [(ngModel)]="nuevoProducto.fecha_vencimiento" 
+          type="date">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Stock inicial</ion-label>
+        <ion-input 
+          [(ngModel)]="nuevoProducto.stock" 
+          type="number" 
+          min="1">
+        </ion-input>
+      </ion-item>
+
+      <div class="form-buttons">
+        <ion-button 
+          expand="block" 
+          class="primary-button"
+          (click)="agregarProducto()"
+          [disabled]="!nuevoProducto.nombre.trim()">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Agregar Producto
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          class="secondary-button"
+          (click)="mostrarFormularioAgregar = false">
+          Cancelar
+        </ion-button>
+      </div>
+
+      <div class="message-container">
+        <ion-chip color="success" *ngIf="success" class="success-chip">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <ion-label>Producto agregado correctamente</ion-label>
+        </ion-chip>
+        
+        <ion-chip color="danger" *ngIf="error" class="error-chip">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <ion-label>{{ error }}</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Formulario para editar producto -->
-<ion-card *ngIf="mostrarFormularioEditar && productoEditar" class="formulario-superior">
-  <ion-card-header>
-    <ion-card-title>Editar Producto</ion-card-title>
-  </ion-card-header>
-  <ion-card-content>
-    <ion-item>
-      <ion-label position="floating">Nombre</ion-label>
-      <ion-input [(ngModel)]="productoEditar.productos.nombre" name="edit_nombre"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Categoría</ion-label>
-      <ion-input [(ngModel)]="productoEditar.productos.categoria" name="edit_categoria"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Origen</ion-label>
-      <ion-input [(ngModel)]="productoEditar.productos.origen" name="edit_origen"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Fecha vencimiento</ion-label>
-      <ion-input [(ngModel)]="productoEditar.fecha_vencimiento" name="edit_fecha" type="date"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Stock</ion-label>
-      <ion-input [(ngModel)]="productoEditar.stock" name="edit_stock" type="number"></ion-input>
-    </ion-item>
-    <ion-button expand="block" (click)="guardarCambiosEditarProducto()">Guardar</ion-button>
-    <ion-button expand="block" fill="clear" color="medium" (click)="mostrarFormularioEditar = false">Cancelar</ion-button>
-  </ion-card-content>
-</ion-card>
+<div class="form-modal" *ngIf="mostrarFormularioEditar">
+  <div class="form-container" (click)="$event.stopPropagation()">
+    <div class="form-header">
+      <h2>Editar Producto</h2>
+      <ion-button fill="clear" (click)="mostrarFormularioEditar = false">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </div>
+    
+    <div class="form-content">
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Nombre del producto</ion-label>
+        <ion-input 
+          [(ngModel)]="productoEditar.productos.nombre" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Categoría</ion-label>
+        <ion-input 
+          [(ngModel)]="productoEditar.productos.categoria">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Origen</ion-label>
+        <ion-input 
+          [(ngModel)]="productoEditar.productos.origen">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Fecha de vencimiento</ion-label>
+        <ion-input 
+          [(ngModel)]="productoEditar.fecha_vencimiento" 
+          type="date">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="form-item" lines="none">
+        <ion-label position="floating">Stock</ion-label>
+        <ion-input 
+          [(ngModel)]="productoEditar.stock" 
+          type="number" 
+          min="1">
+        </ion-input>
+      </ion-item>
+
+      <div class="form-buttons">
+        <ion-button 
+          expand="block" 
+          class="primary-button"
+          (click)="guardarCambiosEditarProducto()"
+          [disabled]="!productoEditar?.productos?.nombre?.trim()">
+          <ion-icon name="save-outline" slot="start"></ion-icon>
+          Guardar Cambios
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          class="secondary-button"
+          (click)="mostrarFormularioEditar = false">
+          Cancelar
+        </ion-button>
+      </div>
+
+      <div class="message-container" *ngIf="error">
+        <ion-chip color="danger" class="error-chip">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <ion-label>{{ error }}</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,13 +1,250 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>home</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>DespensaGO</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="irANotificaciones()">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <ion-badge color="danger" *ngIf="estadisticas.productosVencidos > 0">
+          {{ estadisticas.productosVencidos }}
+        </ion-badge>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">home</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Refresher -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content 
+      pulling-icon="chevron-down-circle-outline"
+      pulling-text="Desliza para actualizar..."
+      refreshing-spinner="crescent"
+      refreshing-text="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Header con saludo personalizado -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">{{ getSaludoSegunHora() }}</h1>
+      <p class="hero-subtitle">{{ getNombreUsuario() }}</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <ion-icon name="grid-outline"></ion-icon>
+          <span>{{ estadisticas.totalDespensas }} despensas</span>
+        </div>
+        <div class="stat-item">
+          <ion-icon name="bag-handle-outline"></ion-icon>
+          <span>{{ estadisticas.totalProductos }} productos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas rápidas -->
+  <div class="stats-grid">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6">
+          <ion-card class="stat-card success">
+            <ion-card-content>
+              <div class="stat-icon">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ estadisticas.totalProductos - estadisticas.productosVencidos }}</h3>
+                <p>Productos OK</p>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        
+        <ion-col size="6">
+          <ion-card class="stat-card warning" *ngIf="estadisticas.productosProximosVencer > 0">
+            <ion-card-content>
+              <div class="stat-icon">
+                <ion-icon name="time-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ estadisticas.productosProximosVencer }}</h3>
+                <p>Por vencer</p>
+              </div>
+            </ion-card-content>
+          </ion-card>
+          
+          <ion-card class="stat-card danger" *ngIf="estadisticas.productosVencidos > 0">
+            <ion-card-content>
+              <div class="stat-icon">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ estadisticas.productosVencidos }}</h3>
+                <p>Vencidos</p>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <!-- Carrusel de productos próximos a vencer -->
+  <div class="section-container" *ngIf="productosProximosVencer.length > 0">
+    <div class="section-header">
+      <h2>
+        <ion-icon name="time-outline"></ion-icon>
+        Próximos a vencer
+      </h2>
+      <p>Usa estos productos pronto</p>
+    </div>
+      <div class="carousel-container">
+      <swiper-container 
+        [slidesPerView]="2.2" 
+        [spaceBetween]="16"
+        [freeMode]="true"
+        class="productos-carousel">
+        <swiper-slide *ngFor="let producto of productosProximosVencer">
+          <ion-card class="producto-card" [color]="getColorSegunDias(getDiasParaVencer(producto.fecha_vencimiento))">
+            <ion-card-content>
+              <div class="producto-emoji">{{ getIconoCategoria(obtenerCategoriaProducto(producto)) }}</div>
+              <h4>{{ obtenerNombreProducto(producto) }}</h4>
+              <p class="despensa-name">{{ obtenerNombreDespensa(producto) }}</p>
+              <div class="producto-info">
+                <ion-chip [color]="getColorSegunDias(getDiasParaVencer(producto.fecha_vencimiento))" size="small">
+                  {{ getDiasParaVencer(producto.fecha_vencimiento) }} días
+                </ion-chip>
+                <span class="stock">Stock: {{ producto.stock }}</span>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </swiper-slide>
+      </swiper-container>
+    </div>
+  </div>
+
+  <!-- Productos con bajo stock -->
+  <div class="section-container" *ngIf="productosBajoStock.length > 0">
+    <div class="section-header">
+      <h2>
+        <ion-icon name="warning-outline"></ion-icon>
+        Stock bajo
+      </h2>
+      <p>Considera reponerlos</p>
+    </div>
+      <div class="carousel-container">
+      <swiper-container 
+        [slidesPerView]="2.5" 
+        [spaceBetween]="16"
+        [freeMode]="true"
+        class="productos-carousel">
+        <swiper-slide *ngFor="let producto of productosBajoStock">
+          <ion-card class="producto-card stock-bajo">
+            <ion-card-content>
+              <div class="producto-emoji">{{ getIconoCategoria(obtenerCategoriaProducto(producto)) }}</div>
+              <h4>{{ obtenerNombreProducto(producto) }}</h4>
+              <p class="despensa-name">{{ obtenerNombreDespensa(producto) }}</p>
+              <div class="producto-info">
+                <ion-chip color="warning" size="small">
+                  Quedan {{ producto.stock }}
+                </ion-chip>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </swiper-slide>
+      </swiper-container>
+    </div>
+  </div>
+
+  <!-- Acciones rápidas -->
+  <div class="section-container">
+    <div class="section-header">
+      <h2>
+        <ion-icon name="flash-outline"></ion-icon>
+        Acciones rápidas
+      </h2>
+    </div>
+    
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6">
+          <ion-card class="action-card" button (click)="irADespensas()">
+            <ion-card-content>
+              <ion-icon name="home-outline" class="action-icon"></ion-icon>
+              <h3>Mis Despensas</h3>
+              <p>Gestionar productos</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        
+        <ion-col size="6">
+          <ion-card class="action-card" button (click)="irAListaDeseos()">
+            <ion-card-content>
+              <ion-icon name="heart-outline" class="action-icon"></ion-icon>
+              <h3>Lista de Deseos</h3>
+              <p>Ver productos guardados</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+      
+      <ion-row>
+        <ion-col size="6">
+          <ion-card class="action-card" button (click)="irARecetas()">
+            <ion-card-content>
+              <ion-icon name="restaurant-outline" class="action-icon"></ion-icon>
+              <h3>Recetas</h3>
+              <p>Ideas para cocinar</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+        
+        <ion-col size="6">
+          <ion-card class="action-card" button>
+            <ion-card-content>
+              <ion-icon name="scan-outline" class="action-icon"></ion-icon>
+              <h3>Escanear</h3>
+              <p>Añadir productos</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="empty-state" *ngIf="!loading && estadisticas.totalProductos === 0">
+    <ion-icon name="bag-handle-outline" class="empty-icon"></ion-icon>
+    <h3>¡Empezemos!</h3>
+    <p>Agrega tu primera despensa y comienza a gestionar tus productos</p>
+    <ion-button expand="block" (click)="irADespensas()">
+      <ion-icon name="add-outline" slot="start"></ion-icon>
+      Crear despensa
+    </ion-button>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="loading-content">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6" *ngFor="let i of [1,2,3,4]">
+          <ion-card>
+            <ion-card-content>
+              <ion-skeleton-text animated style="width: 60px; height: 60px; border-radius: 50%;"></ion-skeleton-text>
+              <ion-skeleton-text animated style="width: 80%; margin-top: 16px;"></ion-skeleton-text>
+              <ion-skeleton-text animated style="width: 60%;"></ion-skeleton-text>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>    </ion-row>
+    </ion-grid>
+  </div>
 </ion-content>
+
+<!-- FAB para agregar - Solo cuando no hay despensas -->
+<ion-fab vertical="bottom" horizontal="end" *ngIf="estadisticas.totalDespensas === 0">
+  <ion-fab-button color="primary" (click)="irADespensas()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

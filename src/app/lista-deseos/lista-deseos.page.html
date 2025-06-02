@@ -1,0 +1,82 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Lista de Deseos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Estado de carga -->
+  <div *ngIf="cargando" class="loading-container">
+    <p>Cargando lista de deseos...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <ion-card *ngIf="error" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button fill="clear" color="light" (click)="cargarListaDeseos()">
+        Reintentar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista vacía -->
+  <ion-card *ngIf="!cargando && !error && listaDeseos.length === 0" class="empty-state">
+    <ion-card-header>
+      <ion-card-title>Lista Vacía</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>No tienes productos en tu lista de deseos.</p>
+      <p>Cuando el stock de un producto se agote, aparecerá automáticamente aquí.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Lista de productos -->
+  <ion-list *ngIf="!cargando && !error && listaDeseos.length > 0">
+    <ion-item *ngFor="let item of listaDeseos" class="producto-item">
+      <ion-label>
+        <h2>{{ item.productos.nombre }}</h2>
+        <p>Categoría: {{ item.productos.categoria || 'Sin categoría' }}</p>
+        <p>Origen: {{ item.productos.origen || 'No especificado' }}</p>
+        <p>Despensa: {{ item.despensas.nombre }}</p>
+        <p>Cantidad deseada: {{ item.cantidad }}</p>
+        <p><small>Agregado: {{ item.created_at | date:'short' }}</small></p>
+      </ion-label>
+      
+      <div slot="end" class="action-buttons">
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          color="primary"
+          (click)="actualizarCantidad(item)"
+        >
+          <ion-icon name="create-outline"></ion-icon>
+        </ion-button>
+        
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          color="danger"
+          (click)="eliminarDeListaDeseos(item)"
+        >
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <!-- Botón para refrescar -->
+  <ion-button 
+    *ngIf="!cargando && listaDeseos.length > 0"
+    expand="block" 
+    fill="clear" 
+    (click)="cargarListaDeseos()"
+    class="refresh-button"
+  >
+    <ion-icon name="refresh-outline" slot="start"></ion-icon>
+    Actualizar Lista
+  </ion-button>
+</ion-content>

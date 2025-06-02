@@ -1,48 +1,831 @@
+// Usar variables globales
+.detalle-despensa-content {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  background: var(--ion-background-color);
+  
+  // Asegurar que el scroll funcione correctamente
+  --overflow: auto;
+  height: 100%;
+}
+
+// Asegurar scroll funcional
+ion-content.detalle-despensa-content {
+  --overflow: auto !important;
+}
+
+// Prevenir bloqueo de scroll en elementos padre
+.detalle-despensa-content * {
+  touch-action: auto;
+}
+
+// Hero Section - Usando la clase global de shared styles
+.hero-section {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  color: white;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+
+  .hero-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+
+    .despensa-hero-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+
+      ion-icon {
+        font-size: 32px;
+      }
+    }
+
+    .hero-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin: 0 0 20px;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        opacity: 0.9;
+
+        ion-icon {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+}
+
+// Container de productos
+.productos-container {
+  padding: 20px;
+  background: var(--ion-background-color);
+}
+
+// Grid de productos
+.productos-grid {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .grid-row {
+    margin-bottom: 20px;
+  }
+}
+
+// Cards de productos
+.producto-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.15);
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.1);
+  margin-bottom: 16px;
+  background: white;
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.2);
+  }
+
+  ion-card-content {
+    padding: 20px;
+
+    .card-main-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;      .producto-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+
+        ion-icon {
+          font-size: 24px;
+        }
+      }      .producto-details {
+        flex: 1;
+        min-width: 0; // Permite que el texto se trunque si es necesario
+
+        h3 {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: var(--ion-text-color);
+          margin: 0 0 12px;
+          line-height: 1.3;
+        }
+
+        .producto-info {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          .categoria-chip {
+            align-self: flex-start;
+            --border-radius: 20px;
+            font-size: 0.75rem;
+            height: 24px;
+
+            ion-icon {
+              font-size: 12px;
+              margin-right: 4px;
+            }
+          }          .vencimiento-date,
+          .stock-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ion-color-medium);
+            font-size: 0.85rem;
+            margin: 0;
+
+            ion-icon {
+              font-size: 14px;
+              color: var(--ion-color-primary);
+            }
+          }
+        }
+      }      .options-button {
+        flex-shrink: 0;
+        --color: var(--ion-color-medium);
+        --background: transparent;
+        width: 40px;
+        height: 40px;
+        position: relative;
+        z-index: 10;
+
+        &:hover {
+          --color: var(--ion-text-color);
+          --background: rgba(0, 0, 0, 0.05);
+        }
+
+        ion-icon {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+
+// Estados de producto (vencidos, próximos a vencer)
 .producto-vencido {
-  --background: #ffe5e5;
-  color: #c70000;
-  font-weight: bold;
+  border-left: 4px solid var(--ion-color-danger);
+  --background: rgba(244, 67, 54, 0.05);
+
+  .producto-details h3 {
+    color: var(--ion-color-danger);
+  }
 }
 
 .producto-pronto-vencer {
-  --background: #fff8e1;
-  color: #b57f00;
-  font-weight: 500;
+  border-left: 4px solid var(--ion-color-warning);
+  --background: rgba(255, 193, 7, 0.05);
+
+  .producto-details h3 {
+    color: var(--ion-color-warning-shade);
+  }
 }
-.boton-flotante {
+
+// Estado vacío
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  .empty-icon {
+    font-size: 4rem;
+    color: var(--ion-color-light);
+    margin-bottom: 20px;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ion-text-color);
+    margin-bottom: 12px;
+  }
+
+  .empty-subtitle {
+    color: var(--ion-color-medium);
+    margin-bottom: 30px;
+    line-height: 1.5;
+  }
+
+  .empty-button {
+    --border-radius: 25px;
+    --padding-start: 32px;
+    --padding-end: 32px;
+    --box-shadow: 0 4px 12px rgba(124, 169, 141, 0.3);
+  }
+}
+
+// Formularios modales
+.modal-overlay {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
-  border-radius: 50%;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-.opciones-producto {
-  margin: 0 1rem 1rem 1rem;
-  border-radius: 8px;
-  background: #f4f4f4;
-}
-.danger {
-  color: var(--ion-color-danger);
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+
+  .modal-header {
+    padding: 24px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--ion-text-color);
+      margin: 0;
+    }
+
+    .close-button {
+      --color: var(--ion-color-medium);
+      --background: transparent;
+      width: 40px;
+      height: 40px;
+
+      ion-icon {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 20px 24px 24px;
+
+    .form-group {
+      margin-bottom: 20px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      ion-item {
+        --background: rgba(124, 169, 141, 0.05);
+        --border-radius: 12px;
+        --padding-start: 16px;
+        --padding-end: 16px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(124, 169, 141, 0.1);        &.ion-focused {
+          --border-color: var(--ion-color-primary);
+          --border-width: 2px;
+          --border-style: solid;
+
+          &:hover {
+            --background: rgba(0, 0, 0, 0.05);
+          }
+        }
+      }
+    }
+  }
 }
 
+// Mensaje de éxito/error
+.message-chip {
+  margin: 16px 0;
+  --border-radius: 12px;
+  
+  &.success-chip {
+    --background: rgba(76, 175, 80, 0.1);
+    --color: #2E7D32;
+  }
 
+  &.error-chip {
+    --background: rgba(244, 67, 54, 0.1);
+    --color: #C62828;
+  }
+
+  ion-icon {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+}
+
+// FAB personalizado - usando paleta global con posición fija
+ion-fab {
+  position: fixed !important;
+  z-index: 1000;
+  
+  ion-fab-button {
+    --background: var(--ion-color-primary);
+    --color: white;
+    --border-radius: 16px;
+    --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.4);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    &:hover {
+      --background: var(--ion-color-primary-shade);
+      --box-shadow: 0 12px 28px rgba(var(--ion-color-primary-rgb), 0.5);
+      transform: translateY(-2px) scale(1.05);
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    ion-icon {
+      font-size: 24px;
+      transition: transform 0.2s ease;
+    }
+
+    &:hover ion-icon {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Estilos para el popover de opciones
+.popover-list {
+  margin: 0;
+  padding: 0;
+  min-width: 150px;
+
+  ion-item {
+    --background: white;    --color: var(--ion-text-color);
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --min-height: 48px;
+    font-size: 0.9rem;
+
+    &:hover {
+      --background: rgba(0, 0, 0, 0.05);
+    }
+
+    &.danger {
+      --color: var(--ion-color-danger);
+
+      ion-icon {
+        color: var(--ion-color-danger);
+      }
+    }
+
+    ion-icon {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+  }
+}
+
+// Estilos para overlay difuminado
 .overlay-blur {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 999;
-  backdrop-filter: blur(6px);
-  background-color: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+  touch-action: auto;
 }
-.formulario-superior {
+
+// Estilos para modales de formulario
+.form-modal {
   position: fixed;
-  top: 10%;
-  left: 10%;
-  right: 10%;
-  z-index: 1000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+
+  .form-container {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .form-header {
+      padding: 24px 24px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+      h2 {
+        font-size: 1.4rem;        font-weight: 600;
+        color: var(--ion-text-color);
+        margin: 0;
+      }
+
+      ion-button {
+        --color: var(--ion-color-medium);
+        --background: transparent;
+        width: 40px;
+        height: 40px;
+        margin: 0;
+
+        ion-icon {
+          font-size: 24px;
+        }
+      }
+    }
+
+    .form-content {
+      padding: 24px;
+
+      .form-item {
+        --background: rgba(124, 169, 141, 0.05);
+        --border-radius: 14px;
+        --padding-start: 20px;
+        --padding-end: 20px;
+        --min-height: 56px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(124, 169, 141, 0.1);
+        transition: all 0.3s ease;        &.ion-focused {
+          --border-color: var(--ion-color-primary);
+          --border-width: 2px;
+          --background: rgba(124, 169, 141, 0.08);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(124, 169, 141, 0.15);
+        }
+
+        ion-label {
+          font-weight: 500;
+          color: var(--ion-color-medium);
+        }
+
+        ion-input {
+          --color: var(--ion-text-color);
+          font-size: 1rem;
+        }
+      }
+
+      .form-buttons {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;        .primary-button {
+          --background: var(--ion-color-primary);
+          --color: white;
+          --border-radius: 14px;
+          --box-shadow: 0 4px 16px rgba(124, 169, 141, 0.3);
+          --padding-top: 16px;
+          --padding-bottom: 16px;
+          font-weight: 600;
+          margin: 0;
+
+          &:hover:not(.button-disabled) {
+            --background: var(--ion-color-primary-shade);
+            transform: translateY(-1px);
+            --box-shadow: 0 6px 20px rgba(124, 169, 141, 0.4);
+          }
+
+          &.button-disabled {
+            opacity: 0.6;
+            --background: var(--ion-color-medium);
+          }
+        }        .secondary-button {
+          --background: transparent;
+          --color: var(--ion-color-medium);
+          --border-radius: 14px;
+          --padding-top: 16px;
+          --padding-bottom: 16px;
+          margin: 0;
+
+          &:hover {
+            --background: rgba(0, 0, 0, 0.05);
+          }
+        }
+      }
+
+      .message-container {
+        margin-top: 16px;
+
+        .success-chip,
+        .error-chip {
+          width: 100%;
+          --border-radius: 12px;
+          justify-content: center;
+
+          ion-icon {
+            margin-right: 8px;
+          }
+        }
+
+        .success-chip {
+          --background: rgba(76, 175, 80, 0.1);
+          --color: #2E7D32;
+        }
+
+        .error-chip {
+          --background: rgba(244, 67, 54, 0.1);
+          --color: #C62828;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .productos-grid {
+    padding: 15px;
+  }
+
+  .producto-card {
+    margin-bottom: 12px;
+
+    ion-card-content {
+      padding: 16px;
+
+      .card-main-content {
+        gap: 12px;
+
+        .producto-icon {
+          width: 40px;
+          height: 40px;
+
+          ion-icon {
+            font-size: 20px;
+          }
+        }
+
+        .producto-details {
+          h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+          }
+
+          .producto-info {
+            gap: 6px;
+
+            .categoria-chip {
+              font-size: 0.7rem;
+              height: 20px;
+
+              ion-icon {
+                font-size: 10px;
+                margin-right: 2px;
+              }
+            }
+
+            .vencimiento-date,
+            .stock-info {
+              font-size: 0.8rem;
+            }
+          }
+        }
+
+        .options-button {
+          width: 36px;
+          height: 36px;
+
+          ion-icon {
+            font-size: 18px;
+          }
+        }
+      }
+    }
+  }
+
+  .form-modal {
+    padding: 10px;
+
+    .form-container {
+      max-height: 95vh;
+
+      .form-content {
+        padding: 20px;
+      }
+    }
+  }
+
+  .hero-section {
+    padding: 20px 15px;
+
+    .hero-content {
+      .despensa-hero-icon {
+        width: 50px;
+        height: 50px;
+
+        ion-icon {
+          font-size: 26px;
+        }
+      }
+
+      .hero-title {
+        font-size: 1.5rem;
+      }
+
+      .hero-stats {
+        gap: 16px;
+
+        .stat-item {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+// Responsive para pantallas muy pequeñas (móviles Android pequeños)
+@media (max-width: 480px) {
+  .productos-container {
+    padding: 0 8px;
+  }
+
+  .producto-card {
+    margin-bottom: 10px;
+
+    ion-card-content {
+      padding: 12px;
+
+      .card-main-content {
+        gap: 8px;
+
+        .producto-icon {
+          width: 36px;
+          height: 36px;
+
+          ion-icon {
+            font-size: 18px;
+          }
+        }
+
+        .producto-details {
+          h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+          }
+
+          .producto-info {
+            gap: 4px;
+
+            .categoria-chip {
+              font-size: 0.65rem;
+              height: 18px;
+
+              ion-icon {
+                font-size: 8px;
+              }
+            }
+
+            .vencimiento-date,
+            .stock-info {
+              font-size: 0.75rem;
+            }
+          }
+        }
+
+        .options-button {
+          width: 32px;
+          height: 32px;
+
+          ion-icon {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  .form-modal {
+    padding: 5px;
+
+    .form-container {
+      border-radius: 16px;
+
+      .form-content {
+        padding: 16px;
+      }
+    }
+  }
+}
+
+// Mejoras para el área táctil en dispositivos móviles
+@media (pointer: coarse) {
+  .producto-card {
+    ion-card-content {
+      .card-main-content {
+        .options-button {
+          // Aumentar el área táctil para móviles
+          min-width: 44px;
+          min-height: 44px;
+          
+          // Añadir un pseudo-elemento para aumentar el área táctil
+          &::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: transparent;
+            border-radius: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos específicos para Android
+@supports (-webkit-appearance: none) {
+  .producto-card {
+    ion-card-content {
+      .card-main-content {
+        .options-button {
+          // Mejorar la visualización en Android
+          --ripple-color: rgba(124, 169, 141, 0.2);
+          
+          &:active {
+            --background: rgba(124, 169, 141, 0.1);
+          }
+        }
+      }
+    }
+  }
 }
