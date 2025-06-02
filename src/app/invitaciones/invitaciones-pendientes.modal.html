@@ -1,0 +1,109 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Invitaciones Pendientes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="dismiss()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="invitaciones-content">
+  <!-- Loader -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Cargando invitaciones...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <ion-icon name="alert-circle-outline" color="danger"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" (click)="cargarInvitaciones()">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Reintentar
+    </ion-button>
+  </div>
+
+  <!-- Lista de invitaciones -->
+  <div *ngIf="!loading && !error">
+    <!-- Estado vacío -->
+    <div *ngIf="invitaciones.length === 0" class="empty-state">
+      <ion-icon name="mail-outline" class="empty-icon"></ion-icon>
+      <h3>No hay invitaciones pendientes</h3>
+      <p>Cuando recibas invitaciones para colaborar en despensas aparecerán aquí.</p>
+    </div>
+
+    <!-- Lista de invitaciones -->
+    <div *ngIf="invitaciones.length > 0" class="invitations-list">
+      <h4 class="section-title">
+        <ion-icon name="mail-outline"></ion-icon>
+        Tienes {{ invitaciones.length }} invitación{{ invitaciones.length > 1 ? 'es' : '' }} pendiente{{ invitaciones.length > 1 ? 's' : '' }}
+      </h4>
+      
+      <ion-card *ngFor="let invitacion of invitaciones" class="invitation-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="home-outline"></ion-icon>
+            {{ invitacion.despensa_nombre || invitacion.despensas?.nombre }}
+          </ion-card-title>
+        </ion-card-header>
+        
+        <ion-card-content>          <!-- Información del invitador -->
+          <div class="invitation-from">
+            <ion-icon name="person-outline"></ion-icon>
+            <span>Invitado por: <strong>{{ invitacion.propietario_nombre }}</strong></span>
+            <div *ngIf="invitacion.propietario_email" class="inviter-email">
+              <small>{{ invitacion.propietario_email }}</small>
+            </div>
+          </div>
+          
+          <!-- Rol asignado -->
+          <div class="invitation-role">
+            <ion-chip [color]="getRoleColor(invitacion.rol)">
+              <ion-icon [name]="getRoleIcon(invitacion.rol)"></ion-icon>
+              <ion-label>{{ getRoleLabel(invitacion.rol) }}</ion-label>
+            </ion-chip>
+          </div>
+          
+          <!-- Mensaje personalizado -->
+          <div *ngIf="invitacion.mensaje" class="invitation-message">
+            <p>"{{ invitacion.mensaje }}"</p>
+          </div>
+          
+          <!-- Fecha de invitación -->
+          <div class="invitation-date">
+            <ion-note>
+              <ion-icon name="time-outline"></ion-icon>
+              Recibida: {{ formatearFecha(invitacion.fecha_invitacion) }}
+            </ion-note>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="invitation-actions">
+            <ion-button 
+              fill="solid" 
+              color="success" 
+              size="small"
+              (click)="aceptarInvitacion(invitacion)"
+              [disabled]="loading">
+              <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+              Aceptar
+            </ion-button>
+            
+            <ion-button 
+              fill="outline" 
+              color="medium" 
+              size="small"
+              (click)="rechazarInvitacion(invitacion)"
+              [disabled]="loading">
+              <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+              Rechazar
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>

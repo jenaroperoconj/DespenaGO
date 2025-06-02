@@ -14,6 +14,7 @@ import {
   IonInput
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
+import { CarritoService } from 'src/app/core/carrito.service';
 
 @Component({
   standalone: true,
@@ -54,33 +55,53 @@ import { SupabaseService } from 'src/app/core/supabase.service';
 })
 export class ConsumirProductoModal {
   @Input() producto: any;
+  @Input() despensaId!: string;
   cantidad: number = 1;
   error: string | null = null;
 
-  constructor(private modalCtrl: ModalController, private supabase: SupabaseService) {}
-
+  constructor(
+    private modalCtrl: ModalController, 
+    private supabase: SupabaseService,
+    private carritoService: CarritoService
+  ) {}
   async confirmarConsumo() {
     if (this.cantidad <= 0 || isNaN(this.cantidad)) {
       this.error = 'Cantidad no válida';
       return;
     }
 
-    if (this.cantidad >= this.producto.stock) {
-      await this.supabase.eliminarProductoDeDespensa(this.producto.id);
-    } else {
+    try {
       const nuevoStock = this.producto.stock - this.cantidad;
-      const { error } = await this.supabase.client
-        .from('producto_despensa')
-        .update({ stock: nuevoStock })
-        .eq('id', this.producto.id);
 
-      if (error) {
-        this.error = error.message;
-        return;
+      if (nuevoStock <= 0) {
+        // Si el stock llega a 0 o menos, eliminar el producto de la despensa
+        await this.supabase.eliminarProductoDeDespensa(this.producto.id);
+        
+        // Verificar stock agotado y ofrecer agregar a lista de deseos
+        await this.carritoService.verificarStockAgotado(
+          this.producto.id,
+          0,
+          this.despensaId,
+          this.producto.productos.id,
+          this.producto.productos.nombre
+        );
+      } else {
+        // Si queda stock, actualizar la cantidad
+        const { error } = await this.supabase.client
+          .from('producto_despensa')
+          .update({ stock: nuevoStock })
+          .eq('id', this.producto.id);
+
+        if (error) {
+          this.error = error.message;
+          return;
+        }
       }
-    }
 
-    this.dismiss(true);
+      this.dismiss(true);
+    } catch (err: any) {
+      this.error = err.message || 'Error al consumir producto';
+    }
   }
 
   dismiss(success = false) {

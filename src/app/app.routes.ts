@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'folder/inbox',
+    redirectTo: 'home',
     pathMatch: 'full',
   },
   {
@@ -46,10 +46,13 @@ export const routes: Routes = [
   {
     path: 'recipes',
     loadComponent: () => import('./recipes/recipes.page').then( m => m.RecipesPage)
-  },
-  {
+  },  {
     path: 'escaneo-boleta',
     loadComponent: () => import('./escaneo-boleta/escaneo-boleta.page').then( m => m.EscaneoBoletaPage)
+  },
+  {
+    path: 'lista-deseos',
+    loadComponent: () => import('./lista-deseos/lista-deseos.page').then( m => m.ListaDeseosPage)
   },
 
 ];

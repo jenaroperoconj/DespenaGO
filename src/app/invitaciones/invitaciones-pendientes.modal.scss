@@ -1,0 +1,248 @@
+.invitaciones-content {
+  --background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  
+  ion-spinner {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    color: var(--ion-color-medium);
+    margin: 0;
+  }
+}
+
+/* Error state */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  
+  ion-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    color: var(--ion-color-danger);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  .empty-icon {
+    font-size: 64px;
+    color: var(--ion-color-medium);
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    color: var(--ion-color-dark);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  
+  p {
+    color: var(--ion-color-medium);
+    line-height: 1.6;
+    max-width: 280px;
+    margin: 0;
+  }
+}
+
+/* Invitations list */
+.invitations-list {
+  padding: 20px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px 0;
+  color: var(--ion-color-dark);
+  font-weight: 600;
+  font-size: 16px;
+  
+  ion-icon {
+    color: var(--ion-color-primary);
+  }
+}
+
+/* Invitation cards */
+.invitation-card {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.1);
+  
+  ion-card-header {
+    background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+    color: white;
+    padding: 16px 20px 12px;
+    
+    ion-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      
+      ion-icon {
+        font-size: 20px;
+      }
+    }
+  }
+  
+  ion-card-content {
+    padding: 20px;
+    background: white;
+  }
+}
+
+/* Información del invitador */
+.invitation-from {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
+  ion-icon {
+    margin-right: 8px;
+    font-size: 16px;
+    color: var(--ion-color-medium);
+  }
+  
+  .inviter-email {
+    margin-left: 24px;
+    margin-top: 4px;
+    
+    small {
+      color: var(--ion-color-medium);
+      font-size: 12px;
+    }
+  }
+}
+
+.invitation-role {
+  margin-bottom: 16px;
+}
+
+.invitation-message {
+  margin-bottom: 16px;
+  
+  p {
+    background: var(--ion-color-light);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 0;
+    font-style: italic;
+    color: var(--ion-color-dark);
+    border-left: 3px solid var(--ion-color-primary);
+  }
+}
+
+.invitation-date {
+  margin-bottom: 20px;
+  
+  ion-note {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    
+    ion-icon {
+      font-size: 14px;
+    }
+  }
+}
+
+/* Action buttons */
+.invitation-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  
+  ion-button {
+    --border-radius: 8px;
+    min-width: 100px;
+    font-weight: 600;
+  }
+}
+
+/* Role chip customizations */
+ion-chip {
+  --border-radius: 12px;
+  font-weight: 600;
+  
+  ion-icon {
+    margin-right: 4px;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .invitation-actions {
+    flex-direction: column;
+    gap: 8px;
+    
+    ion-button {
+      width: 100%;
+    }
+  }
+  
+  .invitations-list {
+    padding: 16px 12px;
+  }
+  
+  .invitation-card {
+    ion-card-content {
+      padding: 16px;
+    }
+  }
+}
+
+/* Animation for cards */
+.invitation-card {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading state for buttons */
+ion-button[disabled] {
+  opacity: 0.6;
+}

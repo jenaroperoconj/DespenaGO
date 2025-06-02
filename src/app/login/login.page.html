@@ -1,23 +1,71 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>login</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" class="login-content">
+  <!-- Hero Section similar al Home -->
+  <div class="login-hero-section">
+    <div class="login-hero-content">
+      <div class="app-logo">
+        <ion-icon name="leaf-outline" class="logo-icon"></ion-icon>
+      </div>
+      <h1 class="hero-title">DespensaGO</h1>
+      <p class="hero-subtitle">Gestiona tu despensa de forma inteligente</p>
+    </div>
+  </div>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <ion-item>
-    <ion-label position="floating">Email</ion-label>
-    <ion-input [(ngModel)]="email" type="email" required></ion-input>
-  </ion-item>
+  <!-- Login Form -->
+  <div class="login-form-container">
+    <div class="login-form">
+      <h2 class="form-title">Iniciar Sesión</h2>
+        <ion-item class="login-item form-item" lines="none">
+        <ion-label position="floating">Email</ion-label>
+        <ion-input 
+          [(ngModel)]="email" 
+          type="email" 
+          required
+          class="login-input">
+        </ion-input>
+      </ion-item>      <ion-item class="login-item form-item" lines="none">
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input 
+          [(ngModel)]="password" 
+          [type]="showPassword ? 'text' : 'password'"
+          required
+          class="login-input">
+        </ion-input>
+        <ion-button 
+          fill="clear" 
+          slot="end" 
+          (click)="togglePasswordVisibility()"
+          class="password-toggle-button">
+          <ion-icon 
+            slot="icon-only" 
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'">
+          </ion-icon>
+        </ion-button>
+      </ion-item><div class="button-container">
+        <ion-button 
+          expand="block" 
+          class="login-primary-button primary-button"
+          (click)="login()"
+          [disabled]="isLoading">
+          <span *ngIf="!isLoading">Iniciar Sesión</span>
+          <span *ngIf="isLoading">Iniciando sesión...</span>
+        </ion-button>
 
-  <ion-item>
-    <ion-label position="floating">Contraseña</ion-label>
-    <ion-input [(ngModel)]="password" type="password" required></ion-input>
-  </ion-item>
+        <ion-button 
+          expand="block" 
+          fill="clear" 
+          class="login-secondary-button secondary-button"
+          (click)="goToRegister()"
+          [disabled]="isLoading">
+          ¿No tienes cuenta? Regístrate
+        </ion-button>
+      </div>
 
-  <ion-button expand="block" (click)="login()">Iniciar Sesión</ion-button>
-
-  <ion-button expand="block" fill="clear" (click)="goToRegister()">Registrarse</ion-button>
-
-  <p *ngIf="error" style="color:red">{{ error }}</p>
+      <div class="error-container" *ngIf="error">
+        <ion-chip color="danger" class="error-chip">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <ion-label>{{ error }}</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+  </div>
 </ion-content>
