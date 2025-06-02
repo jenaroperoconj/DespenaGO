@@ -351,7 +351,7 @@ export class SupabaseService {
   }
 
   /**
-   * Actualiza el stock de un producto in producto_despensa
+   * Actualiza el stock de un producto in producto_despensaa
    */
   async actualizarStockProducto(productoDespensaId: string, nuevoStock: number) {
     const { error } = await this.supabase
