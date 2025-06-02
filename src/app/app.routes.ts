@@ -3,13 +3,8 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'folder/inbox',
+    redirectTo: 'home',
     pathMatch: 'full',
-  },
-  {
-    path: 'folder/:id',
-    loadComponent: () =>
-      import('./folder/folder.page').then((m) => m.FolderPage),
   },
   {
     path: 'home',
@@ -34,22 +29,22 @@ export const routes: Routes = [
   {
     path: 'profile',
     loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage)
-  },
-  {
+  },  {
     path: 'notifications',
     loadComponent: () => import('./notifications/notifications.page').then( m => m.NotificationsPage)
   },
   {
-    path: 'shopping-cart',
-    loadComponent: () => import('./shopping-cart/shopping-cart.page').then( m => m.ShoppingCartPage)
-  },
-  {
     path: 'recipes',
     loadComponent: () => import('./recipes/recipes.page').then( m => m.RecipesPage)
-  },
-  {
+  },{
     path: 'escaneo-boleta',
     loadComponent: () => import('./escaneo-boleta/escaneo-boleta.page').then( m => m.EscaneoBoletaPage)
+  },  {
+    path: 'lista-compras',
+    loadComponent: () => import('./lista-deseos/lista-deseos.page').then( m => m.ListaDeseosPage)
+  },  {
+    path: 'lista-compras/:id',
+    loadComponent: () => import('./lista-compras/lista-compras.page').then( m => m.ListaComprasPage)
   },
 
 ];

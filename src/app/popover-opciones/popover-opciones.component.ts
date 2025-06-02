@@ -4,6 +4,8 @@ import { EditarProductoModal } from '../detalle-despensa/editar-producto.modal';
 import { ConsumirProductoModal } from '../detalle-despensa/consumir-producto.modal';
 import { SupabaseService } from 'src/app/core/supabase.service';
 import { IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { removeOutline, createOutline, trashOutline } from 'ionicons/icons';
 @Component({
   selector: 'app-popover-opciones',
   templateUrl: './popover-opciones.component.html',
@@ -20,12 +22,17 @@ import { IonList, IonItem, IonLabel, IonIcon } from '@ionic/angular/standalone';
 export class PopoverOpcionesComponent {
   @Input() producto: any;
   
-
   constructor(
     private modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
     private supabase: SupabaseService
-  ) {}
+  ) {
+    addIcons({
+      removeOutline,
+      createOutline,
+      trashOutline
+    });
+  }
 
   
   async consumir() {

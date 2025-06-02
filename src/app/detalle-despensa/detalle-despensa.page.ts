@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonIcon,
   IonContent,
@@ -12,20 +12,48 @@ import {
   IonLabel,
   IonButton,
   IonList,
-  IonListHeader,
   IonButtons,
   IonBackButton,
   IonCardContent,
-  IonCardTitle,
-  IonCardHeader,
   IonCard,
   IonInput,
   IonPopover,
-  PopoverController
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonChip,
+  IonFab,
+  IonFabButton,
+  PopoverController,
+  AlertController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
+import { CarritoService } from 'src/app/core/carrito.service';
 import { PopoverOpcionesComponent } from '../popover-opciones/popover-opciones.component';
 import { ModalController } from '@ionic/angular';
+import { CompartirDespensaModal } from '../despensa/compartir-despensa.modal';
+import { ConsumirProductoModal } from './consumir-producto.modal';
+import { addIcons } from 'ionicons';
+import { 
+  basketOutline,
+  bagOutline,
+  pricetagOutline,
+  calendarOutline,
+  cubeOutline,
+  ellipsisVertical,
+  createOutline,
+  removeOutline,
+  trashOutline,
+  addOutline,
+  closeOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  saveOutline,   shareOutline,
+  star,
+  eyeOutline,
+  helpOutline,
+  listOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-detalle-despensa',
@@ -44,16 +72,19 @@ import { ModalController } from '@ionic/angular';
     IonLabel,
     IonButton,
     IonList,
-    IonListHeader,
     IonIcon,
     IonButtons,
     IonBackButton,
     IonCardContent,
-    IonCardTitle,
-    IonCardHeader,
     IonCard,
     IonInput,
-    IonPopover
+    IonPopover,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonChip,
+    IonFab,
+    IonFabButton
   ]
 })
 export class DetalleDespensaPage implements OnInit {
@@ -77,17 +108,46 @@ export class DetalleDespensaPage implements OnInit {
 
   productoOpciones: any = null;
 
+  // Variables para manejar permisos
+  rolUsuario: string | null = null;
+  puedeEditar: boolean = false;
+  esPropietario: boolean = false;
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private supabase: SupabaseService, 
     private modalCtrl: ModalController, 
-    private popoverCtrl: PopoverController
-  ) {}
+    private popoverCtrl: PopoverController,
+    private carritoService: CarritoService,
+    private alertController: AlertController
+  ) {    addIcons({
+      shareOutline,
+      basketOutline,
+      bagOutline,
+      pricetagOutline,
+      calendarOutline,
+      cubeOutline,
+      ellipsisVertical,
+      createOutline,
+      removeOutline,
+      trashOutline,
+      addOutline,
+      closeOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      saveOutline,
+      star,
+      eyeOutline,
+      helpOutline,
+      listOutline
+    });
+  }
 
   ngOnInit() {
     this.despensaId = this.route.snapshot.paramMap.get('id')!;
     this.cargarProductos();
     this.cargarNombreDespensa();
+    this.cargarPermisos();
   }
 
   producto = {
@@ -99,6 +159,7 @@ export class DetalleDespensaPage implements OnInit {
   };
 
   productos: any[] = [];
+
   async cargarProductos() {
     try {
       this.productos = await this.supabase.obtenerProductosDeDespensa(this.despensaId);
@@ -109,6 +170,12 @@ export class DetalleDespensaPage implements OnInit {
   }
 
   async onPopoverAccion(accion: 'editar' | 'consumir' | 'eliminar', producto: any) {
+    // Verificar permisos antes de permitir acciones
+    if ((accion === 'editar' || accion === 'eliminar') && !this.puedeEditar) {
+      await this.mostrarError('No tienes permisos para realizar esta acción');
+      return;
+    }
+
     // Cierra el popover si está abierto
     await this.popoverCtrl.dismiss();
 
@@ -129,21 +196,47 @@ export class DetalleDespensaPage implements OnInit {
 
   async abrirFormularioConsumirProducto(producto: any) {
     if (producto.stock <= 0) {
-      alert('No hay stock disponible para consumir.');
+      // Si el stock ya está en 0, ofrecer agregar a lista de compras directamente
+      await this.carritoService.verificarStockAgotado(
+        producto.id,
+        0,
+        this.despensaId,
+        producto.productos.id,
+        producto.productos.nombre
+      );
       return;
     }
 
-    try {
-      await this.supabase.client
-        .from('producto_despensa')
-        .update({ stock: producto.stock - 1 })
-        .eq('id', producto.id);
+    // Usar el nuevo modal de consumir producto
+    const modal = await this.modalCtrl.create({
+      component: ConsumirProductoModal,
+      componentProps: {
+        producto: producto,
+        despensaId: this.despensaId
+      }
+    });
 
-      this.productoOpciones = null;
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      // Si se consumió el producto, recargar la lista
       await this.cargarProductos();
-    } catch (err: any) {
-      console.error('Error al consumir producto:', err.message);
     }
+  }
+
+  /**
+   * Muestra un mensaje de error
+   */
+  private async mostrarError(mensaje: string): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      message: mensaje,
+      buttons: ['Entendido'],
+      cssClass: 'alert-error'
+    });
+
+    await alert.present();
   }
 
   async confirmarEliminarProducto(producto: any) {
@@ -157,8 +250,13 @@ export class DetalleDespensaPage implements OnInit {
       }
     }
   }
-  
+
   abrirFormularioAgregarProducto() {
+    if (!this.puedeEditar) {
+      this.mostrarError('No tienes permisos para agregar productos');
+      return;
+    }
+    
     this.mostrarFormularioAgregar = true;
     this.nuevoProducto = {
       nombre: '',
@@ -233,6 +331,7 @@ export class DetalleDespensaPage implements OnInit {
 
     await popover.present();
   }
+
   async cargarNombreDespensa() {
     try {
       const { data, error } = await this.supabase.client
@@ -245,6 +344,28 @@ export class DetalleDespensaPage implements OnInit {
       this.nombreDespensa = data.nombre;
     } catch (err: any) {
       console.error('Error al obtener nombre de despensa:', err.message);
+    }
+  }
+
+  async cargarPermisos() {
+    try {
+      // Obtener el rol del usuario en esta despensa
+      this.rolUsuario = await this.supabase.obtenerRolEnDespensa(this.despensaId);
+      this.esPropietario = await this.supabase.esPropietarioDespensa(this.despensaId);
+      
+      // Determinar permisos según el rol
+      this.puedeEditar = this.rolUsuario === 'propietario' || this.rolUsuario === 'editor';
+      
+      console.log('Permisos cargados:', {
+        rol: this.rolUsuario,
+        puedeEditar: this.puedeEditar,
+        esPropietario: this.esPropietario
+      });
+    } catch (err: any) {
+      console.error('Error al cargar permisos:', err.message);
+      // Por defecto, asumir que no puede editar si hay error
+      this.puedeEditar = false;
+      this.esPropietario = false;
     }
   }
 
@@ -262,5 +383,90 @@ export class DetalleDespensaPage implements OnInit {
     return vencimiento >= hoy && vencimiento <= limite;
   }
 
+  // Variables de estado para los formularios
+  success = false;
+  
+  // Métodos auxiliares para indicadores visuales de roles
+  getRoleColor(): string {
+    switch (this.rolUsuario) {
+      case 'propietario':
+        return 'success';
+      case 'editor':
+        return 'primary';
+      case 'viewer':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
 
+  getRoleLabel(): string {
+    switch (this.rolUsuario) {
+      case 'propietario':
+        return 'Propietario';
+      case 'editor':
+        return 'Editor';
+      case 'viewer':
+        return 'Visor';
+      default:
+        return 'Sin permisos';
+    }
+  }
+
+  getRoleIcon(): string {
+    switch (this.rolUsuario) {
+      case 'propietario':
+        return 'star';
+      case 'editor':
+        return 'create-outline';
+      case 'viewer':
+        return 'eye-outline';
+      default:
+        return 'help-outline';
+    }
+  }
+  
+  // Método para manejar el clic en el overlay
+  onOverlayClick(event: Event) {
+    this.mostrarFormularioAgregar = false;
+    this.mostrarFormularioEditar = false;
+  }
+
+  async abrirModalCompartir() {
+    const modal = await this.modalCtrl.create({
+      component: CompartirDespensaModal,
+      componentProps: {
+        despensaId: this.despensaId,
+        nombreDespensa: this.nombreDespensa
+      }
+    });
+
+    await modal.present();
+  }
+
+  // Métodos para controlar cantidad en formulario de agregar producto
+  incrementarStock() {
+    this.nuevoProducto.stock++;
+  }
+
+  decrementarStock() {
+    if (this.nuevoProducto.stock > 1) {
+      this.nuevoProducto.stock--;
+    }
+  }
+
+  // Métodos para controlar cantidad en formulario de editar producto
+  incrementarStockEdit() {
+    this.productoEditar.stock++;
+  }
+  decrementarStockEdit() {
+    if (this.productoEditar.stock > 1) {
+      this.productoEditar.stock--;
+    }
+  }
+
+  // Navegar a la lista de compras
+  irAListaCompras() {
+    this.router.navigate(['/lista-compras', this.despensaId]);
+  }
 }
