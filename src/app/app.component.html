@@ -2,10 +2,22 @@
   <ion-split-pane contentId="main-content">
     <ion-menu contentId="main-content" type="overlay">
       <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header>{{ nombreUsuario || 'Usuario' }}</ion-list-header>
-          <ion-note>{{ correoUsuario || '' }}</ion-note>
+        <!-- Hero Section -->
+        <div class="sidebar-hero-section">
+          <div class="sidebar-hero-content">
+            <div class="app-logo">
+              <ion-icon name="leaf-outline" class="logo-icon"></ion-icon>
+            </div>
+            <h1 class="hero-title">DespensaGO</h1>
+            <div class="user-info">
+              <p class="user-name">{{ nombreUsuario || 'Usuario' }}</p>
+              <p class="user-email">{{ correoUsuario || '' }}</p>
+            </div>
+          </div>
+        </div>
 
+        <!-- Navigation Menu -->
+        <div class="sidebar-menu">
           @for (p of appPages; track p; let i = $index) {
             <ion-menu-toggle auto-hide="false">
               <ion-item
@@ -15,6 +27,7 @@
                 detail="false"
                 routerLinkActive="selected"
                 (click)="p.action ? p.action() : null"
+                class="sidebar-item"
               >
                 <ion-icon
                   slot="start"
@@ -25,18 +38,7 @@
               </ion-item>
             </ion-menu-toggle>
           }
-        </ion-list>
-
-        <ion-list id="labels-list">
-          <ion-list-header>Labels</ion-list-header>
-
-          @for (label of labels; track label) {
-            <ion-item lines="none">
-              <ion-icon aria-hidden="true" slot="start" ios="bookmark-outline" md="bookmark-sharp"></ion-icon>
-              <ion-label>{{ label }}</ion-label>
-            </ion-item>
-          }
-        </ion-list>
+        </div>
       </ion-content>
     </ion-menu>
     <ion-router-outlet id="main-content"></ion-router-outlet>

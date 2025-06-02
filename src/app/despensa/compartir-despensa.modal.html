@@ -1,0 +1,254 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Compartir {{ nombreDespensa }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="dismiss()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="compartir-content">
+  <!-- Pull-to-refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content
+      pullingIcon="refresh-outline"
+      pullingText="Desliza para actualizar"
+      refreshingSpinner="circles"
+      refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Formulario de invitación -->
+  <div class="invite-section" *ngIf="esPropietario">
+    <ion-card>
+      <ion-card-content>
+        <div class="section-header">
+          <ion-icon name="person-add-outline" class="section-icon"></ion-icon>
+          <h2>Invitar colaborador</h2>
+        </div>
+        
+        <ion-item lines="none" class="email-input">
+          <ion-label position="floating">Correo electrónico</ion-label>          <ion-input 
+            [(ngModel)]="emailInvitacion" 
+            type="email" 
+            placeholder="ejemplo@correo.com"
+            [disabled]="loading"
+            (ionInput)="validarEmail()"
+            [class.valid-email]="emailValido"
+            [class.invalid-email]="!emailValido && emailInvitacion.length > 0">
+          </ion-input>
+          <ion-note *ngIf="!emailValido && emailInvitacion.length > 0" color="danger">
+            <small>Por favor, ingresa un email válido</small>
+          </ion-note>
+        </ion-item>
+
+        <ion-item lines="none" class="role-select">
+          <ion-label>Rol</ion-label>
+          <ion-select 
+            [(ngModel)]="rolSeleccionado" 
+            placeholder="Seleccionar rol"
+            [disabled]="loading">
+            <ion-select-option value="editor">Editor (puede agregar, editar y eliminar)</ion-select-option>
+            <ion-select-option value="viewer">Visor (solo puede ver)</ion-select-option>
+          </ion-select>
+        </ion-item>
+        
+        <div class="action-buttons">
+          <ion-button 
+            fill="outline"
+            (click)="verificarUsuario()"
+            [disabled]="loading || !emailInvitacion.trim()"
+            class="verify-button">
+            <ion-icon name="search-outline" slot="start"></ion-icon>
+            Verificar
+          </ion-button>
+          
+          <ion-button 
+            expand="block" 
+            (click)="invitarColaborador()"
+            [disabled]="loading || !emailInvitacion.trim()"
+            class="invite-button">
+            <ion-icon name="share-outline" slot="start"></ion-icon>
+            {{ loading ? 'Invitando...' : 'Enviar invitación' }}
+          </ion-button>
+        </div>
+
+        <!-- Información sobre políticas de seguridad -->
+        <div class="security-info">
+          <ion-chip fill="outline">
+            <ion-icon name="shield-outline"></ion-icon>
+            <ion-label>
+              💡 Solo usuarios registrados en DespensaGO pueden ser invitados
+            </ion-label>
+          </ion-chip>
+        </div>
+
+        <!-- Mensaje de éxito -->
+        <div class="success-message" *ngIf="success">
+          <ion-chip>
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <ion-label>{{ success }}</ion-label>
+          </ion-chip>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div class="error-message" *ngIf="error">
+          <ion-chip>
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <ion-label>{{ error }}</ion-label>
+          </ion-chip>
+          
+          <!-- Botón de diagnóstico para problemas -->
+          <div class="diagnostic-section">
+            <ion-button 
+              fill="clear" 
+              size="small"
+              (click)="ejecutarDiagnostico()"
+              class="diagnostic-button">
+              <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+              ¿Problemas? Ejecutar diagnóstico
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+  <!-- Lista de colaboradores -->
+  <div class="collaborators-section">
+    <div class="section-header">
+      <ion-icon name="people-outline" class="section-icon"></ion-icon>
+      <h2>Colaboradores ({{ colaboradores.length }})</h2>
+      <ion-spinner *ngIf="loading" name="dots" class="loading-spinner"></ion-spinner>
+    </div>    <!-- Indicador mientras se cargan los datos -->
+    <div *ngIf="loading && colaboradores.length === 0" class="loading-state">
+      <ion-card>
+        <ion-card-content class="loading-container">
+          <ion-spinner name="circles" color="primary"></ion-spinner>
+          <p>Cargando colaboradores...</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+    
+    <!-- Lista de colaboradores cuando hay datos -->
+    <div class="collaborators-list" *ngIf="colaboradores.length > 0; else noCollaborators">
+      <ion-card class="collaborator-list-card">
+        <ion-card-content>
+          <ion-list class="animated-list">
+            <ion-item *ngFor="let colaborador of colaboradores; let i = index" lines="full" 
+                     [class.fade-in-item]="true" 
+                     [style.animation-delay]="i * 0.05 + 's'">
+              <div class="collaborator-item">
+                <div class="user-info">
+                  <ion-avatar class="user-avatar">
+                    <ion-icon name="person-outline"></ion-icon>
+                  </ion-avatar>
+                  <div class="details">
+                    <h3>{{ colaborador.usuarios?.nombre || 'Usuario no disponible' }}</h3>
+                    <p>
+                      <ion-icon name="mail-outline" size="small"></ion-icon>
+                      {{ colaborador.usuarios?.email || 'Email no disponible' }}
+                    </p>
+                  </div>
+                  <ion-chip 
+                    class="role-chip"
+                    [class.role-propietario]="colaborador.rol === 'propietario'"
+                    [class.role-editor]="colaborador.rol === 'editor'"
+                    [class.role-viewer]="colaborador.rol === 'viewer'">
+                    <ion-icon [name]="getRoleIcon(colaborador.rol)"></ion-icon>
+                    <ion-label>{{ getRoleLabel(colaborador.rol) }}</ion-label>
+                  </ion-chip>
+                </div>
+                
+                <div class="actions" *ngIf="esPropietario && colaborador.rol !== 'propietario'">
+                  <ion-button 
+                    fill="clear"  
+                    class="edit-btn"
+                    (click)="cambiarRolColaborador(colaborador)">
+                    <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button 
+                    fill="clear" 
+                    class="remove-btn"
+                    (click)="confirmarEliminarColaborador(colaborador)">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    </div>    <ng-template #noCollaborators>
+      <div class="empty-state">
+        <ion-icon name="people-outline"></ion-icon>
+        <h3>Sin colaboradores</h3>
+        <p *ngIf="esPropietario">Invita a otros usuarios para compartir esta despensa</p>
+        <p *ngIf="!esPropietario">Esta despensa no tiene otros colaboradores</p>
+      </div>
+    </ng-template>
+  </div>
+  <!-- Información sobre permisos -->
+  <div class="collaborators-section">
+    <div class="section-header">
+      <ion-icon name="shield-outline" class="section-icon"></ion-icon>
+      <h2>Permisos de colaboración</h2>
+    </div>
+    
+    <ion-card class="permissions-card">
+      <ion-card-content>
+        <div class="permissions-grid">
+          <div class="permission-item role-propietario">
+            <div class="permission-icon">
+              <ion-icon name="shield-outline"></ion-icon>
+            </div>
+            <div class="permission-content">
+              <h3>Propietario</h3>
+              <ul>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Control total de la despensa</li>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Gestionar colaboradores</li>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Eliminar la despensa</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="permission-item role-editor">
+            <div class="permission-icon">
+              <ion-icon name="create-outline"></ion-icon>
+            </div>
+            <div class="permission-content">
+              <h3>Editor</h3>
+              <ul>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Agregar productos</li>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Editar información</li>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Eliminar productos</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="permission-item role-viewer">
+            <div class="permission-icon">
+              <ion-icon name="eye-outline"></ion-icon>
+            </div>
+            <div class="permission-content">
+              <h3>Visor</h3>
+              <ul>
+                <li><ion-icon name="checkmark-outline"></ion-icon> Ver productos</li>
+                <li><ion-icon name="close-outline"></ion-icon> No puede modificar</li>
+                <li><ion-icon name="information-circle-outline"></ion-icon> Acceso de solo lectura</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <ion-note *ngIf="!esPropietario" class="abandon-note">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          Si deseas dejar de colaborar en esta despensa, puedes abandonarla desde la pantalla principal.
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+
