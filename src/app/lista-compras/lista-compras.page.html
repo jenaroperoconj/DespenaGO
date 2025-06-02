@@ -1,0 +1,206 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/despensa"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <div class="title-container">
+        <ion-icon name="cart" class="title-icon"></ion-icon>
+        <span>{{ nombreDespensa }}</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="navegarADespensa()" fill="clear">
+        <ion-icon name="list-outline"></ion-icon>
+      </ion-button>
+      <ion-button *ngIf="puedeEditar" (click)="abrirModalAgregarProducto()" fill="clear">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Lista de Compras</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Refresher -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Error Message -->
+  <ion-card *ngIf="error" color="danger" class="error-card">
+    <ion-card-content>
+      <div class="error-content">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ error }}</span>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando lista de compras...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && listaCompras.length === 0" class="empty-state">
+    <ion-icon name="cart" class="empty-icon"></ion-icon>
+    <h2>Lista de compras vacía</h2>
+    <p>No hay productos en la lista de compras.</p>
+    <ion-button *ngIf="puedeEditar" (click)="abrirModalAgregarProducto()" fill="solid" color="primary">
+      <ion-icon name="add" slot="start"></ion-icon>
+      Agregar producto
+    </ion-button>
+  </div>
+
+  <!-- Lista de Compras -->
+  <div *ngIf="!loading && listaCompras.length > 0" class="content-container">    <!-- Header Stats -->
+    <div class="stats-header">
+      <ion-card class="base-card">
+        <ion-card-content>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="circular-icon">
+                <ion-icon name="cart"></ion-icon>
+              </div>
+              <div>
+                <h3>{{ listaCompras.length }}</h3>
+                <p>Productos</p>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="circular-icon" style="--ion-color-primary: var(--ion-color-success);">
+                <ion-icon name="bag-check-outline"></ion-icon>
+              </div>
+              <div>
+                <h3>{{ getTotalCantidad() }}</h3>
+                <p>Unidades</p>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div><!-- Items de la Lista -->
+    <ion-list class="shopping-list">
+      <ion-item-sliding *ngFor="let item of listaCompras; trackBy: trackByFn" class="base-card">
+        <ion-item button class="shopping-item">
+          <div class="card-main-content">            <!-- Información del Producto -->
+            <div class="item-details">
+              <h3>
+                <ion-icon name="cube-outline" class="product-icon"></ion-icon>
+                {{ item.productos?.nombre }}
+              </h3>
+              <div class="item-info">
+                <div class="product-details">
+                  <ion-chip *ngIf="item.productos?.categoria" class="info-chip category">
+                    <ion-icon name="pricetag-outline"></ion-icon>
+                    {{ item.productos.categoria }}
+                  </ion-chip>
+                  <span *ngIf="item.productos?.origen" class="info-chip role">
+                    <ion-icon name="storefront-outline"></ion-icon>
+                    {{ item.productos.origen }}
+                  </span>
+                </div>
+                <p *ngIf="item.notas" class="product-notes">
+                  <ion-icon name="create-outline"></ion-icon>
+                  <span>{{ item.notas }}</span>
+                </p>
+                <div class="item-metadata">
+                  <span class="added-info">
+                    <ion-icon name="person-outline"></ion-icon>
+                    {{ getUsuarioQueAgrego(item) }}
+                  </span>
+                  <span class="date-info">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    {{ getFechaFormateada(item.fecha_agregado) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Controles de Cantidad -->
+            <div class="quantity-controls">
+              <div class="quantity-display">
+                <ion-button 
+                  *ngIf="puedeEditar"
+                  (click)="decrementarCantidad(item)" 
+                  fill="clear" 
+                  size="small"
+                  [disabled]="loading">
+                  <ion-icon name="remove-outline"></ion-icon>
+                </ion-button>
+                
+                <span class="quantity-number">{{ item.cantidad }}</span>
+                
+                <ion-button 
+                  *ngIf="puedeEditar"
+                  (click)="incrementarCantidad(item)" 
+                  fill="clear" 
+                  size="small"
+                  [disabled]="loading">
+                  <ion-icon name="add-outline"></ion-icon>
+                </ion-button>
+              </div>              <!-- Acciones Principales -->
+              <div class="item-actions">
+                <ion-button 
+                  *ngIf="puedeEditar"
+                  (click)="comprarProducto(item)" 
+                  fill="solid" 
+                  color="success" 
+                  size="small"
+                  class="comprar-btn">
+                  <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                  Comprado
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </ion-item>
+
+        <!-- Sliding Options -->
+        <ion-item-options *ngIf="puedeEditar" side="end">
+          <ion-item-option (click)="editarItem(item)" color="primary">
+            <ion-icon name="create-outline"></ion-icon>
+            Editar
+          </ion-item-option>
+          <ion-item-option (click)="confirmarEliminarItem(item)" color="danger">
+            <ion-icon name="trash-outline"></ion-icon>
+            Eliminar
+          </ion-item-option>
+        </ion-item-options>      </ion-item-sliding>
+    </ion-list>
+
+    <!-- Acciones de Lista -->
+    <div *ngIf="puedeEditar && listaCompras.length > 0" class="list-actions">
+      <ion-button 
+        (click)="confirmarLimpiarLista()" 
+        fill="outline" 
+        color="danger" 
+        expand="block">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
+        Limpiar Lista
+      </ion-button>
+    </div>
+  </div>  <!-- Floating Action Button - Enhanced for Maximum Visibility -->
+  <ion-fab 
+    *ngIf="puedeEditar" 
+    vertical="bottom" 
+    horizontal="end" 
+    slot="fixed" 
+    class="fab-button-visible"
+    [class.fab-visible]="puedeEditar">
+    <ion-fab-button 
+      (click)="abrirModalAgregarProducto()" 
+      color="primary"
+      [attr.aria-label]="'Agregar producto'"
+      class="fab-primary">
+      <ion-icon name="add" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

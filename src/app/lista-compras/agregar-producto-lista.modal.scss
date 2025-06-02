@@ -1,0 +1,43 @@
+// Modal Agregar Producto - Optimizado < 8KB
+ion-modal{--backdrop-opacity:0.5;z-index:10000!important}
+.modal-wrapper{z-index:10001!important}
+
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--ion-color-light)}
+.modal-header h2{margin:0;font-size:1.2rem;font-weight:600;color:var(--ion-color-dark)}
+.modal-header ion-button{--padding-start:8px;--padding-end:8px}
+
+.modal-content{padding:20px;max-height:70vh;overflow-y:auto}
+.tab-buttons{display:flex;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid var(--ion-color-light)}
+.tab-button{flex:1;background:var(--ion-color-light);color:var(--ion-color-medium);border:none;padding:12px;cursor:pointer;transition:all 0.2s ease}
+.tab-button.active{background:var(--ion-color-primary);color:white}
+.tab-button:hover{opacity:0.8}
+
+.search-section,.form-section{margin-bottom:20px}
+.search-section ion-searchbar{--background:var(--ion-color-light);--border-radius:8px;margin-bottom:16px}
+.search-results{max-height:300px;overflow-y:auto;border:1px solid var(--ion-color-light);border-radius:8px}
+.search-result-item{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--ion-color-light);cursor:pointer;transition:background-color 0.2s ease}
+.search-result-item:hover{background:var(--ion-color-light)}
+.search-result-item:last-child{border-bottom:none}
+.search-result-item .product-info{flex:1}
+.search-result-item .product-name{font-weight:600;color:var(--ion-color-dark);margin-bottom:4px}
+.search-result-item .product-details{font-size:0.9rem;color:var(--ion-color-medium)}
+.search-result-item ion-button{--padding-start:12px;--padding-end:12px;margin-left:10px}
+.no-results{text-align:center;padding:20px;color:var(--ion-color-medium);font-style:italic}
+
+.form-group{margin-bottom:16px}
+.form-group ion-label{font-weight:600;color:var(--ion-color-dark);margin-bottom:8px;display:block}
+.form-group ion-input,ion-textarea,ion-select{--background:var(--ion-color-light);--border-radius:8px;--padding-start:12px;--padding-end:12px}
+.form-group ion-textarea{--padding-top:12px;--padding-bottom:12px;min-height:80px}
+
+.quantity-selector{display:flex;align-items:center;justify-content:center;gap:16px;background:var(--ion-color-light);border-radius:8px;padding:12px}
+.quantity-selector ion-button{--border-radius:50%;width:40px;height:40px}
+.quantity-number{font-size:1.2rem;font-weight:600;min-width:40px;text-align:center}
+
+.modal-actions{display:flex;gap:12px;padding-top:20px;border-top:1px solid var(--ion-color-light)}
+.modal-actions ion-button{flex:1;--border-radius:8px;height:44px;font-weight:600}
+
+.hidden{display:none!important}
+
+ion-icon{font-family:'Ionicons'!important;display:inline-block!important;opacity:1!important;font-style:normal!important;font-weight:normal!important}
+ion-button ion-icon{color:inherit!important;opacity:1!important;display:inline-block!important}
+ion-header ion-icon,ion-toolbar ion-icon{opacity:1!important;display:inline-block!important}

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   IonIcon,
   IonContent,
@@ -48,20 +48,18 @@ import {
   closeOutline,
   checkmarkCircleOutline,
   alertCircleOutline,
-  saveOutline,   shareOutline,
+  saveOutline, 
+  shareOutline,
   star,
   eyeOutline,
-  helpOutline,
-  listOutline
-} from 'ionicons/icons';
+  helpOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-detalle-despensa',
   templateUrl: './detalle-despensa.page.html',
   styleUrls: ['./detalle-despensa.page.scss'],
   standalone: true,
-  providers: [ModalController],
-  imports: [
+  providers: [ModalController],  imports: [
     CommonModule,
     FormsModule,
     IonContent,
@@ -111,38 +109,16 @@ export class DetalleDespensaPage implements OnInit {
   // Variables para manejar permisos
   rolUsuario: string | null = null;
   puedeEditar: boolean = false;
-  esPropietario: boolean = false;
-  constructor(
+  esPropietario: boolean = false;  constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private supabase: SupabaseService, 
     private modalCtrl: ModalController, 
     private popoverCtrl: PopoverController,
     private carritoService: CarritoService,
     private alertController: AlertController
-  ) {    addIcons({
-      shareOutline,
-      basketOutline,
-      bagOutline,
-      pricetagOutline,
-      calendarOutline,
-      cubeOutline,
-      ellipsisVertical,
-      createOutline,
-      removeOutline,
-      trashOutline,
-      addOutline,
-      closeOutline,
-      checkmarkCircleOutline,
-      alertCircleOutline,
-      saveOutline,
-      star,
-      eyeOutline,
-      helpOutline,
-      listOutline
-    });
+  ) {
+    addIcons({shareOutline,basketOutline,bagOutline,pricetagOutline,calendarOutline,cubeOutline,ellipsisVertical,createOutline,removeOutline,trashOutline,addOutline,closeOutline,checkmarkCircleOutline,alertCircleOutline,saveOutline,star,eyeOutline,helpOutline});
   }
-
   ngOnInit() {
     this.despensaId = this.route.snapshot.paramMap.get('id')!;
     this.cargarProductos();
@@ -159,7 +135,6 @@ export class DetalleDespensaPage implements OnInit {
   };
 
   productos: any[] = [];
-
   async cargarProductos() {
     try {
       this.productos = await this.supabase.obtenerProductosDeDespensa(this.despensaId);
@@ -168,7 +143,6 @@ export class DetalleDespensaPage implements OnInit {
       this.error = err.message;
     }
   }
-
   async onPopoverAccion(accion: 'editar' | 'consumir' | 'eliminar', producto: any) {
     // Verificar permisos antes de permitir acciones
     if ((accion === 'editar' || accion === 'eliminar') && !this.puedeEditar) {
@@ -192,11 +166,9 @@ export class DetalleDespensaPage implements OnInit {
         this.confirmarEliminarProducto(producto);
         break;
     }
-  }
-
-  async abrirFormularioConsumirProducto(producto: any) {
+  }  async abrirFormularioConsumirProducto(producto: any) {
     if (producto.stock <= 0) {
-      // Si el stock ya está en 0, ofrecer agregar a lista de compras directamente
+      // Si el stock ya está en 0, ofrecer agregar a lista de deseos directamente
       await this.carritoService.verificarStockAgotado(
         producto.id,
         0,
@@ -222,6 +194,46 @@ export class DetalleDespensaPage implements OnInit {
     if (data) {
       // Si se consumió el producto, recargar la lista
       await this.cargarProductos();
+    }
+  }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * Consume una cantidad específica del producto y verifica si se agotó
+   */
+  private async consumirProducto(producto: any, cantidad: number): Promise<void> {
+    try {
+      const nuevoStock = producto.stock - cantidad;
+      
+      if (nuevoStock <= 0) {
+        // Si el stock llega a 0 o menos, eliminar el producto de la despensa
+        await this.supabase.eliminarProductoDeDespensa(producto.id);
+        
+        // Verificar stock agotado y ofrecer agregar a lista de deseos
+        await this.carritoService.verificarStockAgotado(
+          producto.id,
+          0,
+          this.despensaId,
+          producto.productos.id,
+          producto.productos.nombre
+        );
+      } else {
+        // Si queda stock, actualizar la cantidad
+        await this.supabase.client
+          .from('producto_despensa')
+          .update({ stock: nuevoStock })
+          .eq('id', producto.id);
+      }
+
+      this.productoOpciones = null;
+      await this.cargarProductos();
+    } catch (err: any) {
+      console.error('Error al consumir producto:', err.message);
+      await this.mostrarError('Error al consumir producto: ' + err.message);
     }
   }
 
@@ -250,8 +262,7 @@ export class DetalleDespensaPage implements OnInit {
       }
     }
   }
-
-  abrirFormularioAgregarProducto() {
+    abrirFormularioAgregarProducto() {
     if (!this.puedeEditar) {
       this.mostrarError('No tienes permisos para agregar productos');
       return;
@@ -330,9 +341,7 @@ export class DetalleDespensaPage implements OnInit {
     });
 
     await popover.present();
-  }
-
-  async cargarNombreDespensa() {
+  }  async cargarNombreDespensa() {
     try {
       const { data, error } = await this.supabase.client
         .from('despensas')
@@ -444,29 +453,4 @@ export class DetalleDespensaPage implements OnInit {
     await modal.present();
   }
 
-  // Métodos para controlar cantidad en formulario de agregar producto
-  incrementarStock() {
-    this.nuevoProducto.stock++;
-  }
-
-  decrementarStock() {
-    if (this.nuevoProducto.stock > 1) {
-      this.nuevoProducto.stock--;
-    }
-  }
-
-  // Métodos para controlar cantidad en formulario de editar producto
-  incrementarStockEdit() {
-    this.productoEditar.stock++;
-  }
-  decrementarStockEdit() {
-    if (this.productoEditar.stock > 1) {
-      this.productoEditar.stock--;
-    }
-  }
-
-  // Navegar a la lista de compras
-  irAListaCompras() {
-    this.router.navigate(['/lista-compras', this.despensaId]);
-  }
 }

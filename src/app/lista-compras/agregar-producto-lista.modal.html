@@ -1,0 +1,190 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Agregar a Lista</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()" fill="clear">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Error Message -->
+  <ion-card *ngIf="error" color="danger" class="error-card">
+    <ion-card-content>
+      <div class="error-content">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ error }}</span>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Segment para elegir entre buscar o crear -->
+  <ion-segment [(ngModel)]="selectedTab" (ionChange)="segmentChanged($event)" class="tab-segment">
+    <ion-segment-button value="buscar">
+      <ion-label>Buscar Producto</ion-label>
+      <ion-icon name="search-outline"></ion-icon>
+    </ion-segment-button>
+    <ion-segment-button value="nuevo">
+      <ion-label>Crear Nuevo</ion-label>
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-segment-button>
+  </ion-segment>
+
+  <div class="content-container">
+    <!-- Tab: Buscar Producto Existente -->
+    <div *ngIf="selectedTab === 'buscar'" class="search-tab">
+      <!-- Buscador -->
+      <ion-searchbar
+        [(ngModel)]="busqueda"
+        (ionInput)="buscarProductos()"
+        placeholder="Buscar productos..."
+        debounce="300"
+        show-clear-button="focus">
+      </ion-searchbar>
+
+      <!-- Loading búsqueda -->
+      <div *ngIf="buscando" class="search-loading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Buscando productos...</p>
+      </div>
+
+      <!-- Resultados de búsqueda -->
+      <ion-list *ngIf="productosEncontrados.length > 0" class="search-results">
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>Productos encontrados</ion-label>
+          </ion-item-divider>
+          <ion-item 
+            *ngFor="let producto of productosEncontrados" 
+            button
+            (click)="agregarProductoExistente(producto)"
+            [disabled]="guardando">
+            <div class="product-item">
+              <div class="product-info">
+                <h3>{{ producto.nombre }}</h3>
+                <div class="product-details">
+                  <ion-chip *ngIf="producto.categoria" outline color="medium">
+                    {{ producto.categoria }}
+                  </ion-chip>
+                  <span *ngIf="producto.origen" class="product-origin">
+                    {{ producto.origen }}
+                  </span>
+                </div>
+              </div>
+              <ion-icon name="add-outline" color="primary"></ion-icon>
+            </div>
+          </ion-item>
+        </ion-item-group>
+      </ion-list>
+
+      <!-- Estado vacío de búsqueda -->
+      <div *ngIf="busqueda && !buscando && productosEncontrados.length === 0" class="empty-search">
+        <ion-icon name="search-outline"></ion-icon>
+        <p>No se encontraron productos</p>
+        <ion-button fill="outline" (click)="selectedTab = 'nuevo'">
+          Crear nuevo producto
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Tab: Crear Nuevo Producto -->
+    <div *ngIf="selectedTab === 'nuevo'" class="new-product-tab">
+      <ion-list class="form-list">
+        <ion-item>
+          <ion-input
+            [(ngModel)]="nuevoProducto.nombre"
+            placeholder="Nombre del producto *"
+            type="text"
+            fill="outline"
+            label="Nombre del producto"
+            label-placement="floating"
+            required>
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input
+            [(ngModel)]="nuevoProducto.categoria"
+            placeholder="Categoría (opcional)"
+            type="text"
+            fill="outline"
+            label="Categoría"
+            label-placement="floating">
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-input
+            [(ngModel)]="nuevoProducto.origen"
+            placeholder="Origen/Marca (opcional)"
+            type="text"
+            fill="outline"
+            label="Origen/Marca"
+            label-placement="floating">
+          </ion-input>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Configuración común (cantidad y notas) -->
+    <div class="common-settings">
+      <ion-card class="settings-card">
+        <ion-card-header>
+          <ion-card-title>Configuración</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <!-- Cantidad -->
+          <div class="quantity-section">
+            <ion-label>Cantidad</ion-label>
+            <div class="quantity-controls">
+              <ion-button 
+                (click)="decrementarCantidad()" 
+                fill="outline" 
+                size="small"
+                [disabled]="cantidad <= 1">
+                <ion-icon name="remove-outline"></ion-icon>
+              </ion-button>
+              <span class="quantity-display">{{ cantidad }}</span>
+              <ion-button 
+                (click)="incrementarCantidad()" 
+                fill="outline" 
+                size="small">
+                <ion-icon name="add-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Notas -->
+          <ion-item class="notes-item">
+            <ion-textarea
+              [(ngModel)]="notas"
+              placeholder="Notas adicionales (opcional)"
+              fill="outline"
+              label="Notas"
+              label-placement="floating"
+              rows="3">
+            </ion-textarea>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Botón de acción -->
+    <div class="action-buttons">
+      <ion-button 
+        *ngIf="selectedTab === 'nuevo'"
+        (click)="crearYAgregarProducto()"
+        expand="block"
+        fill="solid"
+        color="primary"
+        [disabled]="guardando || !nuevoProducto.nombre.trim()">
+        <ion-icon name="cart-outline" slot="start"></ion-icon>
+        <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+        <span *ngIf="!guardando">Agregar a Lista</span>
+        <span *ngIf="guardando">Agregando...</span>
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

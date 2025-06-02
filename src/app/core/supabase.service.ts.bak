@@ -292,7 +292,7 @@ export class SupabaseService {
   }
 
   /**
-   * Actualiza el stock de un producto in producto_despensa
+   * Actualiza el stock de un producto en producto_despensa
    */
   async actualizarStockProducto(productoDespensaId: string, nuevoStock: number) {
     const { error } = await this.supabase
@@ -359,11 +359,11 @@ export class SupabaseService {
             usuario_id
           )
         )
-      `)      .eq('despensas.accesos_despensa.usuario_id', userId)
+      `)
+      .eq('despensas.accesos_despensa.usuario_id', userId)
       .not('fecha_vencimiento', 'is', null)
       .lte('fecha_vencimiento', fechaLimite.toISOString().split('T')[0])
-      // Eliminada la condición que solo incluía productos a partir de hoy
-      // .gte('fecha_vencimiento', hoy.toISOString().split('T')[0])
+      .gte('fecha_vencimiento', hoy.toISOString().split('T')[0])
       .gt('stock', 0)
       .order('fecha_vencimiento', { ascending: true })
       .limit(10);
@@ -745,22 +745,12 @@ export class SupabaseService {
   }
   /**
    * Obtiene la lista de colaboradores de una despensa
-   */  async obtenerColaboradoresDespensa(despensaId: string): Promise<any[]> {
+   */
+  async obtenerColaboradoresDespensa(despensaId: string): Promise<any[]> {
     try {
       console.log('🔍 Obteniendo colaboradores para despensa:', despensaId);
       
-      // Intentar con RPC primero (más confiable, bypasses RLS)
-      try {
-        const colaboradoresRPC = await this.obtenerColaboradoresRPC(despensaId);
-        if (colaboradoresRPC && colaboradoresRPC.length > 0) {
-          console.log('✅ Colaboradores obtenidos exitosamente vía RPC');
-          return colaboradoresRPC;
-        }
-      } catch (rpcError) {
-        console.log('⚠️ Error con RPC, intentando con método directo:', rpcError);
-      }
-      
-      // Intentar con join directo si RPC falla
+      // Intentar con join directo primero
       const { data, error } = await this.supabase
         .from('accesos_despensa')
         .select(`
@@ -781,59 +771,15 @@ export class SupabaseService {
         // Si hay error RLS, usar fallback sin join
         console.log('🔄 Intentando obtener colaboradores sin join...');
         return await this.obtenerColaboradoresSinJoin(despensaId);
-      }      // Proceso de normalización para asegurar que siempre tenemos datos consistentes      // Usar type assertion para evitar problemas de tipado
-      const colaboradoresNormalizados = (data || []).map(col => {
-        // Siempre crear un objeto usuarios normalizado independientemente de lo que venga
-        const usuariosNormalizados = {
-          id: col.usuario_id || 'id-desconocido',
-          nombre: 'Usuario no disponible',
-          email: 'Email no disponible'
-        };
-        
-        // Intentar extraer datos si están disponibles
-        try {
-          // Confirmar que usuarios existe antes de intentar acceder
-          const usuarios = col.usuarios as any; // Type assertion para evitar errores TS
-          
-          if (usuarios) {
-            if (Array.isArray(usuarios) && usuarios.length > 0) {
-              // Si es un array, tomar el primer elemento
-              const primerUsuario = usuarios[0];
-              if (primerUsuario) {
-                if (primerUsuario.nombre) {
-                  usuariosNormalizados.nombre = primerUsuario.nombre;
-                }
-                if (primerUsuario.email) {
-                  usuariosNormalizados.email = primerUsuario.email;
-                }
-              }
-            } else if (typeof usuarios === 'object') {
-              // Si es un objeto directo
-              if (usuarios.nombre) {
-                usuariosNormalizados.nombre = usuarios.nombre;
-              }
-              if (usuarios.email) {
-                usuariosNormalizados.email = usuarios.email;
-              }
-            }
-          }
-        } catch (error) {
-          console.warn('Error normalizando datos de usuario:', error);
-        }
-        
-        return {
-          ...col,
-          usuarios: usuariosNormalizados
-        };
-      });
+      }
 
-      console.log('✅ Colaboradores obtenidos exitosamente:', colaboradoresNormalizados);
-      return colaboradoresNormalizados;
+      console.log('✅ Colaboradores obtenidos exitosamente:', data);
+      return data || [];
       
     } catch (error: any) {
       console.error('💥 Error obteniendo colaboradores:', error);
       
-      // Fallback sin join como último recurso
+      // Fallback sin join
       return await this.obtenerColaboradoresSinJoin(despensaId);
     }
   }
@@ -914,64 +860,6 @@ export class SupabaseService {
       
       // En caso de error total, retornar array vacío
       console.log('⚠️ Retornando lista vacía de colaboradores');
-      return [];
-    }
-  }
-
-  /**
-   * Obtiene los colaboradores mediante la función RPC (bypassing RLS)
-   */  private async obtenerColaboradoresRPC(despensaId: string): Promise<any[]> {
-    try {
-      console.log('🔄 Usando RPC para obtener colaboradores...');
-      
-      const { data: rpcResult, error: rpcError } = await this.supabase
-        .rpc('obtener_colaboradores_despensa', { p_despensa_id: despensaId });
-        
-      if (rpcError) {
-        console.error('❌ Error obteniendo colaboradores via RPC:', rpcError);
-        throw rpcError;
-      }
-      
-      if (!rpcResult || !Array.isArray(rpcResult) || rpcResult.length === 0) {
-        console.log('⚠️ No se encontraron colaboradores via RPC');
-        return [];
-      }
-      
-      console.log('✅ Colaboradores obtenidos vía RPC:', rpcResult);
-      
-      // Diagnóstico de datos recibidos
-      if (rpcResult.length > 0) {
-        console.log('🔍 Estructura de datos RPC:', Object.keys(rpcResult[0]).join(', '));
-        console.log('🔍 Muestra de un elemento:', JSON.stringify(rpcResult[0], null, 2));
-      }
-      
-      // Transformar al formato esperado por el frontend con mejor manejo de valores nulos
-      return rpcResult.map(col => {
-        // Verificar explícitamente el nombre y email
-        if (!col.usuario_nombre || col.usuario_nombre.trim() === '') {
-          console.warn('⚠️ Nombre de usuario no disponible para ID:', col.usuario_id);
-        }
-        
-        if (!col.usuario_email || col.usuario_email.trim() === '') {
-          console.warn('⚠️ Email de usuario no disponible para ID:', col.usuario_id);
-        }
-        
-        return {
-          rol: col.rol,
-          usuario_id: col.usuario_id,
-          usuarios: {
-            id: col.usuario_id,
-            nombre: col.usuario_nombre && col.usuario_nombre.trim() !== '' 
-              ? col.usuario_nombre 
-              : 'Usuario no disponible',
-            email: col.usuario_email && col.usuario_email.trim() !== '' 
-              ? col.usuario_email 
-              : 'Email no disponible'
-          }
-        };
-      });
-    } catch (error: any) {
-      console.error('💥 Error in método RPC:', error);
       return [];
     }
   }
@@ -1347,6 +1235,7 @@ export class SupabaseService {
       throw error;
     }
   }
+
   /**
    * Obtiene las invitaciones pendientes para el usuario actual
    */  async obtenerInvitacionesPendientes(): Promise<any[]> {
@@ -1394,42 +1283,9 @@ export class SupabaseService {
               normalizedInv.despensa_nombre = normalizedInv.nombre_despensa;
             }
             
-            // Verificar y asignar propietario_nombre
-            if (!normalizedInv.propietario_nombre) {
-              if (normalizedInv.nombre_propietario) {
-                normalizedInv.propietario_nombre = normalizedInv.nombre_propietario;
-                console.log('✅ Usando nombre_propietario de RPC:', normalizedInv.propietario_nombre);
-              } else if (normalizedInv.usuarios?.nombre) {
-                normalizedInv.propietario_nombre = normalizedInv.usuarios.nombre;
-                console.log('✅ Usando usuarios.nombre:', normalizedInv.propietario_nombre);
-              } else if (normalizedInv.propietario_email) {
-                // Si solo tenemos el email como fallback
-                normalizedInv.propietario_nombre = normalizedInv.propietario_email.split('@')[0]; 
-                console.log('⚠️ Generando nombre desde email:', normalizedInv.propietario_nombre);
-              } else {
-                normalizedInv.propietario_nombre = 'Usuario no disponible';
-                console.warn('❌ No se pudo determinar propietario_nombre');
-              }
+            if (!normalizedInv.propietario_nombre && normalizedInv.nombre_propietario) {
+              normalizedInv.propietario_nombre = normalizedInv.nombre_propietario;
             }
-
-            // Asegurar que siempre tengamos el email del propietario
-            if (!normalizedInv.propietario_email) {
-              if (normalizedInv.usuarios?.email) {
-                normalizedInv.propietario_email = normalizedInv.usuarios.email;
-                console.log('✅ Usando usuarios.email:', normalizedInv.propietario_email);
-              } else {
-                normalizedInv.propietario_email = 'Email no disponible';
-                console.warn('❌ No se encontró propietario_email');
-              }
-            }
-            
-            // Log para depuración
-            console.log('📋 Invitación normalizada:', {
-              id: normalizedInv.id,
-              despensa: normalizedInv.despensa_nombre,
-              propietario: normalizedInv.propietario_nombre,
-              email: normalizedInv.propietario_email,
-            });
             
             return normalizedInv;
           });
@@ -1582,7 +1438,12 @@ export class SupabaseService {
         }
 
         console.log('✅ Invitación aceptada exitosamente vía RPC:', data);
-        return data;      }
+        return data;
+      }    } catch (error: any) {
+      console.error('💥 Error global en aceptarInvitacion:', error);
+      throw error;
+    }
+
     } catch (error: any) {
       console.error('💥 Error en aceptarInvitacion:', error);
       throw error;
@@ -1629,467 +1490,5 @@ export class SupabaseService {
       console.error('Error contando invitaciones:', error);
       return 0;
     }
-  }
-
-  /**
-   * Permite a un usuario abandonar una despensa sin eliminarla
-   * Solo elimina el acceso del usuario actual a la despensa
-   */
-  async abandonarDespensa(despensaId: string): Promise<{success: boolean, error?: any}> {
-    try {
-      console.log('🚶‍♂️ Abandonando despensa:', despensaId);
-      
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuario no autenticado');
-      }
-
-      // Verificar que no sea el propietario de la despensa
-      const { data: despensa, error: errorDespensa } = await this.supabase
-        .from('despensas')
-        .select('propietario_id')
-        .eq('id', despensaId)
-        .single();
-      
-      if (errorDespensa) {
-        console.error('❌ Error verificando propietario:', errorDespensa);
-        throw errorDespensa;
-      }
-
-      if (despensa.propietario_id === user.id) {
-        console.error('❌ No puedes abandonar una despensa de la que eres propietario');
-        throw new Error('No puedes abandonar una despensa de la que eres propietario');
-      }
-
-      // Eliminar el acceso del usuario a la despensa
-      const { error } = await this.supabase
-        .from('accesos_despensa')
-        .delete()
-        .eq('despensa_id', despensaId)
-        .eq('usuario_id', user.id);
-
-      if (error) {
-        console.error('❌ Error abandonando despensa:', error);
-        throw error;
-      }
-
-      console.log('✅ Has abandonado la despensa exitosamente');
-      return { success: true };
-    } catch (error: any) {
-      console.error('💥 Error en abandonarDespensa:', error);
-      return { success: false, error };
-    }
-  }
-
-  /**
-   * Obtiene productos que ya han vencido pero siguen en stock
-   */
-  async obtenerProductosVencidos(): Promise<any[]> {
-    const user = await this.supabase.auth.getUser();
-    const userId = user.data.user?.id;
-    if (!userId) throw new Error('No autenticado');
-
-    // Calcular fecha actual
-    const hoy = new Date();
-
-    const { data, error } = await this.supabase
-      .from('producto_despensa')
-      .select(`
-        id,
-        stock,
-        fecha_vencimiento,
-        productos (
-          id,
-          nombre,
-          categoria,
-          origen
-        ),
-        despensas!inner (
-          id,
-          nombre,
-          accesos_despensa!inner (
-            usuario_id
-          )
-        )
-      `)
-      .eq('despensas.accesos_despensa.usuario_id', userId)
-      .not('fecha_vencimiento', 'is', null)
-      .lt('fecha_vencimiento', hoy.toISOString().split('T')[0])
-      .gt('stock', 0)
-      .order('fecha_vencimiento', { ascending: false })
-      .limit(10);
-
-    if (error) throw error;
-    console.log('Datos de productos vencidos:', data);
-    return data || [];
-  }
-
-  /**
-   * MÉTODOS PARA LISTA DE COMPRAS (CARRITO)
-   */
-  /**
-   * Obtiene la lista de compras de una despensa
-   * Usa función RPC que permite acceso compartido entre colaboradores
-   */
-  async obtenerListaCompras(despensaId: string): Promise<any[]> {
-    try {
-      // Intentar con la nueva función RPC que maneja colaboradores
-      const { data, error } = await this.supabase
-        .rpc('obtener_lista_compras_despensa', {
-          p_despensa_id: despensaId
-        });
-
-      if (error) {
-        console.warn('Error con función RPC, usando método fallback:', error);
-        // Fallback al método anterior si la función RPC falla
-        return await this.obtenerListaComprasFallback(despensaId);
-      }
-
-      // Transformar los datos para mantener compatibilidad con el frontend
-      const listaTransformada = (data || []).map((item: any) => ({
-        id: item.id,
-        cantidad: item.cantidad,
-        notas: item.notas,
-        fecha_agregado: item.fecha_agregado,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        usuario_id: item.user_id,
-        productos: {
-          id: item.producto_id,
-          nombre: item.producto_nombre,
-          categoria: item.producto_categoria,
-          origen: null, // La función no incluye origen, se puede agregar después
-          descripcion: item.producto_descripcion,
-          marca: item.producto_marca,
-          unidad_medida: item.producto_unidad_medida,
-          precio_promedio: item.producto_precio_promedio,
-          codigo_barras: item.producto_codigo_barras,
-          imagen_url: item.producto_imagen_url
-        },
-        usuarios: {
-          nombre: item.usuario_nombre,
-          email: item.usuario_email
-        }
-      }));
-
-      console.log('✅ Lista de compras obtenida exitosamente vía RPC para', listaTransformada.length, 'elementos');
-      return listaTransformada;
-      
-    } catch (error) {
-      console.error('💥 Error obteniendo lista de compras:', error);
-      // Fallback en caso de error
-      return await this.obtenerListaComprasFallback(despensaId);
-    }
-  }
-
-  /**
-   * Método fallback para obtener lista de compras (método anterior)
-   */
-  private async obtenerListaComprasFallback(despensaId: string): Promise<any[]> {
-    console.log('🔄 Usando método fallback para obtener lista de compras');
-    const { data, error } = await this.supabase
-      .from('carrito')
-      .select(`
-        id,
-        cantidad,
-        notas,
-        fecha_agregado,
-        created_at,
-        updated_at,
-        usuario_id,
-        productos (
-          id,
-          nombre,
-          categoria,
-          origen
-        ),
-        usuarios (
-          nombre,
-          email
-        )
-      `)
-      .eq('despensa_id', despensaId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  }
-  /**
-   * Agrega un producto a la lista de compras
-   * Usa función RPC que maneja permisos de colaborador automáticamente
-   */
-  async agregarAListaCompras(despensaId: string, productoId: string, cantidad: number = 1, notas?: string): Promise<void> {
-    try {
-      // Intentar con la nueva función RPC que maneja colaboradores
-      const { data, error } = await this.supabase
-        .rpc('agregar_a_lista_compras', {
-          p_despensa_id: despensaId,
-          p_producto_id: productoId,
-          p_cantidad: cantidad,
-          p_notas: notas || null
-        });
-
-      if (error) {
-        console.warn('Error con función RPC, usando método fallback:', error);
-        // Fallback al método anterior si la función RPC falla
-        return await this.agregarAListaComprasFallback(despensaId, productoId, cantidad, notas);
-      }
-
-      // Verificar el resultado de la función RPC
-      if (data && !data.success) {
-        throw new Error(data.error || 'Error desconocido al agregar producto');
-      }
-
-      console.log('✅ Producto agregado a lista de compras exitosamente vía RPC');
-      
-    } catch (error) {
-      console.error('💥 Error agregando producto a lista de compras:', error);
-      // Fallback en caso de error
-      return await this.agregarAListaComprasFallback(despensaId, productoId, cantidad, notas);
-    }
-  }
-
-  /**
-   * Método fallback para agregar a lista de compras (método anterior)
-   */
-  private async agregarAListaComprasFallback(despensaId: string, productoId: string, cantidad: number = 1, notas?: string): Promise<void> {
-    console.log('🔄 Usando método fallback para agregar a lista de compras');
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user) throw new Error('Usuario no autenticado');
-
-    // Verificar si el producto ya está en la lista de compras de esta despensa
-    const { data: existente, error: errorExistente } = await this.supabase
-      .from('carrito')
-      .select('id, cantidad')
-      .eq('despensa_id', despensaId)
-      .eq('producto_id', productoId)
-      .maybeSingle();
-
-    if (errorExistente) throw errorExistente;
-
-    if (existente) {
-      // Si ya existe, actualizar la cantidad
-      const { error: errorUpdate } = await this.supabase
-        .from('carrito')
-        .update({ 
-          cantidad: existente.cantidad + cantidad,
-          updated_at: new Date().toISOString(),
-          notas: notas || null
-        })
-        .eq('id', existente.id);
-
-      if (errorUpdate) throw errorUpdate;
-    } else {
-      // Si no existe, crear nuevo registro
-      const { error: errorInsert } = await this.supabase
-        .from('carrito')
-        .insert({
-          usuario_id: user.id,
-          despensa_id: despensaId,
-          producto_id: productoId,
-          cantidad: cantidad,
-          notas: notas || null,
-          fecha_agregado: new Date().toISOString()
-        });
-
-      if (errorInsert) throw errorInsert;
-    }
-  }
-
-  /**
-   * Crea un nuevo producto y lo agrega a la lista de compras
-   */
-  async crearProductoYAgregarALista(despensaId: string, datosProducto: {
-    nombre: string;
-    categoria?: string;
-    origen?: string;
-  }, cantidad: number = 1, notas?: string): Promise<void> {
-    // 1. Crear el producto
-    const { data: producto, error: errorProducto } = await this.supabase
-      .from('productos')
-      .insert({
-        nombre: datosProducto.nombre,
-        categoria: datosProducto.categoria || null,
-        origen: datosProducto.origen || null,
-        fecha_ingreso: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (errorProducto) throw errorProducto;
-
-    // 2. Agregarlo a la lista de compras
-    await this.agregarAListaCompras(despensaId, producto.id, cantidad, notas);
-  }
-
-  /**
-   * Actualiza la cantidad de un item en la lista de compras
-   */
-  async actualizarCantidadListaCompras(carritoId: string, nuevaCantidad: number): Promise<void> {
-    if (nuevaCantidad <= 0) {
-      await this.eliminarDeListaCompras(carritoId);
-      return;
-    }
-
-    const { error } = await this.supabase
-      .from('carrito')
-      .update({ 
-        cantidad: nuevaCantidad,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', carritoId);
-
-    if (error) throw error;
-  }
-
-  /**
-   * Actualiza las notas de un item en la lista de compras
-   */
-  async actualizarNotasListaCompras(carritoId: string, notas: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('carrito')
-      .update({ 
-        notas: notas,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', carritoId);
-
-    if (error) throw error;
-  }
-
-  /**
-   * Elimina un item de la lista de compras
-   */
-  async eliminarDeListaCompras(carritoId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('carrito')
-      .delete()
-      .eq('id', carritoId);
-
-    if (error) throw error;
-  }
-
-  /**
-   * Compra un producto (lo mueve de la lista de compras a la despensa)
-   */
-  async comprarProducto(carritoId: string, fechaVencimiento?: string): Promise<void> {
-    // 1. Obtener datos del carrito
-    const { data: itemCarrito, error: errorCarrito } = await this.supabase
-      .from('carrito')
-      .select('*')
-      .eq('id', carritoId)
-      .single();
-
-    if (errorCarrito) throw errorCarrito;
-    if (!itemCarrito) throw new Error('Item de carrito no encontrado');
-
-    // 2. Verificar si el producto ya existe en la despensa
-    const { data: productoExistente, error: errorExistente } = await this.supabase
-      .from('producto_despensa')
-      .select('id, stock')
-      .eq('despensa_id', itemCarrito.despensa_id)
-      .eq('producto_id', itemCarrito.producto_id)
-      .maybeSingle();
-
-    if (errorExistente) throw errorExistente;
-
-    if (productoExistente) {
-      // Si ya existe, sumar al stock
-      const { error: errorUpdate } = await this.supabase
-        .from('producto_despensa')
-        .update({ 
-          stock: productoExistente.stock + itemCarrito.cantidad,
-          fecha_vencimiento: fechaVencimiento || null
-        })
-        .eq('id', productoExistente.id);
-
-      if (errorUpdate) throw errorUpdate;
-    } else {
-      // Si no existe, crear nuevo registro en producto_despensa
-      const { error: errorInsert } = await this.supabase
-        .from('producto_despensa')
-        .insert({
-          despensa_id: itemCarrito.despensa_id,
-          producto_id: itemCarrito.producto_id,
-          stock: itemCarrito.cantidad,
-          fecha_vencimiento: fechaVencimiento || null
-        });
-
-      if (errorInsert) throw errorInsert;
-    }
-
-    // 3. Eliminar del carrito
-    await this.eliminarDeListaCompras(carritoId);
-  }
-  /**
-   * Limpia toda la lista de compras de una despensa
-   * Usa función RPC que maneja permisos de colaborador automáticamente
-   */
-  async limpiarListaCompras(despensaId: string): Promise<void> {
-    try {
-      // Intentar con la nueva función RPC que maneja colaboradores
-      const { data, error } = await this.supabase
-        .rpc('limpiar_lista_compras_despensa', {
-          p_despensa_id: despensaId
-        });
-
-      if (error) {
-        console.warn('Error con función RPC, usando método fallback:', error);
-        // Fallback al método anterior si la función RPC falla
-        return await this.limpiarListaComprasFallback(despensaId);
-      }
-
-      // Verificar el resultado de la función RPC
-      if (data && !data.success) {
-        throw new Error(data.error || 'Error desconocido al limpiar lista');
-      }
-
-      console.log('✅ Lista de compras limpiada exitosamente vía RPC');
-      
-    } catch (error) {
-      console.error('💥 Error limpiando lista de compras:', error);
-      // Fallback en caso de error
-      return await this.limpiarListaComprasFallback(despensaId);
-    }
-  }
-
-  /**
-   * Método fallback para limpiar lista de compras (método anterior)
-   */
-  private async limpiarListaComprasFallback(despensaId: string): Promise<void> {
-    console.log('🔄 Usando método fallback para limpiar lista de compras');
-    const { error } = await this.supabase
-      .from('carrito')
-      .delete()
-      .eq('despensa_id', despensaId);
-
-    if (error) throw error;
-  }
-
-  /**
-   * Obtiene el conteo de items en la lista de compras de una despensa
-   */
-  async contarItemsListaCompras(despensaId: string): Promise<number> {
-    const { count, error } = await this.supabase
-      .from('carrito')
-      .select('*', { count: 'exact', head: true })
-      .eq('despensa_id', despensaId);
-
-    if (error) throw error;
-    return count || 0;
-  }
-
-  /**
-   * Busca productos existentes para agregar a la lista de compras
-   */
-  async buscarProductosParaLista(busqueda: string): Promise<any[]> {
-    const { data, error } = await this.supabase
-      .from('productos')
-      .select('id, nombre, categoria, origen')
-      .ilike('nombre', `%${busqueda}%`)
-      .limit(10);
-
-    if (error) throw error;
-    return data || [];
   }
 }
