@@ -16,7 +16,28 @@ export class SupabaseService {
 
   async login(email: string, password: string) {
     return this.supabase.auth.signInWithPassword({ email, password });
-  }
+  }  async signUp(email: string, password: string, nombre: string) {
+    const { data, error } = await this.supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        data: {
+          nombre: nombre
+        }
+      }
+    });
+  }  async signUp(email: string, password: string, nombre: string) {
+    const { data, error } = await this.supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        data: {
+          nombre: nombre
+        }
+      }
+    });
 
   async signUp(email: string, password: string, nombre: string) {
     const { data, error } = await this.supabase.auth.signUp({ 

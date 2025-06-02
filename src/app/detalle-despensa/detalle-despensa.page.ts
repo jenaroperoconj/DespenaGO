@@ -60,8 +60,7 @@ import {
   templateUrl: './detalle-despensa.page.html',
   styleUrls: ['./detalle-despensa.page.scss'],
   standalone: true,
-  providers: [ModalController],
-  imports: [
+  providers: [ModalController],  imports: [
     CommonModule,
     FormsModule,
     IonContent,
@@ -168,7 +167,6 @@ export class DetalleDespensaPage implements OnInit {
       this.error = err.message;
     }
   }
-
   async onPopoverAccion(accion: 'editar' | 'consumir' | 'eliminar', producto: any) {
     // Verificar permisos antes de permitir acciones
     if ((accion === 'editar' || accion === 'eliminar') && !this.puedeEditar) {
@@ -193,7 +191,6 @@ export class DetalleDespensaPage implements OnInit {
         break;
     }
   }
-
   async abrirFormularioConsumirProducto(producto: any) {
     if (producto.stock <= 0) {
       // Si el stock ya está en 0, ofrecer agregar a lista de compras directamente
