@@ -223,8 +223,10 @@ export class AppComponent implements OnInit {
           const menu = document.querySelector('ion-menu');
           menu?.close();
         }
-      },      { title: 'Lista de Compras', url: '/lista-compras', icon: 'cart-outline' },
+      },
+      { title: 'Lista de Compras', url: '/lista-compras', icon: 'cart-outline' },
       { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
+      { title: 'Mi Carrito', url: '/shopping-cart', icon: 'bag-handle-outline' },
       { title: 'Perfil', url: '/profile', icon: 'person-outline' },
       { title: 'Notificaciones', url: '/notifications', icon: 'notifications-outline' },
       { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'scan-outline' },
