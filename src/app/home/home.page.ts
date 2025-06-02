@@ -1,4 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -48,6 +49,30 @@ import {
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],  imports: [
+    CommonModule, 
+    FormsModule,
+    IonContent, 
+    IonHeader, 
+    IonTitle, 
+    IonToolbar,
+    IonCard,
+    IonCardContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon,
+    IonButton,
+    IonChip,
+    IonRefresher,
+    IonRefresherContent,
+    IonSkeletonText,
+    IonBadge,
+    IonFab,
+    IonFabButton,
+    IonButtons,
+    IonMenuButton
+  ]
   schemas: [CUSTOM_ELEMENTS_SCHEMA],  imports: [
     CommonModule, 
     FormsModule,

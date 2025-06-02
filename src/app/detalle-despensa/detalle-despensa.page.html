@@ -1,7 +1,13 @@
 <ion-header [translucent]="true">
+<ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/despensa"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ nombreDespensa || 'Despensa' }}</ion-title>    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="abrirModalCompartir()" *ngIf="esPropietario">
+        <ion-icon name="share-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
     <ion-title>{{ nombreDespensa || 'Despensa' }}</ion-title>    <ion-buttons slot="end">
       <ion-button fill="clear" (click)="abrirModalCompartir()" *ngIf="esPropietario">

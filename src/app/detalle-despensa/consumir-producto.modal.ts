@@ -103,6 +103,7 @@ import {
 export class ConsumirProductoModal {
   @Input() producto: any;
   @Input() despensaId!: string;
+  @Input() despensaId!: string;
   cantidad: number = 1;
   error: string | null = null;  constructor(
     private modalCtrl: ModalController, 
@@ -154,6 +155,7 @@ export class ConsumirProductoModal {
     }
 
     try {
+    try {
       const nuevoStock = this.producto.stock - this.cantidad;
 
       if (nuevoStock <= 0) {
@@ -180,7 +182,16 @@ export class ConsumirProductoModal {
           return;
         }
       }
+        if (error) {
+          this.error = error.message;
+          return;
+        }
+      }
 
+      this.dismiss(true);
+    } catch (err: any) {
+      this.error = err.message || 'Error al consumir producto';
+    }
       this.dismiss(true);
     } catch (err: any) {
       this.error = err.message || 'Error al consumir producto';

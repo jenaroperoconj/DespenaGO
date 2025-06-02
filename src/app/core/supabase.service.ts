@@ -27,7 +27,33 @@ export class SupabaseService {
         }
       }
     });
+  }  async signUp(email: string, password: string, nombre: string) {
+    const { data, error } = await this.supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        data: {
+          nombre: nombre
+        }
+      }
+    });
 
+    if (error) {
+      // Manejo específico para diferentes tipos de errores
+      if (error.message.includes('User already registered')) {
+        throw new Error('Este correo electrónico ya está registrado');
+      } else if (error.message.includes('Invalid email')) {
+        throw new Error('El formato del correo electrónico no es válido');
+      } else if (error.message.includes('Password should be at least')) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      } else if (error.message.includes('Unable to validate email address')) {
+        throw new Error('No se pudo validar el correo electrónico. Verifica que sea correcto');
+      } else if (error.message.includes('For security purposes')) {
+        throw new Error('Por seguridad, debes esperar antes de intentar registrarte nuevamente');
+      }
+      throw error;
+    }
     if (error) {
       // Manejo específico para diferentes tipos de errores
       if (error.message.includes('User already registered')) {
@@ -47,6 +73,11 @@ export class SupabaseService {
     const userId = data.user?.id;
     if (!userId) throw new Error('No se pudo obtener el ID del usuario');
 
+    // Solo insertar en la tabla usuarios si el usuario fue creado exitosamente
+    if (data.user) {
+      const { error: insertError } = await this.supabase
+        .from('usuarios')
+        .insert({ id: userId, email, nombre });
     // Solo insertar en la tabla usuarios si el usuario fue creado exitosamente
     if (data.user) {
       const { error: insertError } = await this.supabase
@@ -151,6 +182,7 @@ export class SupabaseService {
 
     return despensa;
   }  async obtenerDespensasUsuario() {
+  }  async obtenerDespensasUsuario() {
     const user = await this.supabase.auth.getUser();
     const userId = user.data.user?.id;
     if (!userId) throw new Error('No autenticado');
@@ -167,9 +199,36 @@ export class SupabaseService {
       `)
       .eq('usuario_id', userId)
       .order('created_at', { foreignTable: 'despensas', ascending: false });
+      .order('created_at', { foreignTable: 'despensas', ascending: false });
 
     if (error) throw error;
 
+    // Obtener el conteo de productos para cada despensa
+    const despensasConConteo = await Promise.all(
+      (data || []).map(async (item: any) => {
+        if (!item.despensas) return item;
+        
+        const { count, error: errorConteo } = await this.supabase
+          .from('producto_despensa')
+          .select('*', { count: 'exact', head: true })
+          .eq('despensa_id', item.despensas.id)
+          .gt('stock', 0); // Solo contar productos con stock > 0
+
+        if (errorConteo) {
+          console.warn('Error al contar productos para despensa', item.despensas.id, errorConteo);
+        }
+
+        return {
+          ...item,
+          despensas: {
+            ...item.despensas,
+            cantidadProductos: count || 0
+          }
+        };
+      })
+    );
+
+    return despensasConConteo;
     // Obtener el conteo de productos para cada despensa
     const despensasConConteo = await Promise.all(
       (data || []).map(async (item: any) => {

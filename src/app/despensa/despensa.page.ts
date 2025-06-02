@@ -62,6 +62,7 @@ import {
   styleUrls: ['./despensa.page.scss'],
   providers: [ModalController],
   standalone: true,  imports: [
+  standalone: true,  imports: [
     CommonModule,
     FormsModule,
     IonIcon,
@@ -135,7 +136,13 @@ export class DespensaPage implements OnInit {
       return;
     }
 
+    if (!this.nombre.trim()) {
+      this.error = 'El nombre de la despensa es requerido';
+      return;
+    }
+
     try {
+      this.error = null;
       this.error = null;
       await this.supabaseService.crearDespensa(this.nombre);
       this.success = true;
@@ -147,8 +154,16 @@ export class DespensaPage implements OnInit {
         this.success = false;
       }, 1000);
       
+      
+      // Cerrar modal después de 1 segundo
+      setTimeout(() => {
+        this.mostrarFormularioCrear = false;
+        this.success = false;
+      }, 1000);
+      
       await this.cargarDespensas();
     } catch (err: any) {
+      this.success = false;
       this.success = false;
       this.error = err.message || 'Error al crear despensa';
     }
@@ -162,6 +177,7 @@ export class DespensaPage implements OnInit {
     }
   }
   async onPopoverAccion(accion: 'editar' | 'eliminar' | 'compartir', item: any) {
+  async onPopoverAccion(accion: 'editar' | 'eliminar' | 'compartir', item: any) {
     await this.popoverCtrl.dismiss();
 
     // Espera un frame más del DOM para asegurar estabilidad
@@ -170,6 +186,8 @@ export class DespensaPage implements OnInit {
         this.editarDespensa(item);
       } else if (accion === 'eliminar') {
         this.confirmarEliminar(item);
+      } else if (accion === 'compartir') {
+        this.abrirModalCompartir(item);
       } else if (accion === 'compartir') {
         this.abrirModalCompartir(item);
       }
@@ -228,6 +246,10 @@ export class DespensaPage implements OnInit {
     // Verificar si el usuario es propietario o colaborador
     const esPropietario = item.rol === 'propietario';
     
+
+    // Verificar si el usuario es propietario o colaborador
+    const esPropietario = item.rol === 'propietario';
+    
     // Delay breve para asegurar cierre completo del popover
     setTimeout(async () => {
       const alert = await this.alertCtrl.create({
@@ -235,9 +257,14 @@ export class DespensaPage implements OnInit {
         message: esPropietario
           ? `¿Estás seguro de eliminar la despensa "${item.despensas.nombre}"? Esta acción no se puede deshacer.`
           : `¿Estás seguro de abandonar la despensa "${item.despensas.nombre}"? Perderás el acceso a ella, pero seguirá disponible para los demás colaboradores.`,
+        header: esPropietario ? 'Eliminar despensa' : 'Abandonar despensa',
+        message: esPropietario
+          ? `¿Estás seguro de eliminar la despensa "${item.despensas.nombre}"? Esta acción no se puede deshacer.`
+          : `¿Estás seguro de abandonar la despensa "${item.despensas.nombre}"? Perderás el acceso a ella, pero seguirá disponible para los demás colaboradores.`,
         buttons: [
           { text: 'Cancelar', role: 'cancel' },
           {
+            text: esPropietario ? 'Eliminar' : 'Abandonar',
             text: esPropietario ? 'Eliminar' : 'Abandonar',
             role: 'destructive',
             handler: async () => {
@@ -252,8 +279,22 @@ export class DespensaPage implements OnInit {
                     throw new Error(resultado.error?.message || 'Error al abandonar la despensa');
                   }
                 }
+                if (esPropietario) {
+                  // Si es propietario, eliminar la despensa
+                  await this.supabaseService.eliminarDespensa(item.despensas.id);
+                } else {
+                  // Si no es propietario, solo abandonar la despensa
+                  const resultado = await this.supabaseService.abandonarDespensa(item.despensas.id);
+                  if (!resultado.success) {
+                    throw new Error(resultado.error?.message || 'Error al abandonar la despensa');
+                  }
+                }
                 await this.cargarDespensas();
               } catch (err: any) {
+                console.error(esPropietario ? 'Error al eliminar despensa:' : 'Error al abandonar despensa:', err.message);
+                this.error = esPropietario 
+                  ? 'No se pudo eliminar la despensa. Verifica que no tenga productos asociados.'
+                  : 'No se pudo abandonar la despensa. Intenta nuevamente más tarde.';
                 console.error(esPropietario ? 'Error al eliminar despensa:' : 'Error al abandonar despensa:', err.message);
                 this.error = esPropietario 
                   ? 'No se pudo eliminar la despensa. Verifica que no tenga productos asociados.'
@@ -343,7 +384,87 @@ export class DespensaPage implements OnInit {
         message: `No se pudo abrir el modal de compartir: ${error.message || 'Error desconocido'}`,
         buttons: ['OK']
       });
+      await alert.present();    }, 300);
+    
+  }
+
+  getRoleColor(rol: string): string {
+    switch (rol) {
+      case 'owner':
+        return 'primary';
+      case 'admin':
+        return 'secondary';
+      case 'viewer':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
+
+  getRoleIcon(rol: string): string {
+    switch (rol) {
+      case 'owner':
+        return 'shield-outline';
+      case 'admin':
+        return 'person-outline';
+      case 'viewer':
+        return 'eye-outline';
+      default:
+        return 'person-outline';
+    }
+  }
+  cerrarFormularios() {
+    this.mostrarFormularioCrear = false;
+    this.mostrarFormularioEditar = false;
+    this.error = null;
+    this.success = false;
+  }
+
+  // Método específico para abrir el modal de crear despensa
+  abrirModalCrear() {
+    this.error = null;
+    this.success = false;
+    this.nombre = '';
+    this.mostrarFormularioCrear = true;
+  }
+  // Método para manejar el click del overlay
+  onOverlayClick(event: Event) {
+    // Solo cerrar si se hizo click directamente en el overlay, no en el contenido del modal
+    if (event.target === event.currentTarget) {
+      this.cerrarFormularios();
+    }
+  }
+  async abrirModalCompartir(item: any) {
+    try {
+      console.log('🔗 Abriendo modal compartir para:', item.despensas.nombre);
+      
+      const modal = await this.modalCtrl.create({
+        component: CompartirDespensaModal,
+        componentProps: {
+          despensaId: item.despensas.id,
+          nombreDespensa: item.despensas.nombre
+        }
+      });
+
+      await modal.present();
+      
+      // Recargar datos después de cerrar modal (en caso de cambios)
+      const { data } = await modal.onDidDismiss();
+      if (data?.changed) {
+        console.log('📝 Recargando datos tras cambios en colaboración');
+        await this.cargarDespensas();
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error abriendo modal compartir:', error);
+      
+      const alert = await this.alertCtrl.create({
+        header: '❌ Error',
+        message: `No se pudo abrir el modal de compartir: ${error.message || 'Error desconocido'}`,
+        buttons: ['OK']
+      });
       await alert.present();
+    }
     }
   }
 }

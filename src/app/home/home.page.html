@@ -17,6 +17,23 @@
         </ion-badge>
       </ion-button>
     </ion-buttons>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>DespensaGO</ion-title>    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="abrirInvitacionesPendientes()">
+        <ion-icon name="mail-outline"></ion-icon>
+        <ion-badge color="primary" *ngIf="contadorInvitaciones > 0">
+          {{ contadorInvitaciones }}
+        </ion-badge>
+      </ion-button>
+      <ion-button fill="clear" (click)="irANotificaciones()">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <ion-badge color="danger" *ngIf="estadisticas.productosVencidos > 0">
+          {{ estadisticas.productosVencidos }}
+        </ion-badge>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -249,6 +266,13 @@
     </ion-grid>
   </div>
 </ion-content>
+
+<!-- FAB para agregar - Solo cuando no hay despensas -->
+<ion-fab vertical="bottom" horizontal="end" *ngIf="estadisticas.totalDespensas === 0">
+  <ion-fab-button color="primary" (click)="irADespensas()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
 
 <!-- FAB para agregar - Solo cuando no hay despensas -->
 <ion-fab vertical="bottom" horizontal="end" *ngIf="estadisticas.totalDespensas === 0">
