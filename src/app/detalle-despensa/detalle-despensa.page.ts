@@ -12,28 +12,49 @@ import {
   IonLabel,
   IonButton,
   IonList,
-  IonListHeader,
   IonButtons,
   IonBackButton,
   IonCardContent,
-  IonCardTitle,
-  IonCardHeader,
   IonCard,
   IonInput,
   IonPopover,
-  PopoverController
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonChip,
+  IonFab,
+  IonFabButton,
+  PopoverController,
+  AlertController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
+import { CarritoService } from 'src/app/core/carrito.service';
 import { PopoverOpcionesComponent } from '../popover-opciones/popover-opciones.component';
 import { ModalController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { 
+  basketOutline,
+  bagOutline,
+  pricetagOutline,
+  calendarOutline,
+  cubeOutline,
+  ellipsisVertical,
+  createOutline,
+  removeOutline,
+  trashOutline,
+  addOutline,
+  closeOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  saveOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-detalle-despensa',
   templateUrl: './detalle-despensa.page.html',
   styleUrls: ['./detalle-despensa.page.scss'],
   standalone: true,
-  providers: [ModalController],
-  imports: [
+  providers: [ModalController],  imports: [
     CommonModule,
     FormsModule,
     IonContent,
@@ -44,16 +65,19 @@ import { ModalController } from '@ionic/angular';
     IonLabel,
     IonButton,
     IonList,
-    IonListHeader,
     IonIcon,
     IonButtons,
     IonBackButton,
     IonCardContent,
-    IonCardTitle,
-    IonCardHeader,
     IonCard,
     IonInput,
-    IonPopover
+    IonPopover,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonChip,
+    IonFab,
+    IonFabButton
   ]
 })
 export class DetalleDespensaPage implements OnInit {
@@ -75,14 +99,31 @@ export class DetalleDespensaPage implements OnInit {
     stock: 1
   };
 
-  productoOpciones: any = null;
-
-  constructor(
+  productoOpciones: any = null;  constructor(
     private route: ActivatedRoute,
     private supabase: SupabaseService, 
     private modalCtrl: ModalController, 
-    private popoverCtrl: PopoverController
-  ) {}
+    private popoverCtrl: PopoverController,
+    private carritoService: CarritoService,
+    private alertController: AlertController
+  ) {
+    addIcons({
+      basketOutline,
+      bagOutline,
+      pricetagOutline,
+      calendarOutline,
+      cubeOutline,
+      ellipsisVertical,
+      createOutline,
+      removeOutline,
+      trashOutline,
+      addOutline,
+      closeOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      saveOutline
+    });
+  }
 
   ngOnInit() {
     this.despensaId = this.route.snapshot.paramMap.get('id')!;
@@ -126,24 +167,112 @@ export class DetalleDespensaPage implements OnInit {
         break;
     }
   }
-
   async abrirFormularioConsumirProducto(producto: any) {
     if (producto.stock <= 0) {
-      alert('No hay stock disponible para consumir.');
+      // Si el stock ya está en 0, ofrecer agregar a lista de deseos directamente
+      await this.carritoService.verificarStockAgotado(
+        producto.id,
+        0,
+        this.despensaId,
+        producto.productos.id,
+        producto.productos.nombre
+      );
       return;
     }
 
+    // Mostrar alerta para consumir producto
+    const alert = await this.alertController.create({
+      header: 'Consumir Producto',
+      message: `¿Cuántas unidades de "${producto.productos.nombre}" deseas consumir?`,
+      inputs: [
+        {
+          name: 'cantidad',
+          type: 'number',
+          placeholder: 'Cantidad',
+          min: 1,
+          max: producto.stock,
+          value: 1
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Consumir',
+          handler: async (data) => {
+            const cantidad = parseInt(data.cantidad);
+            if (isNaN(cantidad) || cantidad <= 0 || cantidad > producto.stock) {
+              await this.mostrarError('Cantidad no válida');
+              return false;
+            }
+            
+            await this.consumirProducto(producto, cantidad);
+            return true;
+          }
+        },
+        {
+          text: 'Marcar como usado completamente',
+          cssClass: 'secondary',
+          handler: async () => {
+            await this.consumirProducto(producto, producto.stock);
+            return true;
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * Consume una cantidad específica del producto y verifica si se agotó
+   */
+  private async consumirProducto(producto: any, cantidad: number): Promise<void> {
     try {
-      await this.supabase.client
-        .from('producto_despensa')
-        .update({ stock: producto.stock - 1 })
-        .eq('id', producto.id);
+      const nuevoStock = producto.stock - cantidad;
+      
+      if (nuevoStock <= 0) {
+        // Si el stock llega a 0 o menos, eliminar el producto de la despensa
+        await this.supabase.eliminarProductoDeDespensa(producto.id);
+        
+        // Verificar stock agotado y ofrecer agregar a lista de deseos
+        await this.carritoService.verificarStockAgotado(
+          producto.id,
+          0,
+          this.despensaId,
+          producto.productos.id,
+          producto.productos.nombre
+        );
+      } else {
+        // Si queda stock, actualizar la cantidad
+        await this.supabase.client
+          .from('producto_despensa')
+          .update({ stock: nuevoStock })
+          .eq('id', producto.id);
+      }
 
       this.productoOpciones = null;
       await this.cargarProductos();
     } catch (err: any) {
       console.error('Error al consumir producto:', err.message);
+      await this.mostrarError('Error al consumir producto: ' + err.message);
     }
+  }
+
+  /**
+   * Muestra un mensaje de error
+   */
+  private async mostrarError(mensaje: string): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      message: mensaje,
+      buttons: ['Entendido'],
+      cssClass: 'alert-error'
+    });
+
+    await alert.present();
   }
 
   async confirmarEliminarProducto(producto: any) {
@@ -262,5 +391,13 @@ export class DetalleDespensaPage implements OnInit {
     return vencimiento >= hoy && vencimiento <= limite;
   }
 
+  // Variables de estado para los formularios
+  success = false;
+
+  // Método para manejar el clic en el overlay
+  onOverlayClick(event: Event) {
+    this.mostrarFormularioAgregar = false;
+    this.mostrarFormularioEditar = false;
+  }
 
 }

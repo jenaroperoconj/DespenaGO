@@ -1,0 +1,80 @@
+.loading-container {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+}
+
+.empty-state {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.empty-state ion-card-title {
+  color: var(--ion-color-medium);
+}
+
+.empty-state p {
+  color: var(--ion-color-medium);
+  line-height: 1.5;
+}
+
+.producto-item {
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  --background: var(--ion-color-light);
+}
+
+.producto-item ion-label h2 {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.producto-item ion-label p {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  margin: 0.2rem 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.action-buttons ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+}
+
+.refresh-button {
+  margin-top: 1rem;
+  --color: var(--ion-color-medium);
+}
+
+/* Animación para items agregados recientemente */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.producto-item {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: row;
+  }
+  
+  .producto-item ion-label p {
+    font-size: 0.8rem;
+  }
+}

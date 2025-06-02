@@ -1,100 +1,207 @@
-<ion-header>
+<ion-header [translucent]="true">
+  <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
     <ion-title>Mis Despensas</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="despensa-content">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="despensa-hero-icon">
+        <ion-icon name="storefront-outline"></ion-icon>
+      </div>
+      <h1 class="hero-title">Mis Despensas</h1>
+      <p class="hero-subtitle">Organiza y gestiona tus espacios de almacenamiento</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <ion-icon name="home-outline"></ion-icon>
+          <span>{{ despensas.length }} despensas</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Lista de Despensas -->
-  <ion-list *ngIf="despensas.length">
-    <ion-list-header>
-      <ion-label>Lista de Despensas</ion-label>
-    </ion-list-header>
+  <div class="despensas-container" *ngIf="despensas.length; else emptyState">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-md="6" size-lg="4" *ngFor="let item of despensas">          <ion-card class="despensa-card" button (click)="irADespensa(item.despensas.id)">
+            <ion-card-content>
+              <div class="card-main-content">
+                <div class="despensa-icon">
+                  <ion-icon name="home-outline"></ion-icon>
+                </div>                <div class="despensa-details">
+                  <h3>{{ item.despensas.nombre }}</h3>
+                  <div class="despensa-info">
+                    <ion-chip class="role-chip" [color]="getRoleColor(item.rol)">
+                      <ion-icon [name]="getRoleIcon(item.rol)"></ion-icon>
+                      <ion-label>{{ item.rol }}</ion-label>
+                    </ion-chip>                    <div class="product-count">
+                      <ion-icon name="bag-outline"></ion-icon>
+                      <span>{{ item.cantidadProductos || 0 }} productos</span>
+                    </div>
+                    <p class="created-date">{{ item.despensas.created_at | date: 'dd/MM/yyyy' }}</p>
+                  </div>
+                </div>
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  class="options-button"
+                  [id]="'menu-despensa-' + item.despensas.id"
+                  (click)="$event.stopPropagation()">
+                  <ion-icon name="ellipsis-vertical"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-card-content>
 
-    <ion-item *ngFor="let item of despensas">
-      <ion-label (click)="irADespensa(item.despensas.id)">
-        <h2>{{ item.despensas.nombre }}</h2>
-        <p>Rol: {{ item.rol }}</p>
-        <p>Creada: {{ item.despensas.created_at | date: 'short' }}</p>
-      </ion-label>
+            <ion-popover
+              [trigger]="'menu-despensa-' + item.despensas.id"
+              triggerAction="click"
+              [showBackdrop]="false">
+              <ng-template>
+                <ion-list class="popover-list">
+                  <ion-item button (click)="onPopoverAccion('editar', item)">
+                    <ion-icon name="create-outline" slot="start"></ion-icon>
+                    <ion-label>Editar</ion-label>
+                  </ion-item>
+                  <ion-item button color="danger" (click)="onPopoverAccion('eliminar', item)">
+                    <ion-icon name="trash-outline" slot="start"></ion-icon>
+                    <ion-label>Eliminar</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ng-template>
+            </ion-popover>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 
-      <ion-button
-        fill="clear"
-        slot="end"
-        [id]="'menu-despensa-' + item.despensas.id">
-        <ion-icon name="ellipsis-vertical"></ion-icon>
-      </ion-button>
-
-      <ion-popover
-        [trigger]="'menu-despensa-' + item.despensas.id"
-        triggerAction="click"
-        [showBackdrop]="false">
-        <ng-template>
-          <ion-list>
-            <ion-item button (click)="onPopoverAccion('editar', item)">
-              <ion-label>Editar</ion-label>
-            </ion-item>
-            <ion-item button color="danger" (click)="onPopoverAccion('eliminar', item)">
-              <ion-label>Eliminar</ion-label>
-            </ion-item>
-          </ion-list>
-        </ng-template>
-      </ion-popover>
-    </ion-item>
-  </ion-list>
-
-  <!-- Botón flotante -->
-  <ion-button 
-    class="boton-flotante" 
-    shape="round"
-    fill="solid" 
-    size="large" 
-    (click)="mostrarFormularioCrear = true">
-    <ion-icon name="add" slot="icon-only"></ion-icon>
-  </ion-button>
-
-  <!-- Fondo difuminado -->
-<div 
-  class="overlay-blur" 
-  *ngIf="mostrarFormularioCrear || (mostrarFormularioEditar && nombreEditar)">
-</div>
-
-  <!-- Formulario para crear una nueva despensa -->
-  <ion-card *ngIf="mostrarFormularioCrear" class="formulario-superior">
-    <ion-card-header>
-      <ion-card-title>Crear Despensa</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item>
-        <ion-label position="floating">Nombre</ion-label>
-        <ion-input name="nombre" [(ngModel)]="nombre" required></ion-input>
-      </ion-item>
-
-      <ion-button expand="block" (click)="crearDespensa()">Crear</ion-button>
-      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarFormularioCrear = false">Cancelar</ion-button>
-
-      <p *ngIf="success" style="color:green;">Creada correctamente ✅</p>
-      <p *ngIf="error" style="color:red;">{{ error }}</p>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Formulario para editar una despensa -->
-  <ion-card *ngIf="mostrarFormularioEditar" class="formulario-superior">
-    <ion-card-header>
-      <ion-card-title>Editar Despensa</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item>
-        <ion-label position="floating">Nombre de la Despensa</ion-label>
-        <ion-input name="nombreEditar" [(ngModel)]="nombreEditar" required></ion-input>
-      </ion-item>
-
-      <ion-button expand="block" (click)="guardarCambiosEditar()">Guardar Cambios</ion-button>
-      <ion-button expand="block" fill="clear" color="medium" (click)="mostrarFormularioEditar = false">Cancelar</ion-button>
-
-      <p *ngIf="error" style="color:red;">{{ error }}</p>
-    </ion-card-content>
-  </ion-card>
-
+  <!-- Estado vacío -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <ion-icon name="home-outline"></ion-icon>
+      </div>
+      <h3>No tienes despensas</h3>
+      <p>Crea tu primera despensa para comenzar a organizar tus productos</p>      <ion-button class="primary-button" (click)="abrirModalCrear()">
+        <ion-icon name="add-outline" slot="start"></ion-icon>
+        Crear Primera Despensa
+      </ion-button>    </div>
+  </ng-template>
 </ion-content>
+
+<!-- FAB Button - Posición fija fuera del ion-content -->
+<ion-fab vertical="bottom" horizontal="end">
+  <ion-fab-button color="primary" (click)="abrirModalCrear()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Overlay difuminado -->
+  <div 
+    class="overlay-blur" 
+    *ngIf="mostrarFormularioCrear || mostrarFormularioEditar"
+    (click)="onOverlayClick($event)">
+  </div>
+  <!-- Formulario para crear despensa -->
+  <div class="form-modal" *ngIf="mostrarFormularioCrear">
+    <div class="form-container" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h2>Nueva Despensa</h2>
+        <ion-button fill="clear" (click)="mostrarFormularioCrear = false">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <div class="form-content">
+        <ion-item class="form-item" lines="none">
+          <ion-label position="floating">Nombre de la despensa</ion-label>
+          <ion-input 
+            [(ngModel)]="nombre" 
+            required
+            placeholder="Ej: Cocina principal">
+          </ion-input>
+        </ion-item>
+
+        <div class="form-buttons">
+          <ion-button 
+            expand="block" 
+            class="primary-button"
+            (click)="crearDespensa()"
+            [disabled]="!nombre.trim()">
+            <ion-icon name="add-outline" slot="start"></ion-icon>
+            Crear Despensa
+          </ion-button>
+          
+          <ion-button 
+            expand="block" 
+            class="secondary-button"
+            (click)="mostrarFormularioCrear = false">
+            Cancelar
+          </ion-button>
+        </div>
+
+        <div class="message-container">
+          <ion-chip color="success" *ngIf="success" class="success-chip">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <ion-label>Despensa creada correctamente</ion-label>
+          </ion-chip>
+          
+          <ion-chip color="danger" *ngIf="error" class="error-chip">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <ion-label>{{ error }}</ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Formulario para editar despensa -->
+  <div class="form-modal" *ngIf="mostrarFormularioEditar">
+    <div class="form-container" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h2>Editar Despensa</h2>
+        <ion-button fill="clear" (click)="mostrarFormularioEditar = false">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </div>
+      
+      <div class="form-content">
+        <ion-item class="form-item" lines="none">
+          <ion-label position="floating">Nombre de la despensa</ion-label>
+          <ion-input 
+            [(ngModel)]="nombreEditar" 
+            required>
+          </ion-input>
+        </ion-item>
+
+        <div class="form-buttons">
+          <ion-button 
+            expand="block" 
+            class="primary-button"
+            (click)="guardarCambiosEditar()"
+            [disabled]="!nombreEditar.trim()">
+            <ion-icon name="save-outline" slot="start"></ion-icon>
+            Guardar Cambios
+          </ion-button>
+          
+          <ion-button 
+            expand="block" 
+            class="secondary-button"
+            (click)="mostrarFormularioEditar = false">
+            Cancelar
+          </ion-button>
+        </div>        <div class="message-container" *ngIf="error">
+          <ion-chip color="danger" class="error-chip">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <ion-label>{{ error }}</ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </div>
+  </div>
