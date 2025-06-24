@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -26,35 +26,34 @@ import {
   IonPopover,
   PopoverController,
   IonRefresher,
-  IonRefresherContent
+  IonRefresherContent,
+  AlertController,
+  LoadingController
 } from '@ionic/angular/standalone';
 import { SupabaseService } from 'src/app/core/supabase.service';
-import { ModalController, AlertController } from '@ionic/angular';
+import { ModalController } from '@ionic/angular';
 import { CompartirDespensaModal } from './compartir-despensa.modal';
 import { addIcons } from 'ionicons';
 import { 
-  storefrontOutline, 
-  homeOutline, 
-  listOutline, 
   addOutline, 
-  ellipsisHorizontal,
-  createOutline,
-  trashOutline,
+  createOutline, 
+  trashOutline, 
+  shareOutline, 
+  refreshOutline, 
+  arrowDownOutline,
+  storefrontOutline,
+  homeOutline,
+  bagOutline,
+  ellipsisVertical,
+  exitOutline,
   closeOutline,
-  saveOutline,
   checkmarkCircleOutline,
   alertCircleOutline,
-  personOutline,
-  shieldOutline,
-  eyeOutline, 
-  ellipsisVertical, 
-  cubeOutline, 
-  archiveOutline, 
-  bagOutline, 
-  shareOutline, 
-  exitOutline,
-  refreshOutline,
-  arrowDownOutline } from 'ionicons/icons';
+  saveOutline
+} from 'ionicons/icons';
+import { Subject } from 'rxjs';
+import { takeUntil, tap } from 'rxjs/operators';
+import { from } from 'rxjs';
 
 @Component({
   selector: 'app-despensa',
@@ -89,7 +88,7 @@ import {
     IonRefresherContent
   ]
 })
-export class DespensaPage implements OnInit {
+export class DespensaPage implements OnInit, OnDestroy {
   nombre: string = '';
   error: string | null = null;
   success: boolean = false;
@@ -97,38 +96,107 @@ export class DespensaPage implements OnInit {
   mostrarFormularioCrear: boolean = false;
   mostrarFormularioEditar: boolean = false;
   nombreEditar: string = '';
-  despensaIdEditar: string = '';  constructor(
-    private supabaseService: SupabaseService, 
-    private router: Router, 
-    private modalCtrl: ModalController, 
-    private alertCtrl: AlertController, 
+  despensaIdEditar: string = '';
+  private despensasSub: any = null;
+  private productosSubs = new Map<string, any>();
+  private destroy$ = new Subject<void>();
+  loading = true;
+
+  constructor(
+    private supabaseService: SupabaseService,
+    private router: Router,
+    private alertController: AlertController,
+    private loadingController: LoadingController,
+    private modalCtrl: ModalController,
+    private alertCtrl: AlertController,
     private popoverCtrl: PopoverController
   ) {
     addIcons({
+      addOutline,
+      createOutline,
+      trashOutline,
+      shareOutline,
+      refreshOutline,
+      arrowDownOutline,
       storefrontOutline,
       homeOutline,
       bagOutline,
       ellipsisVertical,
-      shareOutline,
-      createOutline,
-      trashOutline,
       exitOutline,
-      addOutline,
       closeOutline,
       checkmarkCircleOutline,
       alertCircleOutline,
-      saveOutline,
-      archiveOutline,
-      cubeOutline,
-      listOutline,
-      ellipsisHorizontal,
-      personOutline,
-      shieldOutline,
-      eyeOutline,
-      refreshOutline,
-      arrowDownOutline
+      saveOutline
     });
   }
+
+  ngOnInit() {
+    this.cargarDespensas();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.limpiarSuscripciones();
+  }
+
+  private limpiarSuscripciones() {
+    if (this.despensasSub) {
+      this.despensasSub.unsubscribe();
+      this.despensasSub = null;
+    }
+    
+    this.productosSubs.forEach(sub => {
+      if (sub) {
+        sub.unsubscribe();
+      }
+    });
+    this.productosSubs.clear();
+  }
+
+  private configurarSuscripciones() {
+    this.limpiarSuscripciones();
+
+    // Suscripción a cambios en despensas
+    this.despensasSub = from(this.supabaseService.obtenerDespensasUsuario())
+      .pipe(
+        takeUntil(this.destroy$),
+        tap((despensas: any[]) => {
+          this.despensas = despensas;
+          this.configurarSuscripcionesProductos();
+        })
+      )
+      .subscribe({
+        error: (err: Error) => {
+          console.error('Error en suscripción de despensas:', err);
+          this.error = 'Error al cargar despensas';
+        }
+      });
+  }
+
+  private configurarSuscripcionesProductos() {
+    this.despensas.forEach(despensa => {
+      if (!this.productosSubs.has(despensa.id)) {
+        const sub = from(this.supabaseService.obtenerProductosDeDespensa(despensa.id))
+          .pipe(
+            takeUntil(this.destroy$),
+            tap((productos: any[]) => {
+              const index = this.despensas.findIndex(d => d.id === despensa.id);
+              if (index !== -1) {
+                this.despensas[index].productos = productos;
+              }
+            })
+          )
+          .subscribe({
+            error: (err: Error) => {
+              console.error(`Error en suscripción de productos para despensa ${despensa.id}:`, err);
+            }
+          });
+        this.productosSubs.set(despensa.id, sub);
+      }
+    });
+  }
+
   async crearDespensa() {
     if (!this.nombre.trim()) {
       this.error = 'El nombre de la despensa es requerido';
@@ -156,11 +224,17 @@ export class DespensaPage implements OnInit {
 
   async cargarDespensas() {
     try {
-      this.despensas = await this.supabaseService.obtenerDespensasUsuario();
+      this.loading = true;
+      this.error = null;
+      this.configurarSuscripciones();
     } catch (err: any) {
-      this.error = err.message;
+      console.error('Error al cargar despensas:', err);
+      this.error = err.message || 'Error al cargar despensas';
+    } finally {
+      this.loading = false;
     }
   }
+
   async onPopoverAccion(accion: 'editar' | 'eliminar' | 'compartir', item: any) {
     await this.popoverCtrl.dismiss();
 
@@ -175,10 +249,7 @@ export class DespensaPage implements OnInit {
       }
     });
   }
-    ngOnInit() {
-    this.cargarDespensas();
-  }
-  
+
   async doRefresh(event: any) {
     console.log('Actualizando despensas...');
     try {
@@ -195,7 +266,8 @@ export class DespensaPage implements OnInit {
   }
 
   irADespensa(id: string) {
-    this.router.navigate(['/despensa', id]);
+    console.log('Navegando a despensa:', id);
+    this.router.navigate(['/despensa', id], { replaceUrl: false });
   }
 
   editarDespensa(item: any) {
@@ -217,6 +289,7 @@ export class DespensaPage implements OnInit {
       this.error = err.message || 'Error al editar despensa';
     }
   }
+
   async confirmarEliminar(item: any) {
     // Asegura cierre del popover
     try {
@@ -293,6 +366,7 @@ export class DespensaPage implements OnInit {
         return 'person-outline';
     }
   }
+
   cerrarFormularios() {
     this.mostrarFormularioCrear = false;
     this.mostrarFormularioEditar = false;
@@ -307,6 +381,7 @@ export class DespensaPage implements OnInit {
     this.nombre = '';
     this.mostrarFormularioCrear = true;
   }
+
   // Método para manejar el click del overlay
   onOverlayClick(event: Event) {
     // Solo cerrar si se hizo click directamente en el overlay, no en el contenido del modal
@@ -314,6 +389,7 @@ export class DespensaPage implements OnInit {
       this.cerrarFormularios();
     }
   }
+
   async abrirModalCompartir(item: any) {
     try {
       console.log('🔗 Abriendo modal compartir para:', item.despensas.nombre);

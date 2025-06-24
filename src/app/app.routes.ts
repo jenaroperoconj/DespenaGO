@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -8,7 +9,8 @@ export const routes: Routes = [
   },
   {
     path: 'home',
-    loadComponent: () => import('./home/home.page').then( m => m.HomePage)
+    loadComponent: () => import('./home/home.page').then( m => m.HomePage),
+    canActivate: [AuthGuard]
   },
   {
     path: 'login',
@@ -16,11 +18,13 @@ export const routes: Routes = [
   },
   {
     path: 'despensa',
-    loadComponent: () => import('./despensa/despensa.page').then( m => m.DespensaPage)
+    loadComponent: () => import('./despensa/despensa.page').then( m => m.DespensaPage),
+    canActivate: [AuthGuard]
   },
   {
     path: 'despensa/:id',
-    loadComponent: () => import('./detalle-despensa/detalle-despensa.page').then( m => m.DetalleDespensaPage)
+    loadComponent: () => import('./detalle-despensa/detalle-despensa.page').then( m => m.DetalleDespensaPage),
+    canActivate: [AuthGuard]
   },
   {
     path: 'register',
@@ -28,23 +32,32 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage)
-  },  {
-    path: 'notifications',
-    loadComponent: () => import('./notifications/notifications.page').then( m => m.NotificationsPage)
+    loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage),
+    canActivate: [AuthGuard]
   },
   {
     path: 'recipes',
-    loadComponent: () => import('./recipes/recipes.page').then( m => m.RecipesPage)
-  },  {
-    path: 'escaneo-boleta',
-    loadComponent: () => import('./escaneo-boleta/escaneo-boleta.page').then( m => m.EscaneoBoletaPage)
-  },  {
-    path: 'lista-compras',
-    loadComponent: () => import('./lista-deseos/lista-deseos.page').then( m => m.ListaDeseosPage)
-  },  {
-    path: 'lista-compras/:id',
-    loadComponent: () => import('./lista-compras/lista-compras.page').then( m => m.ListaComprasPage)
+    loadComponent: () => import('./recipes/recipes.page').then( m => m.RecipesPage),
+    canActivate: [AuthGuard]
   },
-
+  {
+    path: 'escaneo-boleta',
+    loadComponent: () => import('./escaneo-boleta/escaneo-boleta.page').then( m => m.EscaneoBoletaPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'lista-compras',
+    loadComponent: () => import('./lista-deseos/lista-deseos.page').then( m => m.ListaDeseosPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'lista-compras/:id',
+    loadComponent: () => import('./lista-compras/lista-compras.page').then( m => m.ListaComprasPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'ocr-boleta',
+    loadComponent: () => import('./ocr-boleta/ocr-boleta.component').then(m => m.OcrBoletaComponent),
+    canActivate: [AuthGuard]
+  }
 ];

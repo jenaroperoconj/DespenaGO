@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ModalController, AlertController, ToastController } from '@ionic/angular';
+import { ModalController, AlertController, ToastController, PopoverController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { SupabaseService } from '../core/supabase.service';
-import { AgregarProductoListaModal } from './agregar-producto-lista.modal';
-import { EditarItemListaModal } from './editar-item-lista.modal';
+import { PopoverOpcionesListaComprasComponent } from './popover-opciones-lista-compras.component';
 import { addIcons } from 'ionicons';
 import {
   add,
@@ -40,13 +39,56 @@ export class ListaComprasPage implements OnInit {
   error: string | null = null;
   puedeEditar = false;
 
+  // --- NUEVO: Variables para el formulario overlay ---
+  mostrarFormularioAgregar = false;
+  nuevoProducto = {
+    nombre: '',
+    categoria: '',
+    origen: ''
+  };
+  cantidad = 1;
+  notas = '';
+  errorAgregar: string | null = null;
+  guardando = false;
+
+  // --- NUEVO: Variables para el overlay de edición ---
+  mostrarFormularioEditar = false;
+  itemEditar: any = null;
+  cantidadEditar = 1;
+  notasEditar = '';
+  nombreEditar = '';
+  categoriaEditar = '';
+  origenEditar = '';
+  errorEditar: string | null = null;
+  guardandoEditar = false;
+
+  categoriasPredefinidas = [
+    'Bebestible',
+    'Infusión',
+    'Verdura',
+    'Fruta',
+    'Carne',
+    'Lácteo',
+    'Embutido',
+    'Aceites y Grasas',
+    'Pastas y Arroces',
+    'Masas y Premezclas',
+    'Snack',
+    'Enlatado',
+    'Congelado',
+    'Panadería',
+    'Condimento',
+    'Otro'
+  ];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private supabase: SupabaseService,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private popoverCtrl: PopoverController
   ) {
     addIcons({
       add,
@@ -68,7 +110,14 @@ export class ListaComprasPage implements OnInit {
     this.despensaId = this.route.snapshot.paramMap.get('id')!;
     this.cargarListaCompras();
     this.cargarNombreDespensa();
-    this.verificarPermisos();
+    this.cargarPermisos();
+
+    // Suscribirse a los cambios de queryParams
+    this.route.queryParams.subscribe(params => {
+      if (params['recargar']) {
+        this.cargarListaCompras();
+      }
+    });
   }
   async cargarListaCompras() {
     try {
@@ -97,7 +146,7 @@ export class ListaComprasPage implements OnInit {
       this.nombreDespensa = 'Lista de Compras';
     }  }
 
-  async verificarPermisos() {
+  async cargarPermisos() {
     try {      const { data: { user } } = await this.supabase.client.auth.getUser();
       if (!user) {
         return;
@@ -118,60 +167,116 @@ export class ListaComprasPage implements OnInit {
     }
   }
 
-  async abrirModalAgregarProducto() {
-    const modal = await this.modalCtrl.create({
-      component: AgregarProductoListaModal,
-      componentProps: {
-        despensaId: this.despensaId
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data) {
-      await this.cargarListaCompras();
-      this.mostrarToast('Producto agregado a la lista');
-    }
+  abrirModalAgregarProducto() {
+    this.mostrarFormularioAgregar = true;
+    this.nuevoProducto = { nombre: '', categoria: '', origen: '' };
+    this.cantidad = 1;
+    this.notas = '';
+    this.errorAgregar = null;
   }
 
-  async editarItem(item: any) {
-    const modal = await this.modalCtrl.create({
-      component: EditarItemListaModal,
-      componentProps: {
-        item: item
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data) {
-      await this.cargarListaCompras();
-      this.mostrarToast('Item actualizado');
-    }
+  cerrarFormularioAgregar() {
+    this.mostrarFormularioAgregar = false;
   }
 
-  async incrementarCantidad(item: any) {
-    try {
-      await this.supabase.actualizarCantidadListaCompras(item.id, item.cantidad + 1);
-      await this.cargarListaCompras();
-    } catch (err: any) {
-      this.mostrarError(err.message);
-    }
-  }
-
-  async decrementarCantidad(item: any) {
-    if (item.cantidad <= 1) {
-      await this.confirmarEliminarItem(item);
+  async crearYAgregarProducto() {
+    if (!this.nuevoProducto.nombre.trim()) {
+      this.errorAgregar = 'El nombre del producto es requerido';
       return;
     }
-
     try {
-      await this.supabase.actualizarCantidadListaCompras(item.id, item.cantidad - 1);
+      this.guardando = true;
+      await this.supabase.crearProductoYAgregarALista(
+        this.despensaId,
+        {
+          nombre: this.nuevoProducto.nombre.trim(),
+          categoria: this.nuevoProducto.categoria.trim() || undefined,
+          origen: this.nuevoProducto.origen.trim() || undefined
+        },
+        this.cantidad,
+        this.notas || undefined
+      );
+      this.mostrarToast(`${this.nuevoProducto.nombre} agregado a la lista`);
+      this.cerrarFormularioAgregar();
       await this.cargarListaCompras();
     } catch (err: any) {
-      this.mostrarError(err.message);
+      this.errorAgregar = err.message;
+    } finally {
+      this.guardando = false;
+    }
+  }
+
+  incrementarCantidad() {
+    this.cantidad++;
+  }
+
+  decrementarCantidad() {
+    if (this.cantidad > 1) {
+      this.cantidad--;
+    }
+  }
+
+  onOverlayClick(event: Event) {
+    if (event.target === event.currentTarget) {
+      this.cerrarFormularioAgregar();
+    }
+  }
+
+  editarItem(item: any) {
+    this.mostrarFormularioEditar = true;
+    this.itemEditar = item;
+    this.cantidadEditar = item.cantidad || 1;
+    this.notasEditar = item.notas || '';
+    this.nombreEditar = item.productos?.nombre || '';
+    this.categoriaEditar = item.productos?.categoria || '';
+    this.origenEditar = item.productos?.origen || '';
+    this.errorEditar = null;
+    this.guardandoEditar = false;
+  }
+
+  cerrarFormularioEditar() {
+    this.mostrarFormularioEditar = false;
+    this.itemEditar = null;
+  }
+
+  incrementarCantidadEditar() {
+    this.cantidadEditar++;
+  }
+
+  decrementarCantidadEditar() {
+    if (this.cantidadEditar > 1) {
+      this.cantidadEditar--;
+    }
+  }
+
+  async guardarCambiosEditar() {
+    if (!this.nombreEditar.trim()) {
+      this.errorEditar = 'El nombre del producto es requerido';
+      return;
+    }
+    try {
+      this.guardandoEditar = true;
+      this.errorEditar = null;
+      // Actualizar producto (nombre, categoría, origen)
+      await this.supabase.client
+        .from('productos')
+        .update({
+          nombre: this.nombreEditar.trim(),
+          categoria: this.categoriaEditar.trim() || null,
+          origen: this.origenEditar.trim() || null
+        })
+        .eq('id', this.itemEditar.productos.id);
+      // Actualizar cantidad
+      await this.supabase.actualizarCantidadListaCompras(this.itemEditar.id, this.cantidadEditar);
+      // Actualizar notas
+      await this.supabase.actualizarNotasListaCompras(this.itemEditar.id, this.notasEditar);
+      this.mostrarToast('Item actualizado');
+      this.cerrarFormularioEditar();
+      await this.cargarListaCompras();
+    } catch (err: any) {
+      this.errorEditar = err.message;
+    } finally {
+      this.guardandoEditar = false;
     }
   }
 
@@ -209,8 +314,8 @@ export class ListaComprasPage implements OnInit {
 
   async comprarProducto(item: any) {
     const alert = await this.alertCtrl.create({
-      header: 'Comprar producto',
-      message: `¿Quieres agregar "${item.productos?.nombre}" a la despensa?`,
+      header: 'Agregar producto a la despensa',
+      message: `¿Quieres agregar "${item.productos?.nombre}" a la despensa? Ingresa la fecha de vencimiento del producto para mantener un mejor control de tu inventario.`,
       inputs: [
         {
           name: 'fechaVencimiento',
@@ -229,7 +334,15 @@ export class ListaComprasPage implements OnInit {
             try {
               await this.supabase.comprarProducto(item.id, data.fechaVencimiento);
               await this.cargarListaCompras();
-              this.mostrarToast('Producto agregado a la despensa');
+              
+              // Mensaje más detallado
+              let mensaje = `✅ "${item.productos?.nombre}" agregado a la despensa`;
+              if (data.fechaVencimiento) {
+                mensaje += ` con fecha de vencimiento ${new Date(data.fechaVencimiento).toLocaleDateString()}`;
+              } else if (item.productos?.categoria) {
+                mensaje += ` con fecha de vencimiento automática según la categoría ${item.productos.categoria}`;
+              }
+              this.mostrarToast(mensaje);
             } catch (err: any) {
               this.mostrarError(err.message);
             }
@@ -279,7 +392,9 @@ export class ListaComprasPage implements OnInit {
   }
 
   navegarADespensa() {
-    this.router.navigate(['/detalle-despensa', this.despensaId]);
+    this.router.navigate(['/despensa', this.despensaId], {
+      queryParams: { recargar: true }
+    });
   }
 
   async mostrarToast(mensaje: string) {
@@ -323,5 +438,65 @@ export class ListaComprasPage implements OnInit {
 
   trackByFn(index: number, item: any): any {
     return item.id;
+  }
+
+  async abrirPopoverOpciones(ev: Event, item: any) {
+    const popover = await this.popoverCtrl.create({
+      component: PopoverOpcionesListaComprasComponent,
+      event: ev,
+      translucent: true,
+      componentProps: { item }
+    });
+    popover.onDidDismiss().then(async (res) => {
+      if (res.data === 'editar') {
+        await this.editarItem(item);
+      } else if (res.data === 'eliminar') {
+        await this.confirmarEliminarItem(item);
+      }
+    });
+    await popover.present();
+  }
+
+  async moverTodoADespensa() {
+    if (!this.listaCompras.length) return;
+    try {
+      this.loading = true;
+      // Fallback: mover uno por uno
+      for (const item of this.listaCompras) {
+        await this.supabase.comprarProducto(item.id);
+      }
+      await this.cargarListaCompras();
+      
+      // Mensaje más detallado
+      const cantidad = this.listaCompras.length;
+      this.mostrarToast(`✅ ${cantidad} producto${cantidad > 1 ? 's' : ''} agregado${cantidad > 1 ? 's' : ''} a la despensa con fechas de vencimiento automáticas según sus categorías`);
+    } catch (err: any) {
+      this.mostrarError('Error al mover todos los productos: ' + err.message);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // Funciones para los botones de la lista (con parámetro item)
+  async incrementarCantidadItem(item: any) {
+    try {
+      item.cantidad++;
+      await this.supabase.actualizarCantidadListaCompras(item.id, item.cantidad);
+    } catch (err: any) {
+      this.mostrarError(err.message);
+    }
+  }
+
+  async decrementarCantidadItem(item: any) {
+    if (item.cantidad <= 1) {
+      await this.confirmarEliminarItem(item);
+      return;
+    }
+    try {
+      item.cantidad--;
+      await this.supabase.actualizarCantidadListaCompras(item.id, item.cantidad);
+    } catch (err: any) {
+      this.mostrarError(err.message);
+    }
   }
 }

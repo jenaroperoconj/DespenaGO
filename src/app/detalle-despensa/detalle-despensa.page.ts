@@ -24,6 +24,8 @@ import {
   IonChip,
   IonFab,
   IonFabButton,
+  IonSelect,
+  IonSelectOption,
   PopoverController,
   AlertController
 } from '@ionic/angular/standalone';
@@ -52,8 +54,8 @@ import {
   star,
   eyeOutline,
   helpOutline,
-  listOutline
-} from 'ionicons/icons';
+  listOutline, settingsOutline } from 'ionicons/icons';
+import { ConfiguracionVencimientoModal } from './configuracion-vencimiento.modal';
 
 @Component({
   selector: 'app-detalle-despensa',
@@ -83,7 +85,9 @@ import {
     IonCol,
     IonChip,
     IonFab,
-    IonFabButton
+    IonFabButton,
+    IonSelect,
+    IonSelectOption
   ]
 })
 export class DetalleDespensaPage implements OnInit {
@@ -96,6 +100,25 @@ export class DetalleDespensaPage implements OnInit {
   mostrarFormularioEditar: boolean = false;
 
   productoEditar: any = null;
+
+  categoriasPredefinidas = [
+    'Bebestible',
+    'Infusión',
+    'Verdura',
+    'Fruta',
+    'Carne',
+    'Lácteo',
+    'Embutido',
+    'Aceites y Grasas',
+    'Pastas y Arroces',
+    'Masas y Premezclas',
+    'Snack',
+    'Enlatado',
+    'Congelado',
+    'Panadería',
+    'Condimento',
+    'Otro'
+  ];
 
   nuevoProducto = {
     nombre: '',
@@ -119,27 +142,7 @@ export class DetalleDespensaPage implements OnInit {
     private popoverCtrl: PopoverController,
     private carritoService: CarritoService,
     private alertController: AlertController
-  ) {    addIcons({
-      shareOutline,
-      basketOutline,
-      bagOutline,
-      pricetagOutline,
-      calendarOutline,
-      cubeOutline,
-      ellipsisVertical,
-      createOutline,
-      removeOutline,
-      trashOutline,
-      addOutline,
-      closeOutline,
-      checkmarkCircleOutline,
-      alertCircleOutline,
-      saveOutline,
-      star,
-      eyeOutline,
-      helpOutline,
-      listOutline
-    });
+  ) {    addIcons({shareOutline,settingsOutline,basketOutline,bagOutline,listOutline,pricetagOutline,calendarOutline,cubeOutline,ellipsisVertical,createOutline,removeOutline,trashOutline,addOutline,closeOutline,alertCircleOutline,checkmarkCircleOutline,saveOutline,star,eyeOutline,helpOutline});
   }
 
   ngOnInit() {
@@ -147,6 +150,13 @@ export class DetalleDespensaPage implements OnInit {
     this.cargarProductos();
     this.cargarNombreDespensa();
     this.cargarPermisos();
+
+    // Suscribirse a los cambios de queryParams
+    this.route.queryParams.subscribe(params => {
+      if (params['recargar']) {
+        this.cargarProductos();
+      }
+    });
   }
 
   producto = {
@@ -464,6 +474,35 @@ export class DetalleDespensaPage implements OnInit {
 
   // Navegar a la lista de compras
   irAListaCompras() {
-    this.router.navigate(['/lista-compras', this.despensaId]);
+    this.router.navigate(['/lista-compras', this.despensaId], {
+      queryParams: { recargar: true }
+    });
+  }
+
+  async abrirConfiguracionVencimiento() {
+    if (!this.puedeEditar) {
+      this.mostrarError('No tienes permisos para configurar la despensa');
+      return;
+    }
+
+    const modal = await this.modalCtrl.create({
+      component: ConfiguracionVencimientoModal,
+      componentProps: {
+        despensaId: this.despensaId
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      // Si se guardó la configuración, mostrar mensaje de éxito
+      this.mostrarToast('Configuración guardada correctamente');
+    }
+  }
+
+  private mostrarToast(mensaje: string) {
+    // Implementar lógica para mostrar toast
+    console.log(mensaje);
   }
 }

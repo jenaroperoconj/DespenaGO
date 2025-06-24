@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -29,19 +29,25 @@ import { SupabaseService } from '../core/supabase.service';
 import { InvitacionesPendientesModal } from '../invitaciones/invitaciones-pendientes.modal';
 import { addIcons } from 'ionicons';
 import { 
-  homeOutline, 
+  mailOutline, 
+  gridOutline, 
+  bagHandleOutline, 
+  checkmarkCircleOutline, 
   timeOutline, 
+  alertCircleOutline, 
   warningOutline, 
-  statsChartOutline,
-  gridOutline,
-  listOutline,
-  heartOutline,
-  addOutline,
-  refreshOutline,
-  chevronForwardOutline,
-  alertCircleOutline,
-  checkmarkCircleOutline,
-  bagHandleOutline, notificationsOutline, flashOutline, restaurantOutline, scanOutline, mailOutline, cartOutline } from 'ionicons/icons';
+  flashOutline, 
+  homeOutline, 
+  cartOutline, 
+  restaurantOutline, 
+  scanOutline, 
+  addOutline, 
+  heartOutline, 
+  statsChartOutline, 
+  listOutline, 
+  refreshOutline, 
+  chevronForwardOutline 
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-home',
@@ -73,7 +79,7 @@ import {
     IonMenuButton
   ]
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   productosProximosVencer: any[] = [];
   productosBajoStock: any[] = [];
   estadisticas = {
@@ -87,93 +93,122 @@ export class HomePage implements OnInit {
   loading = true;
   error: string | null = null;
   usuario: any = null;
+  private subscriptions: any[] = [];
   constructor(
     private supabaseService: SupabaseService,
     private router: Router,
     private modalCtrl: ModalController
   ) {
-    addIcons({mailOutline,notificationsOutline,gridOutline,bagHandleOutline,checkmarkCircleOutline,timeOutline,alertCircleOutline,warningOutline,flashOutline,homeOutline,cartOutline,restaurantOutline,scanOutline,addOutline,heartOutline,statsChartOutline,listOutline,refreshOutline,chevronForwardOutline});
+    addIcons({
+      mailOutline,
+      gridOutline,
+      bagHandleOutline,
+      checkmarkCircleOutline,
+      timeOutline,
+      alertCircleOutline,
+      warningOutline,
+      flashOutline,
+      homeOutline,
+      cartOutline,
+      restaurantOutline,
+      scanOutline,
+      addOutline,
+      heartOutline,
+      statsChartOutline,
+      listOutline,
+      refreshOutline,
+      chevronForwardOutline
+    });
   }
 
-  async ngOnInit() {
-    await this.cargarDatosIniciales();
+  ngOnInit() {
+    this.cargarDatos();
+    this.configurarSuscripciones();
   }
 
-  async cargarDatosIniciales() {
-    this.loading = true;
-    this.error = null;
-    
+  ngOnDestroy() {
+    this.limpiarSuscripciones();
+  }
+
+  private configurarSuscripciones() {
+    // Suscripción a cambios en despensas
+    const despensasSub = this.supabaseService.suscribirADespensas(async (payload) => {
+      console.log('Cambio en despensas:', payload);
+      await this.cargarDatos();
+    });
+    this.subscriptions.push(despensasSub);
+
+    // Suscripción a invitaciones
+    const invitacionesSub = this.supabaseService.suscribirAInvitaciones(async (payload) => {
+      console.log('Cambio en invitaciones:', payload);
+      this.contadorInvitaciones = await this.supabaseService.contarInvitacionesPendientes();
+    });
+    this.subscriptions.push(invitacionesSub);
+  }
+
+  private limpiarSuscripciones() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions = [];
+  }
+
+  async cargarDatos() {
     try {
-      // Verificar si está autenticado
-      const { data: { user } } = await this.supabaseService.getUser();
-      if (!user) {
-        this.router.navigate(['/login']);
-        return;
-      }
-      
-      this.usuario = user;      // Cargar datos en paralelo para mejor rendimiento
-      await Promise.all([
-        this.cargarEstadisticas(),
-        this.cargarProductosProximosVencer(),
-        this.cargarProductosBajoStock(),
-        this.cargarContadorInvitaciones()
-      ]);
+      this.loading = true;
+      this.error = null;
 
-    } catch (err: any) {
-      console.error('Error al cargar datos del home:', err);
-      this.error = err.message || 'Error al cargar datos';
+      // Cargar datos del usuario
+      const { data: { user } } = await this.supabaseService.getUser();
+      this.usuario = user;
+
+      // Cargar estadísticas
+      this.estadisticas = await this.supabaseService.obtenerEstadisticasUsuario();
+
+      // Cargar productos próximos a vencer
+      this.productosProximosVencer = await this.supabaseService.obtenerProductosProximosAVencer();
+
+      // Cargar productos con bajo stock
+      this.productosBajoStock = await this.supabaseService.obtenerProductosBajoStock();
+
+      // Cargar contador de invitaciones
+      this.contadorInvitaciones = await this.supabaseService.contarInvitacionesPendientes();
+
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      this.error = 'Error al cargar los datos. Por favor, intenta de nuevo.';
     } finally {
       this.loading = false;
     }
   }
 
-  async cargarEstadisticas() {
-    try {
-      this.estadisticas = await this.supabaseService.obtenerEstadisticasUsuario();
-    } catch (err: any) {
-      console.error('Error al cargar estadísticas:', err);
-    }
-  }
-  async cargarProductosProximosVencer() {
-    try {
-      this.productosProximosVencer = await this.supabaseService.obtenerProductosProximosAVencer(7);
-      console.log('Productos próximos a vencer:', this.productosProximosVencer);
-    } catch (err: any) {
-      console.error('Error al cargar productos próximos a vencer:', err);
-    }
-  }
-  async cargarProductosBajoStock() {
-    try {
-      this.productosBajoStock = await this.supabaseService.obtenerProductosBajoStock(3);
-      console.log('Productos bajo stock:', this.productosBajoStock);
-    } catch (err: any) {
-      console.error('Error al cargar productos con bajo stock:', err);
-    }
-  }
-
   async doRefresh(event: any) {
-    await this.cargarDatosIniciales();
+    await this.cargarDatos();
     event.target.complete();
   }
 
   // Métodos de navegación
   irADespensas() {
-    this.router.navigate(['/despensa']);
+    console.log('Navegando a despensas');
+    this.router.navigate(['/despensa'], { replaceUrl: false });
   }
+
   irAListaDeseos() {
-    this.router.navigate(['/lista-compras']);
+    console.log('Navegando a lista de compras');
+    this.router.navigate(['/lista-compras'], { replaceUrl: false });
   }
 
   irARecetas() {
-    this.router.navigate(['/recipes']);
+    console.log('Navegando a recetas');
+    this.router.navigate(['/recipes'], { replaceUrl: false });
   }
 
-  irANotificaciones() {
-    this.router.navigate(['/notifications']);
+  irAOcrBoleta() {
+    console.log('Navegando a OCR boleta');
+    this.router.navigate(['/ocr-boleta'], { replaceUrl: false });
   }
 
   irADespensa(despensaId: string) {
-    this.router.navigate(['/despensa', despensaId]);
+    console.log('Navegando a despensa:', despensaId);
+    this.router.navigate(['/despensa', despensaId], { replaceUrl: false });
   }
 
   // Utilidades
@@ -232,33 +267,22 @@ export class HomePage implements OnInit {
     return producto?.productos?.categoria || 'sin categoria';
   }
 
-  // Método para cargar contador de invitaciones pendientes
-  async cargarContadorInvitaciones() {
-    try {
-      this.contadorInvitaciones = await this.supabaseService.contarInvitacionesPendientes();
-      console.log('📧 Invitaciones pendientes:', this.contadorInvitaciones);
-    } catch (error: any) {
-      console.error('❌ Error cargando contador de invitaciones:', error);
-      this.contadorInvitaciones = 0;
-    }
-  }  // Método para abrir modal de invitaciones pendientes
+  // Método para abrir modal de invitaciones pendientes
   async abrirInvitacionesPendientes() {
     try {
-      console.log('📧 Abriendo modal de invitaciones pendientes');
-      
       const modal = await this.modalCtrl.create({
         component: InvitacionesPendientesModal,
-        cssClass: 'modal-centrado'
+        cssClass: 'modal-fullscreen'
       });
 
       await modal.present();
-      
-      // Recargar contador después de cerrar modal (en caso de aceptar/rechazar invitaciones)
-      const { data } = await modal.onDidDismiss();
-      await this.cargarContadorInvitaciones();
-      
-    } catch (error: any) {
-      console.error('❌ Error abriendo modal de invitaciones:', error);
+
+      const { data } = await modal.onWillDismiss();
+      if (data?.actualizado) {
+        this.contadorInvitaciones = await this.supabaseService.contarInvitacionesPendientes();
+      }
+    } catch (error) {
+      console.error('Error al abrir invitaciones pendientes:', error);
     }
   }
 }

@@ -12,7 +12,6 @@ import {
   createOutline,
   add,
   ellipsisVertical,
-  notificationsOutline,
   flashOutline,
   restaurantOutline,
   scanOutline,
@@ -21,7 +20,8 @@ import {
   mailOutline,
   bagHandleOutline,
   personOutline,
-  logOutOutline
+  logOutOutline,
+  settingsOutline
 } from 'ionicons/icons';
 
 // Registrar Swiper
@@ -34,7 +34,6 @@ addIcons({
   'remove-outline': removeOutline,
   'add': add,
   'ellipsis-vertical': ellipsisVertical,
-  'notifications-outline': notificationsOutline,
   'flash-outline': flashOutline,
   'restaurant-outline': restaurantOutline,
   'scan-outline': scanOutline,
@@ -43,7 +42,8 @@ addIcons({
   'mail-outline': mailOutline,
   'bag-handle-outline': bagHandleOutline,
   'person-outline': personOutline,
-  'log-out-outline': logOutOutline
+  'log-out-outline': logOutOutline,
+  'settings-outline': settingsOutline
 });
 
 bootstrapApplication(AppComponent, {

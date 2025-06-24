@@ -40,7 +40,7 @@ export class CarritoService {
   ): Promise<boolean> {
     const alert = await this.alertController.create({
       header: '🛒 Producto Agotado',
-      message: `El producto <strong>"${nombreProducto}"</strong> se ha agotado completamente. ¿Te gustaría agregarlo a la lista de compras para recordar recomprarlo?`,
+      message: `El producto "${nombreProducto}" se ha agotado completamente. ¿Te gustaría agregarlo a la lista de compras para recordar recomprarlo?`,
       cssClass: 'alert-stock-agotado',
       buttons: [
         {
@@ -132,7 +132,7 @@ export class CarritoService {
   private async mostrarConfirmacionAgregado(nombreProducto: string): Promise<void> {
     const alert = await this.alertController.create({
       header: '✅ ¡Agregado Exitosamente!',
-      message: `<strong>"${nombreProducto}"</strong> ha sido agregado a la lista de compras. Podrás verlo en la sección correspondiente.`,
+      message: `"${nombreProducto}" ha sido agregado a la lista de compras. Podrás verlo en la sección correspondiente.`,
       buttons: [
         {
           text: 'Entendido',

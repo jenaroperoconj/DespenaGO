@@ -53,7 +53,7 @@ import { SupabaseService } from 'src/app/core/supabase.service';
         <ion-input [(ngModel)]="producto.categoria"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Origen</ion-label>
+        <ion-label position="floating">Marca</ion-label>
         <ion-input [(ngModel)]="producto.origen"></ion-input>
       </ion-item>
       <ion-item>
