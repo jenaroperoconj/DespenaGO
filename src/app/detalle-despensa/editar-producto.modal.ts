@@ -42,7 +42,7 @@ import {
       </ion-item>
 
       <ion-item>
-        <ion-label position="floating">Origen</ion-label>
+        <ion-label position="floating">Marca</ion-label>
         <ion-input [(ngModel)]="producto.productos.origen"></ion-input>
       </ion-item>
 

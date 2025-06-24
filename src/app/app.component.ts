@@ -7,61 +7,69 @@ type AppPage = {
 };
 
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { SupabaseService } from './core/supabase.service';
 import { InvitacionesPendientesModal } from './invitaciones/invitaciones-pendientes.modal';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import {
-  IonApp,
-  IonSplitPane,
-  IonMenu,
-  IonContent,
-  IonMenuToggle,
-  IonItem,
-  IonIcon,
-  IonLabel,
-  IonRouterOutlet,
-  IonRouterLink
-} from '@ionic/angular/standalone';
-import { ModalController } from '@ionic/angular/standalone';
+import { IonApp, IonSplitPane, IonMenu, IonContent, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet, IonAvatar } from '@ionic/angular/standalone';
+import { ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import {
-  mailOutline, mailSharp,
-  paperPlaneOutline, paperPlaneSharp,
-  heartOutline, heartSharp,
-  archiveOutline, archiveSharp,
-  trashOutline, trashSharp,
-  warningOutline, warningSharp,
-  bookmarkOutline, bookmarkSharp,
-  logOutOutline, logOutSharp,
-  logInOutline, logInSharp,
-  homeOutline, homeSharp,
-  gridOutline,
-  restaurantOutline, restaurantSharp,
-  bagHandleOutline, bagHandleSharp,  personOutline, personSharp,
-  notificationsOutline, notificationsSharp,
-  scanOutline, scanSharp,
-  storefrontOutline, storefrontSharp,
-  leafOutline,
-  chevronDownCircleOutline,
-  bagOutline,
+import { 
+  homeOutline, 
+  personOutline, 
+  cartOutline, 
+  listOutline, 
+  settingsOutline, 
+  logOutOutline,
   addOutline,
+  searchOutline,
   closeOutline,
-  cartOutline, cartSharp,
-  checkmarkCircleOutline,
-  alertCircleOutline,
-  saveOutline,
-  basketOutline,
-  pricetagOutline,
-  calendarOutline,
-  cubeOutline,
-  ellipsisVertical,
+  chevronBackOutline,
+  chevronForwardOutline,
+  trashOutline,
   createOutline,
-  removeOutline,
+  checkmarkOutline,
+  alertCircleOutline,
+  informationCircleOutline,
+  warningOutline,
+  helpCircleOutline,
   timeOutline,
-  flashOutline,
-  refreshOutline
+  calendarOutline,
+  locationOutline,
+  mailOutline,
+  callOutline,
+  globeOutline,
+  storefrontOutline,
+  logoFacebook,
+  logoTwitter,
+  logoInstagram,
+  logoLinkedin,
+  logoGithub,
+  logoYoutube,
+  logoWhatsapp,
+  logoDiscord,
+  logoSlack,
+  logoReddit,
+  logoTumblr,
+  logoPinterest,
+  logoVimeo,
+  logoSnapchat,
+  logoFlickr,
+  logoDribbble,
+  logoBehance,
+  logoMedium,
+  logoWordpress,
+  logoStencil,
+  logoBuffer,
+  logoVk,
+  logoSkype,
+  logoSteam,
+  logoTwitch,
+  logoYahoo,
+  logoDropbox,
+  logoFoursquare
 } from 'ionicons/icons';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Platform } from '@ionic/angular';
 
 @Component({
   selector: 'app-root',
@@ -80,53 +88,77 @@ import {
     IonIcon,
     IonLabel,
     IonRouterLink,
-    IonRouterOutlet
+    IonRouterOutlet,
+    IonAvatar
   ],
 })
 export class AppComponent implements OnInit {
   public loggedIn: boolean = false;
   public appPages: AppPage[] = [];
   public nombreUsuario: string = '';
-  public correoUsuario: string = '';  constructor(
+  public correoUsuario: string = '';
+  public avatarUsuario: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  constructor(
+    private platform: Platform,
     private supabaseService: SupabaseService,
     private router: Router,
-    private modalCtrl: ModalController  ) {addIcons({
-      mailOutline, mailSharp,
-      paperPlaneOutline, paperPlaneSharp,
-      heartOutline, heartSharp,
-      archiveOutline, archiveSharp,
-      trashOutline, trashSharp,
-      warningOutline, warningSharp,
-      bookmarkOutline, bookmarkSharp,
-      cartOutline, cartSharp,
-      logOutOutline, logOutSharp,
-      logInOutline, logInSharp,
-      homeOutline, homeSharp,
-      gridOutline,
-      restaurantOutline, restaurantSharp,
-      bagHandleOutline, bagHandleSharp,
-      personOutline, personSharp,
-      notificationsOutline, notificationsSharp,
-      scanOutline, scanSharp,
-      storefrontOutline, storefrontSharp,
-      leafOutline,
-      chevronDownCircleOutline,
-      bagOutline,
+    private modalCtrl: ModalController
+  ) {
+    this.initializeApp();
+    addIcons({
+      homeOutline,
+      personOutline,
+      cartOutline,
+      listOutline,
+      settingsOutline,
+      logOutOutline,
       addOutline,
+      searchOutline,
       closeOutline,
-      checkmarkCircleOutline,
-      alertCircleOutline,
-      saveOutline,
-      basketOutline,
-      pricetagOutline,
-      calendarOutline,
-      cubeOutline,
-      ellipsisVertical,
+      chevronBackOutline,
+      chevronForwardOutline,
+      trashOutline,
       createOutline,
-      removeOutline,
+      checkmarkOutline,
+      alertCircleOutline,
+      informationCircleOutline,
+      warningOutline,
+      helpCircleOutline,
       timeOutline,
-      flashOutline,
-      refreshOutline
+      calendarOutline,
+      locationOutline,
+      mailOutline,
+      callOutline,
+      globeOutline,
+      storefrontOutline,
+      logoFacebook,
+      logoTwitter,
+      logoInstagram,
+      logoLinkedin,
+      logoGithub,
+      logoYoutube,
+      logoWhatsapp,
+      logoDiscord,
+      logoSlack,
+      logoReddit,
+      logoTumblr,
+      logoPinterest,
+      logoVimeo,
+      logoSnapchat,
+      logoFlickr,
+      logoDribbble,
+      logoBehance,
+      logoMedium,
+      logoWordpress,
+      logoStencil,
+      logoBuffer,
+      logoVk,
+      logoSkype,
+      logoSteam,
+      logoTwitch,
+      logoYahoo,
+      logoDropbox,
+      logoFoursquare
     });
   }
 
@@ -169,7 +201,9 @@ export class AppComponent implements OnInit {
       
       this.setMenu();
     });
+    this.configurarStatusBar();
   }
+
   async obtenerDatosUsuario() {
     try {
       const { data: user } = await this.supabaseService.getUser();
@@ -178,14 +212,15 @@ export class AppComponent implements OnInit {
       if (id) {
         const { data, error } = await this.supabaseService.client
           .from('usuarios')
-          .select('nombre, email')
+          .select('nombre, email, avatar_url')
           .eq('id', id)
           .single();
 
         if (!error && data) {
           this.nombreUsuario = data.nombre;
           this.correoUsuario = data.email;
-          console.log('Datos de usuario obtenidos:', { nombre: this.nombreUsuario, correo: this.correoUsuario });
+          this.avatarUsuario = data.avatar_url || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+          console.log('Datos de usuario obtenidos:', { nombre: this.nombreUsuario, correo: this.correoUsuario, avatar: this.avatarUsuario });
         } else {
           console.error('Error al obtener datos del usuario:', error);
           this.limpiarDatosUsuario();
@@ -203,6 +238,7 @@ export class AppComponent implements OnInit {
   limpiarDatosUsuario() {
     this.nombreUsuario = '';
     this.correoUsuario = '';
+    this.avatarUsuario = 'https://ionicframework.com/docs/img/demos/avatar.svg';
     console.log('Datos de usuario limpiados');
   }
 
@@ -212,38 +248,45 @@ export class AppComponent implements OnInit {
   }  setMenu() {
     this.appPages = this.loggedIn
       ? [
-      { title: 'Inicio', url: '/home', icon: 'home-outline' },
-      { title: 'Mis Despensas', url: '/despensa', icon: 'storefront-outline' },
-      { 
-        title: 'Invitaciones',
-        url: '',
-        icon: 'mail-outline',
-        action: async () => {
-          await this.abrirInvitacionesPendientes();
-          const menu = document.querySelector('ion-menu');
-          menu?.close();
-        }
-      },
-      { title: 'Lista de Compras', url: '/lista-compras', icon: 'cart-outline' },
-      { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
-      { title: 'Mi Carrito', url: '/shopping-cart', icon: 'bag-handle-outline' },
-      { title: 'Perfil', url: '/profile', icon: 'person-outline' },
-      { title: 'Notificaciones', url: '/notifications', icon: 'notifications-outline' },
-      { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'scan-outline' },
-      { 
-        title: 'Cerrar sesión',
-        url: '/login',
-        icon: 'log-out-outline',
-        action: async () => {
-          await this.logout();
-          const menu = document.querySelector('ion-menu');
-          menu?.close();
-        }
-      }
-    ]
-  : [
-      { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
-    ];
+          { 
+            title: 'Inicio', 
+            url: '/home', 
+            icon: 'home-outline',
+            action: () => {
+              this.router.navigate(['/home'], { replaceUrl: false });
+              const menu = document.querySelector('ion-menu');
+              menu?.close();
+            }
+          },
+          { title: 'Perfil', url: '/profile', icon: 'person-outline' },
+          { title: 'Lista de Compras', url: '/lista-compras', icon: 'list-outline' },
+          { title: 'Mis Despensas', url: '/despensa', icon: 'storefront-outline' },
+          { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
+          { title: 'Escaneo Boletas', url: '/ocr-boleta', icon: 'scan-outline' },
+          { 
+            title: 'Invitaciones',
+            url: '',
+            icon: 'mail-outline',
+            action: async () => {
+              await this.abrirInvitacionesPendientes();
+              const menu = document.querySelector('ion-menu');
+              menu?.close();
+            }
+          },
+          { 
+            title: 'Cerrar sesión',
+            url: '/login',
+            icon: 'log-out-outline',
+            action: async () => {
+              await this.logout();
+              const menu = document.querySelector('ion-menu');
+              menu?.close();
+            }
+          }
+        ]
+      : [
+          { title: 'Iniciar sesión', url: '/login', icon: 'log-in-outline' }
+        ];
   }async logout() {
     try {
       console.log('Iniciando proceso de logout...');
@@ -274,5 +317,19 @@ export class AppComponent implements OnInit {
     } catch (error: any) {
       console.error('❌ Error abriendo modal de invitaciones:', error);
     }
+  }
+
+  async configurarStatusBar() {
+    try {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setStyle({ style: Style.Dark });
+    } catch (e) {
+      console.warn('StatusBar plugin no disponible o no soportado en web.');
+    }
+  }
+
+  async initializeApp() {
+    await this.platform.ready();
+    await StatusBar.setStyle({ style: Style.Dark });
   }
 }

@@ -71,3 +71,7 @@ Thumbs.db
 
 # Android
 /android
+
+# Archivos de entorno Angular
+src/environments/environment.ts
+src/environments/environment.prod.ts

@@ -51,7 +51,7 @@ ion-content{--background:linear-gradient(135deg,#F1F8E9 0%,#E8F5E8 100%);--paddi
 .list-actions{margin-top:32px;padding:0 16px}
 ion-item-options ion-item-option{display:flex;flex-direction:column;align-items:center;justify-content:center}
 ion-item-options ion-item-option ion-icon{color:white!important;font-size:1.2em!important}
-ion-fab,ion-fab[slot="fixed"]{position:fixed!important;bottom:20px!important;right:20px!important;z-index:9999!important;opacity:1!important;visibility:visible!important;display:block!important}
+ion-fab,ion-fab[slot="fixed"]{position:fixed!important;bottom:20px!important;right:20px!important;z-index:9999!important;opacity:1!important;visibility:visible!important;display:block!important;margin:0!important}
 ion-fab-button{--background:var(--sp)!important;--background-hover:var(--sa)!important;--color:white!important;--border-radius:50%!important;--box-shadow:0 8px 24px rgba(46,125,50,0.4)!important;width:56px!important;height:56px!important;z-index:10000!important;opacity:1!important;visibility:visible!important;display:flex!important;transform:scale(1)!important;transition:all 0.3s ease!important}
 ion-fab-button:hover{--background:var(--sa)!important;--box-shadow:0 12px 32px rgba(46,125,50,0.5)!important;transform:scale(1.05) translateY(-2px)!important}
 ion-fab-button ion-icon{color:white!important;font-size:1.6em!important;opacity:1!important;visibility:visible!important;display:flex!important;font-family:'Ionicons'!important}
@@ -67,3 +67,454 @@ ion-fab-button:not([hidden]){display:flex!important}
 @media (max-width:768px){ion-fab{bottom:16px!important;right:16px!important}ion-fab-button{width:48px!important;height:48px!important}ion-fab-button ion-icon{font-size:1.4em!important}}
 @media (max-width:576px){.stats-grid{grid-template-columns:1fr;gap:16px}.stat-item{justify-content:center;text-align:center;flex-direction:column;gap:12px}.card-main-content{flex-direction:column;gap:16px;padding:16px}.quantity-controls{flex-direction:row;min-width:auto;width:100%;justify-content:space-between}.item-actions{flex-direction:row;width:100%;justify-content:center}.quantity-display{order:1}.item-details h3{font-size:1.1rem}.circular-icon{width:48px!important;height:48px!important}}
 @media (max-width:320px){.content-container{padding:12px}.base-card{margin-bottom:12px}.card-main-content{padding:12px}.stats-grid{gap:12px}.stat-item h3{font-size:1.6em}}
+
+// Hero Section
+.hero-section {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+  padding: 2rem 1.5rem 3rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+  &::before {
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+  }
+  &::after {
+    bottom: -30%;
+    left: -10%;
+    width: 150px;
+    height: 150px;
+  }
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+.hero-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0 0 1.5rem;
+}
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  ion-icon {
+    font-size: 1.2rem;
+  }
+}
+.despensa-hero-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: white;
+  ion-icon {
+    font-size: 32px;
+  }
+}
+// Cards de productos
+.productos-container {
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+.producto-card {
+  position: relative;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.15);
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.1);
+  margin-bottom: 16px;
+  background: white;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.2);
+  }
+  ion-card-content {
+    padding: 20px;
+    .card-main-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+      .producto-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        ion-icon {
+          font-size: 24px;
+        }
+      }
+      .producto-details {
+        flex: 1;
+        min-width: 0;
+        h3 {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: var(--ion-text-color);
+          margin: 0 0 8px 0;
+          word-wrap: break-word;
+        }
+        .producto-info {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          .categoria-chip {
+            --border-radius: 20px;
+            font-size: 0.75rem;
+            height: 24px;
+            align-self: flex-start;
+            --background: rgba(var(--ion-color-primary-rgb), 0.1);
+            --color: var(--ion-color-primary);
+            ion-icon {
+              font-size: 12px;
+              margin-right: 4px;
+            }
+          }
+          .info-chip.role {
+            font-size: 0.85rem;
+            color: var(--ion-color-medium);
+            margin-left: 8px;
+          }
+          .product-notes {
+            font-size: 0.95rem;
+            color: var(--ion-color-medium-shade);
+            font-style: italic;
+            margin: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+            background: var(--ion-color-light);
+            border-radius: 12px;
+            border-left: 3px solid var(--ion-color-primary);
+            padding: 8px 12px;
+          }
+          .item-metadata {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+            .added-info, .date-info {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              color: var(--ion-color-medium);
+              font-size: 0.9rem;
+              font-weight: 500;
+              ion-icon {
+                font-size: 16px;
+                color: var(--ion-color-primary);
+              }
+            }
+          }
+        }
+        .quantity-controls {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 12px;
+          .quantity-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--ion-color-primary);
+            min-width: 32px;
+            text-align: center;
+          }
+        }
+        .item-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+      }
+      .options-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 10;
+        --color: var(--ion-color-medium);
+        --background: transparent;
+        width: 40px;
+        height: 40px;
+        &:hover {
+          --color: var(--ion-text-color);
+          --background: rgba(0, 0, 0, 0.05);
+        }
+        ion-icon {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+// Estado vacío
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  .empty-icon {
+    font-size: 4rem;
+    color: var(--ion-color-light);
+    margin-bottom: 20px;
+  }
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ion-text-color);
+    margin-bottom: 12px;
+  }
+  p {
+    color: var(--ion-color-medium);
+    margin-bottom: 30px;
+    line-height: 1.5;
+  }
+  .empty-button {
+    --border-radius: 25px;
+    --padding-start: 32px;
+    --padding-end: 32px;
+    --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+  }
+}
+// FAB Button
+ion-fab {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  margin: 0 !important;
+}
+ion-fab-button {
+  --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.4);
+  --border-radius: 16px;
+}
+// Responsividad
+@media (max-width: 768px) {
+  .productos-container {
+    padding: 0 0.5rem;
+  }
+  .producto-card ion-card-content {
+    padding: 12px;
+  }
+  .card-main-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .productos-container {
+    padding: 0 0.25rem;
+  }
+  .producto-card ion-card-content {
+    padding: 8px;
+  }
+  .card-main-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  ion-fab, ion-fab[slot="fixed"] {
+    bottom: env(safe-area-inset-bottom, 8px) !important;
+    right: env(safe-area-inset-right, 8px) !important;
+    margin-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    margin-right: max(8px, env(safe-area-inset-right, 8px)) !important;
+  }
+}
+
+.producto-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  word-wrap: break-word;
+}
+.options-button {
+  --color: var(--ion-color-medium);
+  --background: transparent;
+  width: 40px;
+  height: 40px;
+  margin-left: 8px;
+  &:hover {
+    --color: var(--ion-text-color);
+    --background: rgba(0, 0, 0, 0.05);
+  }
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+// Estilos para el modal de agregar producto
+::ng-deep .add-product-modal {
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 16px;
+  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+  ion-content {
+    --background: var(--ion-background-color);
+  }
+
+  .modal-wrapper {
+    background: var(--ion-background-color);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  ion-header {
+    ion-toolbar {
+      --background: var(--ion-background-color);
+      --border-color: transparent;
+      padding: 16px;
+      border-bottom: 1px solid rgba(var(--ion-color-medium-rgb), 0.1);
+
+      ion-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--ion-text-color);
+      }
+
+      ion-buttons {
+        ion-button {
+          --color: var(--ion-color-medium);
+          --background: transparent;
+          --background-hover: rgba(var(--ion-color-medium-rgb), 0.1);
+          --border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          margin: 0;
+
+          ion-icon {
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+
+  ion-content {
+    .ion-padding {
+      padding: 20px;
+    }
+
+    ion-item {
+      --background: transparent;
+      --border-color: rgba(var(--ion-color-medium-rgb), 0.1);
+      --border-radius: 12px;
+      --padding-start: 16px;
+      --padding-end: 16px;
+      --inner-padding-end: 0;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+
+      ion-label {
+        color: var(--ion-text-color);
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      ion-input, ion-textarea {
+        --padding-start: 0;
+        --padding-end: 0;
+        --padding-top: 8px;
+        --padding-bottom: 8px;
+        font-size: 1rem;
+        color: var(--ion-text-color);
+      }
+
+      &.item-has-focus {
+        --border-color: var(--ion-color-primary);
+        --highlight-color: var(--ion-color-primary);
+        border-color: var(--ion-color-primary);
+      }
+    }
+
+    ion-button {
+      --border-radius: 12px;
+      --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+      margin: 0;
+      height: 48px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 1rem;
+
+      &.button-solid {
+        --background: var(--ion-color-primary);
+        --background-hover: var(--ion-color-primary-shade);
+        --background-activated: var(--ion-color-primary-shade);
+      }
+    }
+  }
+}
+
+// Estilos para el input de fecha en el diálogo de alerta
+::ng-deep .alert-wrapper {
+  .alert-input-wrapper {
+    input[type="date"] {
+      background-color: var(--ion-color-light);
+      border: 2px solid var(--ion-color-success);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--ion-color-success);
+      font-weight: 500;
+      width: 100%;
+      margin: 8px 0;
+      
+      &::-webkit-calendar-picker-indicator {
+        background-color: var(--ion-color-success);
+        padding: 5px;
+        cursor: pointer;
+        border-radius: 3px;
+        filter: invert(1);
+      }
+      
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(var(--ion-color-success-rgb), 0.2);
+      }
+    }
+  }
+}

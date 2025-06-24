@@ -1,9 +1,12 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'despensaGO',
-  webDir: 'www'
+  appId: 'com.despensago.app',
+  appName: 'DespensaGO',
+  webDir: 'www',
+  server: {
+    androidScheme: 'https'
+  }
 };
 
 export default config;

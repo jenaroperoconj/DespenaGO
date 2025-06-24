@@ -1,13 +1,185 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>profile</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="ion-text-center">Mi Perfil</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">profile</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="false" class="ion-padding">
+  <div class="profile-container">
+    <div class="profile-header">
+      <div class="avatar-container">
+        <ion-avatar class="profile-avatar">
+          <img [src]="userProfile.avatar" alt="Avatar del usuario">
+        </ion-avatar>
+        <ion-button fill="clear" class="edit-avatar" *ngIf="editando">
+          <ion-icon name="camera-outline"></ion-icon>
+          <input 
+            type="file" 
+            accept="image/*" 
+            (change)="subirImagenPerfil($event)"
+            style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;"
+          >
+        </ion-button>
+      </div>
+      <h2>{{ userProfile.name }}</h2>
+      <p class="member-since" *ngIf="userProfile.created_at">
+        <ion-icon name="calendar-outline"></ion-icon>
+        Miembro desde {{ formatearFecha(userProfile.created_at) }}
+      </p>
+    </div>
+
+    <ion-card class="profile-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="person-outline"></ion-icon>
+          Información Personal
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-icon name="mail-outline" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Correo Electrónico</h3>
+              <p>{{ userProfile.email }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input 
+              type="text" 
+              [(ngModel)]="userProfile.name" 
+              placeholder="Tu nombre"
+              [disabled]="!editando">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="call-outline" slot="start"></ion-icon>
+            <ion-label position="stacked">Teléfono</ion-label>
+            <ion-input 
+              type="tel" 
+              [(ngModel)]="userProfile.telefono" 
+              placeholder="Ingresa tu teléfono"
+              [disabled]="!editando">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="location-outline" slot="start"></ion-icon>
+            <ion-label position="stacked">País</ion-label>
+            <ion-select 
+              [(ngModel)]="userProfile.pais" 
+              placeholder="Selecciona tu país"
+              [disabled]="!editando">
+              <ion-select-option *ngFor="let pais of paises" [value]="pais">
+                {{ pais }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-list>
+
+        <div class="edit-buttons">
+          <ion-button *ngIf="!editando" (click)="editando = true" fill="outline" class="edit-button">
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            Editar Perfil
+          </ion-button>
+          <div *ngIf="editando" class="save-cancel-buttons">
+            <ion-button (click)="guardarCambios()" color="success" class="save-button" [disabled]="loading">
+              <ion-icon name="save-outline" slot="start"></ion-icon>
+              <ion-spinner *ngIf="loading" name="crescent" style="width: 20px; height: 20px; margin-right: 8px;"></ion-spinner>
+              Guardar
+            </ion-button>
+            <ion-button (click)="cancelarEdicion()" color="medium" fill="outline" class="cancel-button" [disabled]="loading">
+              Cancelar
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="security-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          Seguridad
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item button (click)="mostrarModalCambioContrasena()">
+            <ion-icon name="key-outline" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Cambiar Contraseña</h3>
+              <p>Actualiza tu contraseña de acceso</p>
+            </ion-label>
+            <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stats-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="stats-chart-outline"></ion-icon>
+          Estadísticas
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <ion-icon name="storefront-outline"></ion-icon>
+            <div class="stat-info">
+              <h3>Despensas</h3>
+              <p>{{ userProfile.stats.totalDespensas }}</p>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <ion-icon name="cube-outline"></ion-icon>
+            <div class="stat-info">
+              <h3>Productos</h3>
+              <p>{{ userProfile.stats.totalProductos }}</p>
+            </div>
+          </div>
+
+          <div class="stat-item warning">
+            <ion-icon name="time-outline"></ion-icon>
+            <div class="stat-info">
+              <h3>Por Vencer</h3>
+              <p>{{ userProfile.stats.productosProximosVencer }}</p>
+            </div>
+          </div>
+
+          <div class="stat-item danger">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <div class="stat-info">
+              <h3>Vencidos</h3>
+              <p>{{ userProfile.stats.productosVencidos }}</p>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="logout-container">
+      <ion-button expand="block" color="danger" (click)="cerrarSesion()" class="logout-button">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Cerrar Sesión
+      </ion-button>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="showToast"
+    [message]="toastMessage"
+    [duration]="3000"
+    (didDismiss)="showToast = false">
+  </ion-toast>
 </ion-content>

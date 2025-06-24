@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient  } from '@supabase/supabase-js';
+import { environment } from '../../environments/environment';
+
+export interface ConfiguracionVencimiento {
+  categoria: string;
+  dias_vencimiento: number;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -7,10 +13,29 @@ import { createClient, SupabaseClient  } from '@supabase/supabase-js';
 export class SupabaseService {
   private supabase: SupabaseClient;
 
+  private readonly configuracionPorDefecto: ConfiguracionVencimiento[] = [
+    { categoria: 'Bebestible', dias_vencimiento: 180 },
+    { categoria: 'Infusión', dias_vencimiento: 365 },
+    { categoria: 'Verdura', dias_vencimiento: 7 },
+    { categoria: 'Fruta', dias_vencimiento: 7 },
+    { categoria: 'Carne', dias_vencimiento: 5 },
+    { categoria: 'Lácteo', dias_vencimiento: 30 },
+    { categoria: 'Embutido', dias_vencimiento: 15 },
+    { categoria: 'Aceites y Grasas', dias_vencimiento: 365 },
+    { categoria: 'Pastas y Arroces', dias_vencimiento: 365 },
+    { categoria: 'Masas y Premezclas', dias_vencimiento: 30 },
+    { categoria: 'Snack', dias_vencimiento: 180 },
+    { categoria: 'Enlatado', dias_vencimiento: 365 },
+    { categoria: 'Congelado', dias_vencimiento: 180 },
+    { categoria: 'Panadería', dias_vencimiento: 7 },
+    { categoria: 'Condimento', dias_vencimiento: 365 },
+    { categoria: 'Otro', dias_vencimiento: 180 }
+  ];
+
   constructor() {
     this.supabase = createClient(
-      'https://qiatmsfnhjqfdbxfokig.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpYXRtc2ZuaGpxZmRieGZva2lnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3NjAzODMsImV4cCI6MjA2MjMzNjM4M30.O5g4ovc0N-XYecog0bsJJP2EmNYi2iTtqT_c0odMBng'
+      environment.supabaseUrl,
+      environment.supabaseKey
     );
   }
 
@@ -203,6 +228,18 @@ export class SupabaseService {
     fecha_vencimiento?: string;
     stock?: number;
   }) {
+    // Si no hay fecha de vencimiento y hay categoría, buscar configuración
+    if (!datos.fecha_vencimiento && datos.categoria) {
+      const configuraciones = await this.obtenerConfiguracionVencimiento(despensaId);
+      const config = configuraciones.find(c => c.categoria === datos.categoria);
+      
+      if (config) {
+        const fechaVencimiento = new Date();
+        fechaVencimiento.setDate(fechaVencimiento.getDate() + config.dias_vencimiento);
+        datos.fecha_vencimiento = fechaVencimiento.toISOString().split('T')[0];
+      }
+    }
+
     // 1. Insertar producto
     const { data: producto, error: errorProd } = await this.supabase
       .from('productos')
@@ -1286,11 +1323,18 @@ export class SupabaseService {
         throw new Error('Solo el propietario puede enviar invitaciones');
       }
 
-      // 2. Obtener ID del propietario
+      // 2. Obtener ID del propietario y nombre de la despensa
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuario no autenticado');
       }
+
+      // Obtener nombre de la despensa
+      const { data: despensaData } = await this.supabase
+        .from('despensas')
+        .select('nombre')
+        .eq('id', despensaId)
+        .single();
 
       // 3. Verificar si ya existe una invitación pendiente
       const { data: invitacionExistente, error: errorVerificacion } = await this.supabase
@@ -1316,10 +1360,11 @@ export class SupabaseService {
         
         if (usuarioExistente) {
           usuarioInvitadoId = usuarioExistente.id;
+        } else {
+          throw new Error('Solo puedes invitar a usuarios registrados en DespensaGO.');
         }
       } catch (e) {
-        // No hay problema si no encontramos el usuario, se registrará después
-        console.log('👤 Usuario no registrado aún, invitación por email:', emailInvitado);
+        throw new Error('Solo puedes invitar a usuarios registrados en DespensaGO.');
       }
 
       // 5. Crear la invitación
@@ -1757,7 +1802,7 @@ export class SupabaseService {
           id: item.producto_id,
           nombre: item.producto_nombre,
           categoria: item.producto_categoria,
-          origen: null, // La función no incluye origen, se puede agregar después
+          origen: item.producto_origen || item.producto_marca || null,
           descripcion: item.producto_descripcion,
           marca: item.producto_marca,
           unidad_medida: item.producto_unidad_medida,
@@ -1975,12 +2020,24 @@ export class SupabaseService {
     // 1. Obtener datos del carrito
     const { data: itemCarrito, error: errorCarrito } = await this.supabase
       .from('carrito')
-      .select('*')
+      .select('*, productos(*)')
       .eq('id', carritoId)
       .single();
 
     if (errorCarrito) throw errorCarrito;
     if (!itemCarrito) throw new Error('Item de carrito no encontrado');
+
+    // Si no hay fecha de vencimiento y hay categoría, buscar configuración
+    if (!fechaVencimiento && itemCarrito.productos?.categoria) {
+      const configuraciones = await this.obtenerConfiguracionVencimiento(itemCarrito.despensa_id);
+      const config = configuraciones.find(c => c.categoria === itemCarrito.productos.categoria);
+      
+      if (config) {
+        const fechaVencimientoAuto = new Date();
+        fechaVencimientoAuto.setDate(fechaVencimientoAuto.getDate() + config.dias_vencimiento);
+        fechaVencimiento = fechaVencimientoAuto.toISOString().split('T')[0];
+      }
+    }
 
     // 2. Verificar si el producto ya existe en la despensa
     const { data: productoExistente, error: errorExistente } = await this.supabase
@@ -2090,5 +2147,361 @@ export class SupabaseService {
 
     if (error) throw error;
     return data || [];
+  }
+
+  // === PRODUCTOS APRENDIDOS (GLOBAL) ===
+
+  /**
+   * Obtiene todos los productos aprendidos globales
+   */
+  async obtenerProductosAprendidosGlobal(): Promise<any[]> {
+    const { data, error } = await this.supabase
+      .from('productos_aprendidos')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  }
+
+  /**
+   * Inserta o actualiza un producto aprendido globalmente
+   */
+  async upsertProductoAprendido(producto: {
+    nombre: string;
+    categoria?: string;
+    codigo_producto?: string;
+    confianza?: number;
+    veces_detectado?: number;
+    clasificaciones_correctas?: number;
+    clasificaciones_totales?: number;
+  }) {
+    // Si hay código, usarlo como clave única, si no, usar nombre
+    const match = producto.codigo_producto
+      ? { codigo_producto: producto.codigo_producto }
+      : { nombre: producto.nombre };
+    const { data: existente, error: errorExistente } = await this.supabase
+      .from('productos_aprendidos')
+      .select('*')
+      .match(match)
+      .maybeSingle();
+    if (errorExistente) throw errorExistente;
+
+    if (existente) {
+      // Actualizar
+      const { error } = await this.supabase
+        .from('productos_aprendidos')
+        .update({
+          categoria: producto.categoria || existente.categoria,
+          confianza: producto.confianza ?? existente.confianza,
+          veces_detectado: (existente.veces_detectado || 1) + 1,
+          clasificaciones_correctas: producto.clasificaciones_correctas ?? existente.clasificaciones_correctas,
+          clasificaciones_totales: producto.clasificaciones_totales ?? existente.clasificaciones_totales,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existente.id);
+      if (error) throw error;
+    } else {
+      // Insertar
+      const { error } = await this.supabase
+        .from('productos_aprendidos')
+        .insert({
+          nombre: producto.nombre,
+          categoria: producto.categoria || null,
+          codigo_producto: producto.codigo_producto || null,
+          confianza: producto.confianza ?? 1,
+          veces_detectado: producto.veces_detectado ?? 1,
+          clasificaciones_correctas: producto.clasificaciones_correctas ?? 0,
+          clasificaciones_totales: producto.clasificaciones_totales ?? 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      if (error) throw error;
+    }
+  }
+
+  /**
+   * Registra una clasificación (correcta o total) para un producto aprendido
+   */
+  async registrarClasificacionProductoAprendido(nombre: string, codigo_producto: string | null, esCorrecta: boolean) {
+    // Buscar producto por código o nombre
+    const match = codigo_producto
+      ? { codigo_producto }
+      : { nombre };
+    const { data: existente, error: errorExistente } = await this.supabase
+      .from('productos_aprendidos')
+      .select('*')
+      .match(match)
+      .maybeSingle();
+    if (errorExistente) throw errorExistente;
+    if (!existente) return;
+    const nuevasCorrectas = (existente.clasificaciones_correctas || 0) + (esCorrecta ? 1 : 0);
+    const nuevasTotales = (existente.clasificaciones_totales || 0) + 1;
+    const { error } = await this.supabase
+      .from('productos_aprendidos')
+      .update({
+        clasificaciones_correctas: nuevasCorrectas,
+        clasificaciones_totales: nuevasTotales,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existente.id);
+    if (error) throw error;
+  }
+
+  /**
+   * Calcula el porcentaje de precisión global del sistema
+   */
+  async obtenerPrecisionGlobal(): Promise<number> {
+    const { data, error } = await this.supabase
+      .from('productos_aprendidos')
+      .select('clasificaciones_correctas, clasificaciones_totales');
+    if (error) throw error;
+    let correctas = 0;
+    let totales = 0;
+    (data || []).forEach((p: any) => {
+      correctas += p.clasificaciones_correctas || 0;
+      totales += p.clasificaciones_totales || 0;
+    });
+    if (totales === 0) return 0;
+    return Math.round((correctas / totales) * 100);
+  }
+
+  /**
+   * Registra el resultado de una clasificación de producto, actualizándolo o creándolo.
+   * Encapsula toda la lógica de aprendizaje en una sola llamada.
+   */
+  async registrarAceptacionProducto(producto: {
+    nombreOriginal: string;
+    categoria: string;
+    codigoProducto: string | null;
+    esCorrecta: boolean;
+  }) {
+    const match = producto.codigoProducto
+      ? { codigo_producto: producto.codigoProducto }
+      // Normaliza el nombre para la búsqueda para evitar duplicados por espacios o mayúsculas
+      : { nombre: producto.nombreOriginal.trim().toLowerCase() };
+
+    const { data: existente, error: findError } = await this.supabase
+      .from('productos_aprendidos')
+      .select('*')
+      .match(match)
+      .maybeSingle();
+
+    if (findError) throw findError;
+
+    if (existente) {
+      // Product exists, update its stats
+      const { error: updateError } = await this.supabase
+        .from('productos_aprendidos')
+        .update({
+          veces_detectado: (existente.veces_detectado || 0) + 1,
+          clasificaciones_correctas: (existente.clasificaciones_correctas || 0) + (producto.esCorrecta ? 1 : 0),
+          clasificaciones_totales: (existente.clasificaciones_totales || 0) + 1,
+          categoria: producto.categoria, // Actualiza la categoría por si fue corregida
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existente.id);
+      if (updateError) throw updateError;
+    } else {
+      // Product doesn't exist, insert it
+      const { error: insertError } = await this.supabase
+        .from('productos_aprendidos')
+        .insert({
+          nombre: producto.nombreOriginal.trim().toLowerCase(),
+          categoria: producto.categoria,
+          codigo_producto: producto.codigoProducto,
+          veces_detectado: 1,
+          clasificaciones_correctas: producto.esCorrecta ? 1 : 0,
+          clasificaciones_totales: 1,
+        });
+      if (insertError) throw insertError;
+    }
+  }
+
+  // Métodos para suscripciones en tiempo real
+  suscribirADespensas(callback: (payload: any) => void) {
+    return this.supabase
+      .channel('despensas-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'despensas'
+        },
+        callback
+      )
+      .subscribe();
+  }
+
+  suscribirAProductosDespensa(despensaId: string, callback: (payload: any) => void) {
+    return this.supabase
+      .channel(`productos-despensa-${despensaId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'producto_despensa',
+          filter: `despensa_id=eq.${despensaId}`
+        },
+        callback
+      )
+      .subscribe();
+  }
+
+  suscribirAInvitaciones(callback: (payload: any) => void) {
+    return this.supabase
+      .channel('invitaciones-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invitaciones_despensa'
+        },
+        callback
+      )
+      .subscribe();
+  }
+
+  // Método para limpiar todas las suscripciones
+  limpiarSuscripciones() {
+    this.supabase.removeAllChannels();
+  }
+
+  async obtenerConfiguracionVencimiento(despensaId: string): Promise<ConfiguracionVencimiento[]> {
+    const { data, error } = await this.supabase
+      .from('configuracion_vencimiento')
+      .select('*')
+      .eq('despensa_id', despensaId);
+
+    if (error) throw error;
+
+    // Si no hay configuración, inicializar con valores por defecto
+    if (!data || data.length === 0) {
+      await this.guardarConfiguracionVencimiento(despensaId, this.configuracionPorDefecto);
+      return this.configuracionPorDefecto;
+    }
+
+    return data;
+  }
+
+  async guardarConfiguracionVencimiento(despensaId: string, configuraciones: ConfiguracionVencimiento[]): Promise<void> {
+    // Primero eliminamos las configuraciones existentes
+    await this.supabase
+      .from('configuracion_vencimiento')
+      .delete()
+      .eq('despensa_id', despensaId);
+
+    // Luego insertamos las nuevas configuraciones
+    const { error } = await this.supabase
+      .from('configuracion_vencimiento')
+      .insert(
+        configuraciones.map(config => ({
+          despensa_id: despensaId,
+          categoria: config.categoria,
+          dias_vencimiento: config.dias_vencimiento
+        }))
+      );
+
+    if (error) throw error;
+  }
+
+  async actualizarPerfilUsuario(datos: { telefono?: string; pais?: string; nombre?: string }) {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    const { error } = await this.supabase
+      .from('usuarios')
+      .update({
+        telefono: datos.telefono,
+        pais: datos.pais,
+        nombre: datos.nombre
+      })
+      .eq('id', user.id);
+
+    if (error) throw error;
+  }
+
+  async obtenerPerfilUsuario() {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    const { data, error } = await this.supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updatePassword(currentPassword: string, newPassword: string) {
+    // Primero verificamos la contraseña actual
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    // Actualizamos la contraseña
+    const { error } = await this.supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      if (error.message.includes('Password should be at least')) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+      throw error;
+    }
+  }
+
+  async updateUserMetadata(metadata: { nombre?: string }) {
+    const { error } = await this.supabase.auth.updateUser({
+      data: metadata
+    });
+
+    if (error) throw error;
+  }
+
+  async subirImagenPerfil(file: File): Promise<string> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    const { error: uploadError } = await this.supabase.storage
+      .from('avatars')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = this.supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    // Actualizar la URL del avatar en la tabla de usuarios
+    const { error: updateError } = await this.supabase
+      .from('usuarios')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id);
+
+    if (updateError) throw updateError;
+
+    return publicUrl;
+  }
+
+  async obtenerImagenPerfil(): Promise<string | null> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    const { data, error } = await this.supabase
+      .from('usuarios')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .single();
+
+    if (error) throw error;
+    return data?.avatar_url || null;
   }
 }

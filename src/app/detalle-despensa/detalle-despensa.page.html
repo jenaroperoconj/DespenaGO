@@ -3,15 +3,19 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/despensa"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ nombreDespensa || 'Despensa' }}</ion-title>    <ion-buttons slot="end">
+    <ion-title>{{ nombreDespensa || 'Despensa' }}</ion-title>
+    <ion-buttons slot="end">
       <ion-button fill="clear" (click)="abrirModalCompartir()" *ngIf="esPropietario">
         <ion-icon name="share-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="solid" color="light" (click)="abrirConfiguracionVencimiento()">
+        <ion-icon name="settings-outline" style="color: #222;"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="detalle-despensa-content" [scrollEvents]="true">  <!-- Hero Section -->
+<ion-content [fullscreen]="false" class="detalle-despensa-content" [scrollEvents]="true">  <!-- Hero Section -->
   <div class="hero-section">
     <div class="hero-content">
       <div class="despensa-hero-icon">
@@ -156,14 +160,17 @@
 
         <ion-item class="form-item" fill="outline">
           <ion-label position="floating">Categoría</ion-label>
-          <ion-input 
+          <ion-select 
             [(ngModel)]="nuevoProducto.categoria"
-            placeholder="Ej: Cereales">
-          </ion-input>
+            placeholder="Selecciona una categoría">
+            <ion-select-option *ngFor="let categoria of categoriasPredefinidas" [value]="categoria">
+              {{ categoria }}
+            </ion-select-option>
+          </ion-select>
         </ion-item>
 
         <ion-item class="form-item" fill="outline">
-          <ion-label position="floating">Origen</ion-label>
+          <ion-label position="floating">Marca</ion-label>
           <ion-input 
             [(ngModel)]="nuevoProducto.origen"
             placeholder="Ej: Supermercado XYZ">
@@ -176,6 +183,7 @@
             type="date"
             [(ngModel)]="nuevoProducto.fecha_vencimiento">
           </ion-input>
+          <ion-icon name="calendar-outline" slot="end" style="color: #000;"></ion-icon>
         </ion-item>
 
         <div class="quantity-control">
@@ -262,13 +270,17 @@
 
         <ion-item class="form-item" fill="outline">
           <ion-label position="floating">Categoría</ion-label>
-          <ion-input 
-            [(ngModel)]="productoEditar.productos.categoria">
-          </ion-input>
+          <ion-select 
+            [(ngModel)]="productoEditar.productos.categoria"
+            placeholder="Selecciona una categoría">
+            <ion-select-option *ngFor="let categoria of categoriasPredefinidas" [value]="categoria">
+              {{ categoria }}
+            </ion-select-option>
+          </ion-select>
         </ion-item>
 
         <ion-item class="form-item" fill="outline">
-          <ion-label position="floating">Origen</ion-label>
+          <ion-label position="floating">Marca</ion-label>
           <ion-input 
             [(ngModel)]="productoEditar.productos.origen">
           </ion-input>

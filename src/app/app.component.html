@@ -10,8 +10,13 @@
             </div>
             <h1 class="hero-title">DespensaGO</h1>
             <div class="user-info">
-              <p class="user-name">{{ nombreUsuario || 'Usuario' }}</p>
-              <p class="user-email">{{ correoUsuario || '' }}</p>
+              <ion-avatar style="width: 40px; height: 40px; margin-right: 12px; display: inline-block; vertical-align: middle;">
+                <img [src]="avatarUsuario" alt="Avatar del usuario" />
+              </ion-avatar>
+              <div style="display: inline-block; vertical-align: middle;">
+                <p class="user-name">{{ nombreUsuario || 'Usuario' }}</p>
+                <p class="user-email">{{ correoUsuario || '' }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -31,8 +36,7 @@
               >
                 <ion-icon
                   slot="start"
-                  [ios]="p.icon + '-outline'"
-                  [md]="p.icon + '-sharp'"
+                  [name]="p.icon"
                 ></ion-icon>
                 <ion-label>{{ p.title }}</ion-label>
               </ion-item>
