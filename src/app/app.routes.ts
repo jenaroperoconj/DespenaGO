@@ -55,9 +55,4 @@ export const routes: Routes = [
     loadComponent: () => import('./lista-compras/lista-compras.page').then( m => m.ListaComprasPage),
     canActivate: [AuthGuard]
   },
-  {
-    path: 'ocr-boleta',
-    loadComponent: () => import('./ocr-boleta/ocr-boleta.component').then(m => m.OcrBoletaComponent),
-    canActivate: [AuthGuard]
-  }
 ];
