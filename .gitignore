@@ -95,6 +95,7 @@ ios/GoogleService-Info.plist
 config.json
 secrets.json
 credentials.json
+backend/despensago-f8435-dddc913847a2.json
 
 # Archivos temporales de credenciales
 *.key
