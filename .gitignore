@@ -75,7 +75,8 @@ src/environments/environment.prod.ts
 
 # Credenciales y archivos sensibles
 # Google Cloud Vision API
-/backend/*.json
+/backend/credentials.json
+/backend/*-key.json
 /backend/credentials/
 /backend/keys/
 /backend/auth/
