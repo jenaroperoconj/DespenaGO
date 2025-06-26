@@ -508,5 +508,9 @@ app.post('/detectar-categoria', async (req, res) => {
   }
 });
 
+app.get('/health', (req, res) => {
+  res.send('OK');
+});
+
 const PORT = config.port;
 app.listen(PORT, () => console.log(`OCR backend listening on port ${PORT}`)); 
