@@ -1,13 +1,56 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>escaneo-boleta</ion-title>
+    <ion-title>Escanear Boleta</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">escaneo-boleta</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  <div class="scan-container">
+    <ion-button 
+      expand="block" 
+      (click)="escanearBoleta()" 
+      [disabled]="escaneando"
+      class="scan-button">
+      <ion-icon name="camera-outline" slot="start"></ion-icon>
+      {{ escaneando ? 'Escaneando...' : 'Escanear Boleta' }}
+    </ion-button>
+
+    <ion-button 
+      expand="block" 
+      fill="outline" 
+      (click)="limpiarProductos()" 
+      [disabled]="products.length === 0"
+      class="clear-button">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Limpiar Productos
+    </ion-button>
+
+    <!-- Mensaje de estado -->
+    <div *ngIf="mensaje" class="status-message">
+      <ion-icon name="checkmark-circle-outline" *ngIf="!escaneando && products.length > 0"></ion-icon>
+      {{ mensaje }}
+    </div>
+
+    <!-- Lista de productos detectados -->
+    <div *ngIf="products.length > 0" class="products-section">
+      <h3>Productos Detectados ({{ products.length }})</h3>
+      
+      <ion-list>
+        <ion-item *ngFor="let product of products; let i = index">
+          <ion-label>
+            <h3>{{ product.nombre }}</h3>
+            <ion-chip [color]="obtenerColorCategoria(product.categoria)" class="category-chip">
+              {{ product.categoria }}
+            </ion-chip>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Mensaje cuando no hay productos -->
+    <div *ngIf="!escaneando && products.length === 0 && mensaje && !mensaje.includes('Error')" class="no-products">
+      <p>No se detectaron productos en la boleta escaneada.</p>
+      <p>Intenta con una imagen más clara o una boleta diferente.</p>
+    </div>
+  </div>
 </ion-content>

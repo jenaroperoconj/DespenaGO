@@ -69,9 +69,34 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# Android
-/android
-
 # Archivos de entorno Angular
 src/environments/environment.ts
 src/environments/environment.prod.ts
+
+# Credenciales y archivos sensibles
+# Google Cloud Vision API
+/backend/*.json
+/backend/credentials/
+/backend/keys/
+/backend/auth/
+
+# Firebase
+android/app/google-services.json
+ios/GoogleService-Info.plist
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+.env.development
+
+# Archivos de configuración con credenciales
+config.json
+secrets.json
+credentials.json
+
+# Archivos temporales de credenciales
+*.key
+*.pem
+*.p12
+*.pfx

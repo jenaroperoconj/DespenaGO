@@ -262,7 +262,7 @@ export class AppComponent implements OnInit {
           { title: 'Lista de Compras', url: '/lista-compras', icon: 'list-outline' },
           { title: 'Mis Despensas', url: '/despensa', icon: 'storefront-outline' },
           { title: 'Recetas', url: '/recipes', icon: 'restaurant-outline' },
-          { title: 'Escaneo Boletas', url: '/ocr-boleta', icon: 'scan-outline' },
+          { title: 'Escaneo Boletas', url: '/escaneo-boleta', icon: 'scan-outline' },
           { 
             title: 'Invitaciones',
             url: '',
