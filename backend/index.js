@@ -34,7 +34,8 @@ const categoriasKeywords = {
     'leche', 'leche chocolatada', 'leche saborizada', 'bebida láctea', 'yogur bebible',
     'té helado', 'limonada', 'agua saborizada', 'isotónica', 'hidratante', 'bebida isotónica',
     'cola', 'sprite', 'fanta', 'pepsi', 'coca', 'seven up', 'mirinda', 'crush', 'squirt',
-    'powerade', 'gatorade', 'red bull', 'monster', 'rockstar', 'bebida deportiva'
+    'powerade', 'gatorade', 'red bull', 'monster', 'rockstar', 'bebida deportiva',
+    'nectar light', 'vino dona', 'vino tinto', 'vino blanco', 'vino rosado'
   ],
   'Infusión': [
     'té', 'café', 'mate', 'yerba', 'infusión', 'té verde', 'té negro', 'té rojo',
@@ -178,13 +179,14 @@ function esComestiblePorTexto(texto) {
   if (!texto) return true; // Si no hay texto, asumir que es comestible
   
   const textoLower = texto.toLowerCase();
+  console.log(`[DEBUG] Verificando texto: "${texto}" -> "${textoLower}"`);
   
   // Lista de palabras que indican productos NO comestibles
   const palabrasNoComestibles = [
     'confort', 'papel', 'higiénico', 'toilet', 'tissue', 'servilleta', 'pañal',
     'toalla', 'higiénica', 'tampón', 'protector', 'jabón', 'shampoo', 'detergente',
     'limpiador', 'limpia', 'cloro', 'desinfectante', 'perfume', 'desodorante',
-    'crema', 'loción', 'maquillaje', 'cosmético', 'cepillo', 'pasta', 'dental',
+    'crema', 'loción', 'maquillaje', 'cosmético', 'cepillo', 'pasta dental', 'dental',
     'enjuague', 'bucal', 'hilo', 'dental', 'cuchilla', 'maquinilla', 'afeitar',
     'protector', 'solar', 'bronceador', 'esmalte', 'uñas', 'quitaesmalte',
     'vela', 'incienso', 'ambientador', 'insecticida', 'repelente', 'mata',
@@ -193,14 +195,26 @@ function esComestiblePorTexto(texto) {
   ];
   
   // Verificar si contiene palabras de productos no comestibles
-  return !palabrasNoComestibles.some(palabra => textoLower.includes(palabra));
+  const palabraEncontrada = palabrasNoComestibles.find(palabra => textoLower.includes(palabra));
+  if (palabraEncontrada) {
+    console.log(`[DEBUG] Palabra no comestible encontrada: "${palabraEncontrada}"`);
+    return false;
+  }
+  
+  console.log(`[DEBUG] Texto es comestible`);
+  return true;
 }
 
 // Función para determinar si un producto es comestible basándose en los labels de Google Vision
 function esComestiblePorLabels(labels, textoProducto = '') {
+  console.log(`[DEBUG] Verificando si es comestible: "${textoProducto}"`);
+  console.log(`[DEBUG] Labels recibidos:`, labels?.map(l => l.description) || []);
+  
   if (!labels || labels.length === 0) {
     // Si no hay labels, verificar el texto del producto
-    return esComestiblePorTexto(textoProducto);
+    const resultado = esComestiblePorTexto(textoProducto);
+    console.log(`[DEBUG] No hay labels, usando texto: ${resultado}`);
+    return resultado;
   }
   
   const labelsLower = labels.map(l => l.description.toLowerCase());
@@ -216,35 +230,49 @@ function esComestiblePorLabels(labels, textoProducto = '') {
     labelsNoComestibles.some(noComestible => label.includes(noComestible))
   ).length;
   
+  console.log(`[DEBUG] Labels comestibles encontrados: ${comestiblesCount}`);
+  console.log(`[DEBUG] Labels no comestibles encontrados: ${noComestiblesCount}`);
+  
   // Verificar también el texto del producto
   const esComestibleTexto = esComestiblePorTexto(textoProducto);
+  console.log(`[DEBUG] Es comestible por texto: ${esComestibleTexto}`);
   
   // Si el texto del producto indica que NO es comestible, excluirlo
   if (!esComestibleTexto) {
+    console.log(`[DEBUG] Producto filtrado por texto: NO es comestible`);
     return false;
   }
   
   // Si hay más labels de productos no comestibles, entonces no es comestible
   if (noComestiblesCount > comestiblesCount) {
+    console.log(`[DEBUG] Producto filtrado por labels: más no comestibles que comestibles`);
     return false;
   }
   
   // Si hay al menos un label de producto comestible, es comestible
   if (comestiblesCount > 0) {
+    console.log(`[DEBUG] Producto aceptado: tiene labels comestibles`);
     return true;
   }
   
   // Si no hay labels claros, usar el resultado del análisis de texto
+  console.log(`[DEBUG] Producto aceptado: usando análisis de texto`);
   return esComestibleTexto;
 }
 
 // Función para detectar categoría basada en texto y labels
 function detectarCategoria(texto, labels) {
+  console.log(`[DEBUG] Detectando categoría para: "${texto}"`);
+  
   const textoLower = texto.toLowerCase();
   const labelsLower = labels.map(l => l.description.toLowerCase());
   
   // Verificar si es comestible usando los labels de Google Vision y el texto del producto
-  if (!esComestiblePorLabels(labels, texto)) {
+  const esComestible = esComestiblePorLabels(labels, texto);
+  console.log(`[DEBUG] ¿Es comestible? ${esComestible}`);
+  
+  if (!esComestible) {
+    console.log(`[DEBUG] Producto NO es comestible, retornando null`);
     return null; // Retornar null para indicar que no es comestible
   }
   
@@ -261,6 +289,7 @@ function detectarCategoria(texto, labels) {
     keywords.forEach(keyword => {
       if (textoLower.includes(keyword)) {
         puntuaciones[categoria] += 3; // Peso mayor para texto directo
+        console.log(`[DEBUG] Coincidencia en texto: "${keyword}" -> ${categoria}`);
       }
     });
   });
@@ -271,6 +300,7 @@ function detectarCategoria(texto, labels) {
       labelsLower.forEach(label => {
         if (label.includes(keyword) || keyword.includes(label)) {
           puntuaciones[categoria] += 2; // Peso medio para labels
+          console.log(`[DEBUG] Coincidencia en label: "${keyword}" en "${label}" -> ${categoria}`);
         }
       });
     });
@@ -400,6 +430,7 @@ function detectarCategoria(texto, labels) {
     Object.entries(mapeoLabelsCategoria).forEach(([labelKey, categoria]) => {
       if (label.includes(labelKey)) {
         puntuaciones[categoria] += 4; // Peso muy alto para mapeo directo
+        console.log(`[DEBUG] Mapeo directo: "${labelKey}" en "${label}" -> ${categoria}`);
       }
     });
   });
@@ -415,8 +446,12 @@ function detectarCategoria(texto, labels) {
     }
   });
   
+  console.log(`[DEBUG] Puntuaciones finales:`, puntuaciones);
+  console.log(`[DEBUG] Categoría seleccionada: ${mejorCategoria} (puntuación: ${mejorPuntuacion})`);
+  
   // Si no hay coincidencias claras, usar 'Otro'
   if (mejorPuntuacion === 0) {
+    console.log(`[DEBUG] Sin coincidencias, usando 'Otro'`);
     return 'Otro';
   }
   
