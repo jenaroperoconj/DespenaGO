@@ -174,6 +174,14 @@ const labelsNoComestibles = [
   'tender', 'careful', 'cautious', 'protective', 'defensive', 'preventive', 'proactive'
 ];
 
+// Labels genéricos de boleta que deben ser ignorados en la clasificación
+const labelsGenericosBoleta = [
+  'receipt', 'paper', 'paper product', 'label', 'ticket', 'document', 'text',
+  'printed', 'print', 'writing', 'written', 'font', 'typography', 'letter',
+  'character', 'word', 'line', 'paragraph', 'section', 'header', 'footer',
+  'title', 'heading', 'subtitle', 'caption', 'note', 'memo', 'form', 'template'
+];
+
 // Función para verificar si un producto es comestible basándose en su texto
 function esComestiblePorTexto(texto) {
   if (!texto) return true; // Si no hay texto, asumir que es comestible
@@ -220,13 +228,27 @@ function esComestiblePorLabels(labels, textoProducto = '') {
   const labelsLower = labels.map(l => l.description.toLowerCase());
   const textoLower = textoProducto.toLowerCase();
   
+  // Filtrar labels genéricos de boleta
+  const labelsFiltrados = labelsLower.filter(label => 
+    !labelsGenericosBoleta.some(generico => label.includes(generico))
+  );
+  
+  console.log(`[DEBUG] Labels después de filtrar genéricos:`, labelsFiltrados);
+  
+  // Si no quedan labels después del filtrado, usar solo el texto
+  if (labelsFiltrados.length === 0) {
+    const resultado = esComestiblePorTexto(textoProducto);
+    console.log(`[DEBUG] Solo labels genéricos, usando texto: ${resultado}`);
+    return resultado;
+  }
+  
   // Contar coincidencias con labels comestibles
-  const comestiblesCount = labelsLower.filter(label => 
+  const comestiblesCount = labelsFiltrados.filter(label => 
     labelsComestibles.some(comestible => label.includes(comestible))
   ).length;
   
   // Contar coincidencias con labels no comestibles
-  const noComestiblesCount = labelsLower.filter(label => 
+  const noComestiblesCount = labelsFiltrados.filter(label => 
     labelsNoComestibles.some(noComestible => label.includes(noComestible))
   ).length;
   
