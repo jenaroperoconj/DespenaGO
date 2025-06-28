@@ -571,3 +571,57 @@ app.get('/health', (req, res) => {
 
 const PORT = config.port;
 app.listen(PORT, () => console.log(`OCR backend listening on port ${PORT}`)); 
+
+
+// Endpoint para generar recetas con Gemini API
+app.post('/api/receta', async (req, res) => {
+  const { prompt, condicionMedica } = req.body;
+  try {
+    const receta = await generarRecetaGemini(prompt, condicionMedica);
+    res.json({ receta });
+  } catch (err) {
+    res.status(500).json({ error: err.message, receta: 'Error al generar receta.' });
+  }
+});
+
+const PORT = config.port;
+app.listen(PORT, () => {
+  console.log(`Backend DespenaGO corriendo en http://localhost:${PORT}`);
+  console.log(`- Endpoint OCR: http://localhost:${PORT}/ocr`);
+  console.log(`- Endpoint Recetas: http://localhost:${PORT}/api/receta`);
+  console.log(`- Health check: http://localhost:${PORT}/health`);
+});
+
+async function generarRecetaGemini(ingredientes, condicionMedica) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+
+  // Construye el prompt incluyendo la condición médica
+  let prompt = `Genera una receta completa usando estos ingredientes: ${ingredientes}. Dame el nombre del plato, ingredientes y pasos.`;
+  if (condicionMedica && condicionMedica !== 'none') {
+    prompt += ` Considera la siguiente condición médica: ${condicionMedica}. Ajusta la receta para que sea apta para esta condición.`;
+  }
+
+  const body = {
+    contents: [
+      {
+        parts: [
+          { text: prompt }
+        ]
+      }
+    ]
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json();
+  console.log('Respuesta completa de Gemini:', data);
+
+  const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No se pudo generar una receta.';
+  console.log('Receta generada:', texto);
+  return texto;
+}
