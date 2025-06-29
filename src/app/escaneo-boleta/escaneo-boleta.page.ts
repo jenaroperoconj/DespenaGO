@@ -1,12 +1,40 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonChip, IonIcon } from '@ionic/angular/standalone';
+import { RouterModule } from '@angular/router';
+import { 
+  IonButton, 
+  IonContent, 
+  IonHeader, 
+  IonTitle, 
+  IonToolbar, 
+  IonList, 
+  IonItem, 
+  IonLabel, 
+  IonChip, 
+  IonIcon, 
+  IonCheckbox, 
+  IonModal, 
+  IonCard, 
+  IonCardContent, 
+  IonCardHeader, 
+  IonCardTitle, 
+  IonGrid, 
+  IonRow, 
+  IonCol, 
+  IonBadge, 
+  IonAlert, 
+  IonLoading, 
+  IonButtons, 
+  IonProgressBar
+} from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { addIcons } from 'ionicons';
-import { cameraOutline, refreshOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import { cameraOutline, refreshOutline, checkmarkCircleOutline, addOutline, homeOutline, bagOutline, checkmarkCircle, closeOutline, warningOutline, informationCircleOutline, receiptOutline, hourglassOutline, checkmarkDoneOutline, pricetagOutline, checkmarkOutline, imagesOutline } from 'ionicons/icons';
 import { getApiUrl, API_ENDPOINTS } from '../core/api.config';
+import { SupabaseService } from '../core/supabase.service';
+import { AlertController, LoadingController } from '@ionic/angular';
 
 @Component({
   selector: 'app-escaneo-boleta',
@@ -20,92 +48,155 @@ import { getApiUrl, API_ENDPOINTS } from '../core/api.config';
     IonToolbar, 
     CommonModule, 
     FormsModule, 
+    RouterModule,
     IonButton, 
     IonList,
     IonItem,
     IonLabel,
     IonChip,
     IonIcon,
+    IonCheckbox,
+    IonModal,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonButtons,
+    IonProgressBar,
+    IonBadge,
     HttpClientModule
   ]
 })
 export class EscaneoBoletaPage implements OnInit {
 
-  products: { nombre: string, categoria: string }[] = [];
-  escaneando = false;
-  mensaje = '';
+  products: { nombre: string, categoria: string, seleccionado: boolean }[] = [];
+  procesando = false;
+  despensas: any[] = [];
+  mostrarSelectorDespensa = false;
+  productosSeleccionados: { nombre: string, categoria: string }[] = [];
+  despensaSeleccionada: any = null;
+  agregandoProductos = false;
 
-  constructor(private http: HttpClient) {
-    addIcons({
-      cameraOutline,
-      refreshOutline,
-      checkmarkCircleOutline
-    });
+  constructor(
+    private http: HttpClient,
+    private supabaseService: SupabaseService,
+    private alertController: AlertController,
+    private loadingController: LoadingController
+  ) {
+    addIcons({receiptOutline,imagesOutline,refreshOutline,checkmarkDoneOutline,closeOutline,pricetagOutline,addOutline,informationCircleOutline,bagOutline,homeOutline,warningOutline,cameraOutline,checkmarkOutline,checkmarkCircleOutline,checkmarkCircle,hourglassOutline});
   }
 
   ngOnInit() {
+    this.cargarDespensas();
   }
 
-  async escanearBoleta() {
-    this.escaneando = true;
-    this.mensaje = 'Escaneando boleta...';
+  async cargarDespensas() {
+    try {
+      this.despensas = await this.supabaseService.obtenerDespensasUsuario();
+    } catch (error) {
+      console.error('Error al cargar despensas:', error);
+    }
+  }
+
+  async seleccionarImagen() {
+    this.procesando = true;
+    this.products = [];
     
     try {
-      // Tomar foto
+      // Seleccionar desde galería PRIMERO
       const image = await Camera.getPhoto({
-        quality: 70,
+        quality: 85,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera
+        source: CameraSource.Photos
       });
       
       if (!image || !image.dataUrl) {
-        this.mensaje = 'No se obtuvo imagen';
-        this.escaneando = false;
-        return;
+        throw new Error('No se seleccionó imagen');
       }
 
-      this.mensaje = 'Procesando imagen...';
+      // MOSTRAR LOADING DESPUÉS de seleccionar imagen
+      const loading = await this.loadingController.create({
+        message: 'Procesando imagen...',
+        spinner: 'crescent'
+      });
+      await loading.present();
 
       // Enviar al backend para OCR
       const response: any = await this.http.post(getApiUrl(API_ENDPOINTS.OCR), { 
         imageBase64: image.dataUrl 
       }).toPromise();
-      
-      const texto = response.text || '';
-      const labels = response.labels || [];
-      
-      console.log('Texto detectado:', texto);
-      console.log('Labels detectados:', labels);
-      
-      // Extraer productos del texto
-      const productos = this.extraerProductos(texto);
-      
-      if (productos.length === 0) {
-        this.mensaje = 'No se detectaron productos en la boleta';
-        this.escaneando = false;
-        return;
+
+      if (response && response.text) {
+        const texto = response.text || '';
+        
+        console.log('Texto detectado:', texto);
+        
+        // Extraer productos del texto
+        const productos = this.extraerProductos(texto);
+        
+        if (productos.length === 0) {
+          throw new Error('No se detectaron productos en la boleta. Intenta con una imagen más clara.');
+        }
+
+        // Asignar categorías localmente
+        this.products = productos.map(producto => ({
+          ...producto,
+          categoria: this.detectarCategoriaLocal(producto.nombre),
+          seleccionado: true // Por defecto todos seleccionados
+        }));
+        
+        console.log('Productos con categorías:', this.products);
+        
+        await loading.dismiss();
+      } else {
+        throw new Error('No se pudo extraer texto de la imagen');
       }
-
-      this.mensaje = 'Detectando categorías...';
-
-      // Detectar categorías usando la nueva API
-      const categoriaResponse: any = await this.http.post(getApiUrl(API_ENDPOINTS.DETECTAR_CATEGORIA), {
-        productos: productos,
-        labels: labels
-      }).toPromise();
-
-      this.products = categoriaResponse.productos;
-      this.mensaje = `Se detectaron ${this.products.length} productos`;
+    } catch (error: any) {
+      console.error('Error al procesar imagen:', error);
       
-      console.log('Productos con categorías:', this.products);
+      // Solo cerrar loading si existe
+      try {
+        await this.loadingController.dismiss();
+      } catch (e) {
+        // Loading no estaba abierto
+      }
       
-    } catch (error) {
-      console.error('Error escaneando boleta:', error);
-      this.mensaje = 'Error al procesar la boleta';
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: error.message || 'No se pudo procesar la imagen. Intenta con otra imagen.',
+        buttons: ['Entendido']
+      });
+      await alert.present();
     } finally {
-      this.escaneando = false;
+      this.procesando = false;
     }
+  }
+
+  detectarCategoriaLocal(nombre: string): string {
+    const nombreUpper = nombre.toUpperCase();
+    
+    const categorias = {
+      'Lácteos': ['LECHE', 'QUESO', 'YOGUR', 'YOGURT', 'MANTECA', 'CREMA', 'MANTEQUILLA'],
+      'Carnes': ['CARNE', 'POLLO', 'PESCADO', 'RES', 'VACUNO', 'CERDO', 'PAVO', 'JAMON', 'SALCHICHA', 'ATUN', 'SARDINA', 'SALMON'],
+      'Frutas y Verduras': ['MANZANA', 'NARANJA', 'BANANA', 'TOMATE', 'CEBOLLA', 'PAPA', 'ZANAHORIA', 'LECHUGA', 'ESPINACA', 'BROCOLI', 'COLIFLOR', 'FRUTA', 'VERDURA'],
+      'Granos y Cereales': ['ARROZ', 'PASTA', 'PAN', 'HARINA', 'AZUCAR'],
+      'Bebidas': ['BEBIDA', 'JUGO', 'AGUA', 'CAFE', 'TE', 'VINO', 'CERVEZA'],
+      'Condimentos': ['SAL', 'PIMIENTA', 'ACEITE'],
+      'Dulces': ['CHOCOLATE', 'GALETA', 'AZUCAR'],
+      'Otros': ['HUEVO']
+    };
+    
+    for (const [categoria, palabras] of Object.entries(categorias)) {
+      if (palabras.some(palabra => nombreUpper.includes(palabra))) {
+        return categoria;
+      }
+    }
+    
+    return 'Otros';
   }
 
   extraerProductos(texto: string): { nombre: string }[] {
@@ -290,29 +381,142 @@ export class EscaneoBoletaPage implements OnInit {
 
   limpiarProductos() {
     this.products = [];
-    this.mensaje = '';
+    this.productosSeleccionados = [];
+    this.despensaSeleccionada = null;
+    this.mostrarSelectorDespensa = false;
+  }
+
+  toggleSeleccionProducto(producto: any) {
+    producto.seleccionado = !producto.seleccionado;
+  }
+
+  seleccionarTodos() {
+    this.products.forEach(producto => producto.seleccionado = true);
+  }
+
+  deseleccionarTodos() {
+    this.products.forEach(producto => producto.seleccionado = false);
+  }
+
+  obtenerProductosSeleccionados() {
+    return this.products.filter(producto => producto.seleccionado);
+  }
+
+  async continuarConProductosSeleccionados() {
+    const productosSeleccionados = this.obtenerProductosSeleccionados();
+    
+    if (productosSeleccionados.length === 0) {
+      const alert = await this.alertController.create({
+        header: 'Sin productos seleccionados',
+        message: 'Debes seleccionar al menos un producto para continuar.',
+        buttons: ['Entendido']
+      });
+      await alert.present();
+      return;
+    }
+
+    this.productosSeleccionados = productosSeleccionados;
+    this.mostrarSelectorDespensa = true;
+  }
+
+  seleccionarDespensa(despensa: any) {
+    this.despensaSeleccionada = despensa;
+  }
+
+  async agregarProductosADespensa() {
+    if (!this.despensaSeleccionada) {
+      const alert = await this.alertController.create({
+        header: 'Despensa no seleccionada',
+        message: 'Debes seleccionar una despensa para agregar los productos.',
+        buttons: ['Entendido']
+      });
+      await alert.present();
+      return;
+    }
+
+    this.agregandoProductos = true;
+
+    try {
+      const loading = await this.loadingController.create({
+        message: 'Agregando productos...',
+        spinner: 'crescent'
+      });
+      await loading.present();
+
+      for (const producto of this.productosSeleccionados) {
+        await this.supabaseService.agregarProductoADespensa(
+          this.despensaSeleccionada.despensas.id,
+          {
+            nombre: producto.nombre,
+            categoria: producto.categoria,
+            stock: 1
+          }
+        );
+      }
+
+      await loading.dismiss();
+
+      const alert = await this.alertController.create({
+        header: 'Productos agregados',
+        message: `Se agregaron ${this.productosSeleccionados.length} productos a "${this.despensaSeleccionada.despensas.nombre}" exitosamente.`,
+        buttons: [
+          {
+            text: 'Continuar escaneando',
+            handler: () => {
+              this.limpiarProductos();
+            }
+          }
+        ]
+      });
+      await alert.present();
+
+    } catch (error: any) {
+      await this.loadingController.dismiss();
+      
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: `Error al agregar productos: ${error.message}`,
+        buttons: ['Entendido']
+      });
+      await alert.present();
+    } finally {
+      this.agregandoProductos = false;
+    }
+  }
+
+  cancelarSeleccionDespensa() {
+    this.mostrarSelectorDespensa = false;
+    this.despensaSeleccionada = null;
+    this.productosSeleccionados = [];
+  }
+
+  getRoleColor(rol: string): string {
+    switch (rol) {
+      case 'propietario':
+        return 'primary';
+      case 'editor':
+        return 'secondary';
+      case 'viewer':
+        return 'medium';
+      default:
+        return 'medium';
+    }
+  }
+
+  getRoleIcon(rol: string): string {
+    switch (rol) {
+      case 'propietario':
+        return 'shield-outline';
+      case 'editor':
+        return 'person-outline';
+      case 'viewer':
+        return 'eye-outline';
+      default:
+        return 'person-outline';
+    }
   }
 
   obtenerColorCategoria(categoria: string): string {
-    const colores: { [key: string]: string } = {
-      'Bebestible': 'primary',
-      'Infusión': 'secondary',
-      'Verdura': 'success',
-      'Fruta': 'warning',
-      'Carne': 'danger',
-      'Lácteo': 'tertiary',
-      'Embutido': 'medium',
-      'Aceites y Grasas': 'dark',
-      'Pastas y Arroces': 'primary',
-      'Masas y Premezclas': 'secondary',
-      'Snack': 'warning',
-      'Enlatado': 'medium',
-      'Congelado': 'tertiary',
-      'Panadería': 'success',
-      'Condimento': 'dark',
-      'Otro': 'medium'
-    };
-    
-    return colores[categoria] || 'medium';
+    return 'success';
   }
 }

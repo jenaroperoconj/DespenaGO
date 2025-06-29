@@ -6,51 +6,205 @@
 
 <ion-content class="ion-padding">
   <div class="scan-container">
-    <ion-button 
-      expand="block" 
-      (click)="escanearBoleta()" 
-      [disabled]="escaneando"
-      class="scan-button">
-      <ion-icon name="camera-outline" slot="start"></ion-icon>
-      {{ escaneando ? 'Escaneando...' : 'Escanear Boleta' }}
-    </ion-button>
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-icon">
+        <ion-icon name="receipt-outline"></ion-icon>
+      </div>
+      <h1 class="hero-title">Escanear Boleta</h1>
+      <p class="hero-subtitle">Selecciona una imagen de tu boleta para detectar automáticamente los productos</p>
+    </div>
 
-    <ion-button 
-      expand="block" 
-      fill="outline" 
-      (click)="limpiarProductos()" 
-      [disabled]="products.length === 0"
-      class="clear-button">
-      <ion-icon name="refresh-outline" slot="start"></ion-icon>
-      Limpiar Productos
-    </ion-button>
+    <!-- Botón Principal -->
+    <div class="scan-action-section">
+      <ion-button 
+        expand="block" 
+        (click)="seleccionarImagen()" 
+        [disabled]="procesando"
+        class="scan-button"
+        color="primary"
+        *ngIf="!products.length">
+        <ion-icon name="images-outline" slot="start"></ion-icon>
+        {{ procesando ? 'Procesando...' : 'Seleccionar Imagen' }}
+      </ion-button>
 
-    <!-- Mensaje de estado -->
-    <div *ngIf="mensaje" class="status-message">
-      <ion-icon name="checkmark-circle-outline" *ngIf="!escaneando && products.length > 0"></ion-icon>
-      {{ mensaje }}
+      <ion-button 
+        expand="block" 
+        fill="outline" 
+        (click)="limpiarProductos()" 
+        [disabled]="products.length === 0"
+        class="clear-button"
+        *ngIf="products.length > 0">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Limpiar Productos
+      </ion-button>
     </div>
 
     <!-- Lista de productos detectados -->
     <div *ngIf="products.length > 0" class="products-section">
-      <h3>Productos Detectados ({{ products.length }})</h3>
+      <div class="section-header">
+        <div class="header-content">
+          <h2>Productos Detectados</h2>
+          <ion-badge color="primary" class="product-count">
+            {{ products.length }} producto{{ products.length !== 1 ? 's' : '' }}
+          </ion-badge>
+        </div>
+        <div class="selection-controls">
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            (click)="seleccionarTodos()"
+            class="selection-button select-all">
+            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+            Seleccionar todos
+          </ion-button>
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            (click)="deseleccionarTodos()"
+            class="selection-button deselect-all">
+            <ion-icon name="close-outline" slot="start"></ion-icon>
+            Deseleccionar todos
+          </ion-button>
+        </div>
+      </div>
       
-      <ion-list>
-        <ion-item *ngFor="let product of products; let i = index">
-          <ion-label>
+      <ion-list class="products-list">
+        <ion-item *ngFor="let product of products; let i = index" class="product-item">
+          <ion-checkbox 
+            slot="start" 
+            [(ngModel)]="product.seleccionado"
+            class="product-checkbox">
+          </ion-checkbox>
+          <ion-label class="product-label">
             <h3>{{ product.nombre }}</h3>
             <ion-chip [color]="obtenerColorCategoria(product.categoria)" class="category-chip">
+              <ion-icon name="pricetag-outline" slot="start"></ion-icon>
               {{ product.categoria }}
             </ion-chip>
           </ion-label>
         </ion-item>
       </ion-list>
+
+      <!-- Botón para continuar con productos seleccionados -->
+      <div class="continue-section">
+        <ion-button 
+          expand="block" 
+          color="success"
+          (click)="continuarConProductosSeleccionados()"
+          [disabled]="obtenerProductosSeleccionados().length === 0"
+          class="continue-button">
+          <ion-icon name="add-outline" slot="start"></ion-icon>
+          Agregar {{ obtenerProductosSeleccionados().length }} producto{{ obtenerProductosSeleccionados().length === 1 ? '' : 's' }} a despensa
+        </ion-button>
+      </div>
     </div>
 
-    <!-- Mensaje cuando no hay productos -->
-    <div *ngIf="!escaneando && products.length === 0 && mensaje && !mensaje.includes('Error')" class="no-products">
-      <p>No se detectaron productos en la boleta escaneada.</p>
-      <p>Intenta con una imagen más clara o una boleta diferente.</p>
+    <!-- Tips de uso -->
+    <div class="tips-section" *ngIf="!procesando && products.length === 0">
+      <ion-card class="tips-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Consejos para un mejor escaneo
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ul class="tips-list">
+            <li>Asegúrate de que la boleta esté bien iluminada</li>
+            <li>Captura toda la sección de productos</li>
+            <li>Evita sombras y reflejos</li>
+            <li>Selecciona una imagen clara y nítida</li>
+          </ul>
+        </ion-card-content>
+      </ion-card>
     </div>
   </div>
 </ion-content>
+
+<!-- Modal para seleccionar despensa -->
+<div class="overlay-blur" *ngIf="mostrarSelectorDespensa" (click)="cancelarSeleccionDespensa()">
+  <div class="form-modal">
+    <div class="form-container" (click)="$event.stopPropagation()">
+      <div class="form-header">
+        <h2>
+          <ion-icon name="bag-outline"></ion-icon>
+          Seleccionar Despensa
+        </h2>
+        <button class="close-button" (click)="cancelarSeleccionDespensa()">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="form-content despensa-selection-container">
+        <!-- Resumen de productos seleccionados -->
+        <ion-card class="summary-card">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="bag-outline"></ion-icon>
+              Productos a agregar
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>{{ productosSeleccionados.length }}</strong> producto{{ productosSeleccionados.length === 1 ? '' : 's' }} seleccionad{{ productosSeleccionados.length === 1 ? 'o' : 'os' }}:</p>
+            <div class="selected-products-list">
+              <ion-chip *ngFor="let producto of productosSeleccionados" size="small">
+                {{ producto.nombre }}
+              </ion-chip>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        
+        <!-- Lista de despensas disponibles -->
+        <div class="despensas-section">
+          <h3>Selecciona una despensa:</h3>
+          <div *ngIf="despensas.length === 0" class="no-despensas">
+            <ion-icon name="home-outline"></ion-icon>
+            <p>No tienes despensas disponibles</p>
+            <ion-button fill="outline" routerLink="/despensa">
+              Crear despensa
+            </ion-button>
+          </div>
+          <ion-grid *ngIf="despensas.length > 0">
+            <ion-row>
+              <ion-col size="12" *ngFor="let despensa of despensas">
+                <div class="despensa-card" [class.selected]="despensaSeleccionada === despensa" (click)="seleccionarDespensa(despensa)">
+                  <ion-card-content>
+                    <div class="despensa-info">
+                      <h3>{{ despensa.despensas.nombre }}</h3>
+                      <p>{{ despensa.despensas.descripcion || 'Sin descripción' }}</p>
+                      <div class="despensa-meta">
+                        <ion-badge [color]="getRoleColor(despensa.rol)">
+                          <ion-icon [name]="getRoleIcon(despensa.rol)"></ion-icon>
+                          {{ despensa.rol }}
+                        </ion-badge>
+                      </div>
+                    </div>
+                  </ion-card-content>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="form-actions">
+          <ion-button 
+            expand="block" 
+            color="success"
+            (click)="agregarProductosADespensa()"
+            [disabled]="!despensaSeleccionada || agregandoProductos">
+            <ion-icon name="add-outline" slot="start"></ion-icon>
+            {{ agregandoProductos ? 'Agregando...' : 'Agregar Productos' }}
+          </ion-button>
+          <ion-button 
+            expand="block" 
+            fill="outline"
+            (click)="cancelarSeleccionDespensa()"
+            [disabled]="agregandoProductos">
+            Cancelar
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

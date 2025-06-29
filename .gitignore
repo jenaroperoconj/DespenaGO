@@ -12,7 +12,6 @@ $RECYCLE.BIN/
 *.log
 log.txt
 
-
 /.sourcemaps
 /.versions
 /coverage
@@ -34,6 +33,9 @@ log.txt
 npm-debug.log
 yarn-error.log
 
+# Backend node_modules
+/backend/node_modules
+
 # IDEs and editors
 .idea/
 .project
@@ -51,7 +53,6 @@ yarn-error.log
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
-
 
 # Miscellaneous
 /.angular
@@ -80,6 +81,7 @@ src/environments/environment.prod.ts
 /backend/credentials/
 /backend/keys/
 /backend/auth/
+/backend/despensago-f8435-dddc913847a2.json
 
 # Firebase
 android/app/google-services.json
@@ -95,10 +97,19 @@ ios/GoogleService-Info.plist
 config.json
 secrets.json
 credentials.json
-backend/despensago-f8435-dddc913847a2.json
 
 # Archivos temporales de credenciales
 *.key
 *.pem
 *.p12
 *.pfx
+
+# Android build files
+android/build/
+android/.gradle/
+android/local.properties
+android/app/build/
+android/.idea/
+
+# Capacitor
+android/capacitor-cordova-android-plugins/

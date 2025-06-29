@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">despensaGO</string>
-    <string name="title_activity_main">despensaGO</string>
-    <string name="package_name">com.despensago.matjen</string>
-    <string name="custom_url_scheme">com.despensago.matjen</string>
-    <string name="default_notification_channel_id">default_channel</string>
+    <string name="app_name">DespensaGO</string>
+    <string name="title_activity_main">DespensaGO</string>
+    <string name="package_name">com.despensago.app</string>
+    <string name="custom_url_scheme">com.despensago.app</string>
 </resources>
