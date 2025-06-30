@@ -1,13 +1,134 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>recipes</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Recetas</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">recipes</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+
+  <!-- Indicador de carga de despensas -->
+  <ion-card *ngIf="cargandoDespensas">
+    <ion-card-content class="loading-content">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando tus despensas...</p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Mensaje de error -->
+  <ion-card *ngIf="errorCarga" color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+      {{ errorCarga }}
+      <ion-button 
+        fill="clear" 
+        size="small" 
+        (click)="cargarDespensas()"
+        class="reload-button">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Recargar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Selector de despensa -->
+  <ion-card *ngIf="!cargandoDespensas && !errorCarga">
+    <ion-item>
+      <ion-label>Selecciona una despensa</ion-label>
+      <ion-select [(ngModel)]="despensaSeleccionada" (ionChange)="onDespensaChange()" placeholder="Elige una despensa">
+        <ion-select-option *ngFor="let despensa of despensas" [value]="despensa">
+          {{ despensa.nombre }} ({{ despensa.productos?.length || 0 }} productos)
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-card>
+
+  <!-- Productos de la despensa seleccionada -->
+  <ion-card *ngIf="despensaSeleccionada && !cargandoDespensas">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="restaurant-outline" slot="start"></ion-icon>
+        Productos disponibles en {{ despensaSeleccionada.nombre }}
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="productosDisponibles.length > 0; else noProductos">
+        <div class="productos-grid">
+          <ion-chip 
+            *ngFor="let producto of productosDisponibles" 
+            [color]="getCategoriaColor(producto.categoria)"
+            class="producto-chip">
+            <ion-label>
+              <strong>{{ producto.nombre }}</strong>
+              <br>
+              <small>{{ producto.categoria || 'Sin categoría' }}</small>
+              <br>
+              <ion-badge color="primary">Stock: {{ producto.stock || 1 }}</ion-badge>
+            </ion-label>
+          </ion-chip>
+        </div>
+        <p class="productos-count">
+          <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+          {{ productosDisponibles.length }} productos disponibles para recetas
+        </p>
+      </div>
+      <ng-template #noProductos>
+        <p class="no-productos">
+          <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+          No hay productos en esta despensa
+        </p>
+      </ng-template>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Selector de condición médica -->
+  <ion-card *ngIf="!cargandoDespensas && !errorCarga">
+    <ion-item>
+      <ion-label>Condición médica (opcional)</ion-label>
+      <ion-select [(ngModel)]="condicionMedica">
+        <ion-select-option value="none">Ninguna</ion-select-option>
+        <ion-select-option value="diabetic">Diabético</ion-select-option>
+        <ion-select-option value="celiac">Celíaco</ion-select-option>
+        <ion-select-option value="hypertensive">Hipertenso</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-card>
+
+  <!-- Botón generar receta -->
+  <ion-button 
+    expand="block" 
+    (click)="generarReceta()" 
+    [disabled]="cargando || !despensaSeleccionada || productosDisponibles.length === 0 || cargandoDespensas"
+    color="primary">
+    <ion-spinner *ngIf="cargando" name="crescent"></ion-spinner>
+    <ion-icon *ngIf="!cargando" name="restaurant-outline" slot="start"></ion-icon>
+    {{ cargando ? 'Generando receta...' : 'Generar Receta' }}
+  </ion-button>
+
+  <!-- Receta generada -->
+  <ion-card *ngIf="receta && !cargando">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="book-outline" slot="start"></ion-icon>
+        Receta Generada
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="receta-content">
+        <pre>{{ receta }}</pre>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Indicador de carga de receta -->
+  <ion-card *ngIf="cargando">
+    <ion-card-content class="loading-content">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Generando receta con IA...</p>
+      <small>Esto puede tomar unos segundos</small>
+    </ion-card-content>
+  </ion-card>
+
 </ion-content>
