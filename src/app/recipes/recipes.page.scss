@@ -1,0 +1,159 @@
+.productos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.producto-chip {
+  margin: 4px;
+  max-width: 200px;
+  
+  ion-label {
+    white-space: normal;
+    line-height: 1.2;
+    
+    strong {
+      font-size: 0.9em;
+    }
+    
+    small {
+      font-size: 0.7em;
+      opacity: 0.8;
+    }
+    
+    ion-badge {
+      margin-top: 4px;
+      font-size: 0.6em;
+    }
+  }
+}
+
+.productos-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ion-color-success);
+  font-weight: 500;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 1.2em;
+  }
+}
+
+.no-productos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ion-color-warning);
+  font-style: italic;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 1.2em;
+  }
+}
+
+.loading-content {
+  text-align: center;
+  padding: 20px;
+  
+  ion-spinner {
+    margin-bottom: 16px;
+  }
+  
+  p {
+    margin: 8px 0;
+    font-weight: 500;
+  }
+  
+  small {
+    opacity: 0.7;
+  }
+}
+
+.receta-content {
+  pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: 0.9em;
+  }
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  ion-icon {
+    font-size: 1.2em;
+  }
+}
+
+ion-button {
+  margin: 16px 0;
+  
+  ion-spinner {
+    margin-right: 8px;
+  }
+  
+  ion-icon {
+    margin-right: 8px;
+  }
+}
+
+.reload-button {
+  margin-top: 8px;
+  --color: var(--ion-color-light);
+  
+  ion-icon {
+    margin-right: 4px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .productos-grid {
+    gap: 6px;
+  }
+  
+  .producto-chip {
+    max-width: 150px;
+    
+    ion-label {
+      strong {
+        font-size: 0.8em;
+      }
+      
+      small {
+        font-size: 0.6em;
+      }
+      
+      ion-badge {
+        font-size: 0.5em;
+      }
+    }
+  }
+}
+
+::ng-deep .markdown {
+  h1, h2, h3 {
+    color: #3880ff;
+    margin-top: 1em;
+  }
+  ul, ol {
+    margin-left: 1.5em;
+  }
+  strong, b {
+    color: #222;
+  }
+  p {
+    margin-bottom: 0.5em;
+  }
+}
