@@ -74,6 +74,7 @@ export class RecipesPage implements OnInit {
   productosDisponibles: any[] = [];
   errorCarga: string = '';
   recetaGenerada: string = '';
+  productosSeleccionados: any[] = [];
 
   constructor(
     private http: HttpClient,
@@ -183,24 +184,54 @@ export class RecipesPage implements OnInit {
     }
   }
 
+  isProductoSeleccionado(producto: any): boolean {
+    return this.productosSeleccionados.some(p => p.id === producto.id);
+  }
+
+  toggleProductoSeleccionado(producto: any) {
+    if (this.isProductoSeleccionado(producto)) {
+      this.productosSeleccionados = this.productosSeleccionados.filter(p => p.id !== producto.id);
+    } else if (this.productosSeleccionados.length < 3) {
+      this.productosSeleccionados.push(producto);
+    }
+  }
+
   generarReceta() {
-    if (!this.despensaSeleccionada || !this.productosDisponibles.length) {
-      this.receta = 'Selecciona una despensa con productos para generar una receta.';
+    if (this.productosSeleccionados.length === 0 || this.productosSeleccionados.length > 3) {
       return;
     }
 
-    // Solo los nombres de los productos, separados por coma
-    const ingredientes = this.productosDisponibles
-      .filter(p => p.stock > 0)
+    // Solo los nombres de los productos seleccionados, separados por coma
+    const ingredientes = this.productosSeleccionados
       .map(p => p.nombre)
       .join(', ');
 
     this.cargando = true;
     this.receta = '';
 
+    // Prompt mejorado para formato móvil
+    const prompt = `Genera una receta usando estos ingredientes: ${ingredientes}.
+
+Formato requerido (exactamente así):
+🍽️ NOMBRE DEL PLATO
+
+📋 INGREDIENTES:
+- [Lista de ingredientes principales]
+- [Ingredientes adicionales necesarios]
+
+👨‍🍳 PASOS:
+1. [Paso 1]
+2. [Paso 2]
+3. [Paso 3]
+[Continuar numerando los pasos]
+
+${this.condicionMedica !== 'none' ? `\n💡 CONSIDERACIÓN: ${this.getCondicionMedicaText()}` : ''}
+
+Genera una receta simple, práctica y deliciosa. Usa solo los ingredientes mencionados más ingredientes básicos de cocina.`;
+
     this.http
       .post<any>(getApiUrl('/api/receta'), { 
-        prompt: ingredientes, 
+        prompt: prompt, 
         condicionMedica: this.condicionMedica 
       })
       .subscribe({
