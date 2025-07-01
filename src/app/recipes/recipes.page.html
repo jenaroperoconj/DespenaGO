@@ -58,8 +58,11 @@
         <div class="productos-grid">
           <ion-chip 
             *ngFor="let producto of productosDisponibles" 
-            [color]="getCategoriaColor(producto.categoria)"
-            class="producto-chip">
+            [color]="isProductoSeleccionado(producto) ? 'primary' : getCategoriaColor(producto.categoria)"
+            class="producto-chip"
+            [class.producto-seleccionado]="isProductoSeleccionado(producto)"
+            (click)="toggleProductoSeleccionado(producto)"
+            [disabled]="!isProductoSeleccionado(producto) && productosSeleccionados.length >= 3">
             <ion-label>
               <strong>{{ producto.nombre }}</strong>
               <br>
@@ -67,11 +70,12 @@
               <br>
               <ion-badge color="primary">Stock: {{ producto.stock || 1 }}</ion-badge>
             </ion-label>
+            <ion-icon *ngIf="isProductoSeleccionado(producto)" name="checkmark-circle" color="light"></ion-icon>
           </ion-chip>
         </div>
         <p class="productos-count">
           <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-          {{ productosDisponibles.length }} productos disponibles para recetas
+          {{ productosSeleccionados.length }} / 3 productos seleccionados
         </p>
       </div>
       <ng-template #noProductos>
@@ -100,7 +104,7 @@
   <ion-button 
     expand="block" 
     (click)="generarReceta()" 
-    [disabled]="cargando || !despensaSeleccionada || productosDisponibles.length === 0 || cargandoDespensas"
+    [disabled]="cargando || !despensaSeleccionada || productosSeleccionados.length === 0 || productosSeleccionados.length > 3 || cargandoDespensas"
     color="primary">
     <ion-spinner *ngIf="cargando" name="crescent"></ion-spinner>
     <ion-icon *ngIf="!cargando" name="restaurant-outline" slot="start"></ion-icon>
