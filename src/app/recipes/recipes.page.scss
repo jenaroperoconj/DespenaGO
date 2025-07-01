@@ -1,182 +1,138 @@
-.productos-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Recetas</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-.producto-chip {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  margin: 4px;
-  max-width: 200px;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  ion-label {
-    white-space: normal;
-    line-height: 1.2;
-    
-    strong {
-      font-size: 0.9em;
-    }
-    
-    small {
-      font-size: 0.7em;
-      opacity: 0.8;
-    }
-    
-    ion-badge {
-      margin-top: 4px;
-      font-size: 0.6em;
-    }
-  }
-}
+<ion-content class="ion-padding">
 
-.producto-seleccionado {
-  border: 2px solid var(--ion-color-primary);
-  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
-  transform: scale(1.05);
-  
-  ion-label {
-    font-weight: bold;
-  }
-}
+  <!-- Indicador de carga de despensas -->
+  <ion-card *ngIf="cargandoDespensas">
+    <ion-card-content class="loading-content">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando tus despensas...</p>
+    </ion-card-content>
+  </ion-card>
 
-.productos-count {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ion-color-success);
-  font-weight: 500;
-  margin: 0;
-  text-align: center;
-  margin-top: 12px;
-  
-  ion-icon {
-    font-size: 1.2em;
-  }
-}
+  <!-- Mensaje de error -->
+  <ion-card *ngIf="errorCarga" color="danger">
+    <ion-card-content>
+      <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+      {{ errorCarga }}
+      <ion-button 
+        fill="clear" 
+        size="small" 
+        (click)="cargarDespensas()"
+        class="reload-button">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Recargar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
 
-.no-productos {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ion-color-warning);
-  font-style: italic;
-  margin: 0;
-  text-align: center;
-  
-  ion-icon {
-    font-size: 1.2em;
-  }
-}
+  <!-- Selector de despensa -->
+  <ion-card *ngIf="!cargandoDespensas && !errorCarga">
+    <ion-item>
+      <ion-label>Selecciona una despensa</ion-label>
+      <ion-select [(ngModel)]="despensaSeleccionada" (ionChange)="onDespensaChange()" placeholder="Elige una despensa">
+        <ion-select-option *ngFor="let despensa of despensas" [value]="despensa">
+          {{ despensa.nombre }} ({{ despensa.productos?.length || 0 }} productos)
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-card>
 
-.loading-content {
-  text-align: center;
-  padding: 20px;
-  
-  ion-spinner {
-    margin-bottom: 12px;
-  }
-  
-  p {
-    margin: 8px 0;
-    font-weight: 500;
-  }
-  
-  small {
-    opacity: 0.7;
-  }
-}
+  <!-- Productos de la despensa seleccionada -->
+  <ion-card *ngIf="despensaSeleccionada && !cargandoDespensas">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="restaurant-outline" slot="start"></ion-icon>
+        Productos disponibles en {{ despensaSeleccionada.nombre }}
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngIf="productosDisponibles.length > 0; else noProductos">
+        <div class="productos-grid">
+          <ion-chip 
+            *ngFor="let producto of productosDisponibles" 
+            [color]="isProductoSeleccionado(producto) ? 'primary' : getCategoriaColor(producto.categoria)"
+            class="producto-chip"
+            [class.producto-seleccionado]="isProductoSeleccionado(producto)"
+            (click)="toggleProductoSeleccionado(producto)"
+            [disabled]="!isProductoSeleccionado(producto) && productosSeleccionados.length >= 3">
+            <ion-label>
+              <strong>{{ producto.nombre }}</strong>
+              <br>
+              <small>{{ producto.categoria || 'Sin categoría' }}</small>
+              <br>
+              <ion-badge color="primary">Stock: {{ producto.stock || 1 }}</ion-badge>
+            </ion-label>
+            <ion-icon *ngIf="isProductoSeleccionado(producto)" name="checkmark-circle" color="light"></ion-icon>
+          </ion-chip>
+        </div>
+        <p class="productos-count">
+          <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+          {{ productosSeleccionados.length }} / 3 productos seleccionados
+        </p>
+      </div>
+      <ng-template #noProductos>
+        <p class="no-productos">
+          <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+          No hay productos en esta despensa
+        </p>
+      </ng-template>
+    </ion-card-content>
+  </ion-card>
 
-.receta-content {
-  pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.5;
-    background: var(--ion-color-light);
-    padding: 16px;
-    border-radius: 8px;
-    border-left: 4px solid var(--ion-color-primary);
-    margin: 0;
-  }
-}
+  <!-- Selector de condición médica -->
+  <ion-card *ngIf="!cargandoDespensas && !errorCarga">
+    <ion-item>
+      <ion-label>Condición médica (opcional)</ion-label>
+      <ion-select [(ngModel)]="condicionMedica">
+        <ion-select-option value="none">Ninguna</ion-select-option>
+        <ion-select-option value="diabetic">Diabético</ion-select-option>
+        <ion-select-option value="celiac">Celíaco</ion-select-option>
+        <ion-select-option value="hypertensive">Hipertenso</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-card>
 
-ion-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  ion-icon {
-    font-size: 1.2em;
-  }
-}
+  <!-- Botón generar receta -->
+  <ion-button 
+    expand="block" 
+    (click)="generarReceta()" 
+    [disabled]="cargando || !despensaSeleccionada || productosSeleccionados.length === 0 || productosSeleccionados.length > 3 || cargandoDespensas"
+    color="primary">
+    <ion-spinner *ngIf="cargando" name="crescent"></ion-spinner>
+    <ion-icon *ngIf="!cargando" name="restaurant-outline" slot="start"></ion-icon>
+    {{ cargando ? 'Generando receta...' : 'Generar Receta' }}
+  </ion-button>
 
-ion-button {
-  margin: 16px 0;
-  
-  ion-spinner {
-    margin-right: 8px;
-  }
-  
-  ion-icon {
-    margin-right: 8px;
-  }
-}
+  <!-- Receta generada -->
+  <ion-card *ngIf="receta && !cargando">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="book-outline" slot="start"></ion-icon>
+        Receta Generada
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="receta-content">
+        <pre>{{ receta }}</pre>
+      </div>
+    </ion-card-content>
+  </ion-card>
 
-.reload-button {
-  margin-top: 8px;
-  --color: var(--ion-color-light);
-  
-  ion-icon {
-    margin-right: 4px;
-  }
-}
+  <!-- Indicador de carga de receta -->
+  <ion-card *ngIf="cargando">
+    <ion-card-content class="loading-content">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Generando receta con IA...</p>
+      <small>Esto puede tomar unos segundos</small>
+    </ion-card-content>
+  </ion-card>
 
-// Responsive design
-@media (max-width: 768px) {
-  .productos-grid {
-    gap: 6px;
-  }
-  
-  .producto-chip {
-    max-width: 150px;
-    
-    ion-label {
-      strong {
-        font-size: 0.8em;
-      }
-      
-      small {
-        font-size: 0.6em;
-      }
-      
-      ion-badge {
-        font-size: 0.5em;
-      }
-    }
-  }
-}
-
-::ng-deep .markdown {
-  h1, h2, h3 {
-    color: #3880ff;
-    margin-top: 1em;
-  }
-  ul, ol {
-    margin-left: 1.5em;
-  }
-  strong, b {
-    color: #222;
-  }
-  p {
-    margin-bottom: 0.5em;
-  }
-}
+</ion-content>
