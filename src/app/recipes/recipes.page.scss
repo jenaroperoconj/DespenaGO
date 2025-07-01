@@ -6,8 +6,16 @@
 }
 
 .producto-chip {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
   margin: 4px;
   max-width: 200px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
   
   ion-label {
     white-space: normal;
@@ -29,6 +37,16 @@
   }
 }
 
+.producto-seleccionado {
+  border: 2px solid var(--ion-color-primary);
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+  transform: scale(1.05);
+  
+  ion-label {
+    font-weight: bold;
+  }
+}
+
 .productos-count {
   display: flex;
   align-items: center;
@@ -36,6 +54,8 @@
   color: var(--ion-color-success);
   font-weight: 500;
   margin: 0;
+  text-align: center;
+  margin-top: 12px;
   
   ion-icon {
     font-size: 1.2em;
@@ -49,6 +69,7 @@
   color: var(--ion-color-warning);
   font-style: italic;
   margin: 0;
+  text-align: center;
   
   ion-icon {
     font-size: 1.2em;
@@ -60,7 +81,7 @@
   padding: 20px;
   
   ion-spinner {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   
   p {
@@ -76,13 +97,15 @@
 .receta-content {
   pre {
     white-space: pre-wrap;
+    word-wrap: break-word;
     font-family: inherit;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--ion-color-light);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--ion-color-primary);
     margin: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    font-size: 0.9em;
   }
 }
 
