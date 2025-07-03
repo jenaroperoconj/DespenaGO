@@ -11,8 +11,17 @@
       <div class="hero-icon">
         <ion-icon name="receipt-outline"></ion-icon>
       </div>
-      <h1 class="hero-title">Escanear Boleta</h1>
-      <p class="hero-subtitle">Selecciona una imagen de tu boleta para detectar automáticamente los productos</p>
+      <h1 class="hero-title">
+        {{ products.length > 0 ? '¡Boleta escaneada!' : 'Escanear Boleta' }}
+      </h1>
+      <p class="hero-subtitle">
+        {{ products.length > 0 ? 'Selecciona los productos que desees añadir a tu despensa.' : 'Selecciona una imagen de tu boleta para detectar automáticamente los productos' }}
+      </p>
+      <ng-container *ngIf="products.length > 0">
+        <div class="hero-extra-info">
+          Puedes desmarcar los productos que no quieras agregar. Revisa bien la lista antes de continuar.
+        </div>
+      </ng-container>
     </div>
 
     <!-- Botón Principal -->
@@ -41,62 +50,42 @@
     </div>
 
     <!-- Lista de productos detectados -->
-    <div *ngIf="products.length > 0" class="products-section">
-      <div class="section-header">
-        <div class="header-content">
-          <h2>Productos Detectados</h2>
-          <ion-badge color="primary" class="product-count">
-            {{ products.length }} producto{{ products.length !== 1 ? 's' : '' }}
-          </ion-badge>
-        </div>
-        <div class="selection-controls">
-          <ion-button 
-            fill="clear" 
-            size="small" 
-            (click)="seleccionarTodos()"
-            class="selection-button select-all">
-            <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-            Seleccionar todos
-          </ion-button>
-          <ion-button 
-            fill="clear" 
-            size="small" 
-            (click)="deseleccionarTodos()"
-            class="selection-button deselect-all">
-            <ion-icon name="close-outline" slot="start"></ion-icon>
-            Deseleccionar todos
-          </ion-button>
-        </div>
+    <div *ngIf="products.length > 0" class="products-section-wrapper">
+      <div class="product-count-badge-outside">
+        <ion-badge color="primary" class="product-count">
+          {{ products.length }} producto{{ products.length !== 1 ? 's' : '' }}
+        </ion-badge>
       </div>
-      
-      <ion-list class="products-list">
-        <ion-item *ngFor="let product of products; let i = index" class="product-item">
-          <ion-checkbox 
-            slot="start" 
-            [(ngModel)]="product.seleccionado"
-            class="product-checkbox">
-          </ion-checkbox>
-          <ion-label class="product-label">
-            <h3>{{ product.nombre }}</h3>
-            <ion-chip [color]="obtenerColorCategoria(product.categoria)" class="category-chip">
-              <ion-icon name="pricetag-outline" slot="start"></ion-icon>
-              {{ product.categoria }}
-            </ion-chip>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <!-- Botón para continuar con productos seleccionados -->
-      <div class="continue-section">
-        <ion-button 
-          expand="block" 
-          color="success"
-          (click)="continuarConProductosSeleccionados()"
-          [disabled]="obtenerProductosSeleccionados().length === 0"
-          class="continue-button">
-          <ion-icon name="add-outline" slot="start"></ion-icon>
-          Agregar {{ obtenerProductosSeleccionados().length }} producto{{ obtenerProductosSeleccionados().length === 1 ? '' : 's' }} a despensa
-        </ion-button>
+      <div class="products-section">
+        <div class="section-header">
+          <div class="selection-controls">
+            <ion-checkbox
+              [(ngModel)]="todosSeleccionados"
+              (ionChange)="toggleSeleccionTodos()"
+              class="select-all-checkbox">
+            </ion-checkbox>
+            <label class="select-all-label">
+              {{ todosSeleccionados ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+            </label>
+          </div>
+        </div>
+        
+        <ion-list class="products-list">
+          <ion-item *ngFor="let product of products; let i = index" class="product-item">
+            <ion-checkbox 
+              slot="start" 
+              [(ngModel)]="product.seleccionado"
+              class="product-checkbox">
+            </ion-checkbox>
+            <ion-label class="product-label">
+              <h3>{{ product.nombre }}</h3>
+              <ion-chip [color]="obtenerColorCategoria(product.categoria)" class="category-chip">
+                <ion-icon name="pricetag-outline" slot="start"></ion-icon>
+                {{ product.categoria }}
+              </ion-chip>
+            </ion-label>
+          </ion-item>
+        </ion-list>
       </div>
     </div>
 
@@ -119,6 +108,18 @@
         </ion-card-content>
       </ion-card>
     </div>
+  </div>
+
+  <div class="continue-fixed-bar" *ngIf="products.length > 0">
+    <ion-button 
+      expand="block"
+      color="success"
+      (click)="continuarConProductosSeleccionados()"
+      [disabled]="obtenerProductosSeleccionados().length === 0"
+      class="continue-button">
+      <ion-icon name="arrow-forward-outline"></ion-icon>
+      Continuar
+    </ion-button>
   </div>
 </ion-content>
 

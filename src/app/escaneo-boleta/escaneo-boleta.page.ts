@@ -26,7 +26,10 @@ import {
   IonAlert, 
   IonLoading, 
   IonButtons, 
-  IonProgressBar
+  IonProgressBar,
+  IonFab,
+  IonFabList,
+  IonFabButton,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
@@ -67,6 +70,9 @@ import { AlertController, LoadingController } from '@ionic/angular';
     IonButtons,
     IonProgressBar,
     IonBadge,
+    IonFab,
+    IonFabButton,
+    IonFabList,
     HttpClientModule
   ]
 })
@@ -79,6 +85,7 @@ export class EscaneoBoletaPage implements OnInit {
   productosSeleccionados: { nombre: string, categoria: string }[] = [];
   despensaSeleccionada: any = null;
   agregandoProductos = false;
+  todosSeleccionados: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -390,12 +397,9 @@ export class EscaneoBoletaPage implements OnInit {
     producto.seleccionado = !producto.seleccionado;
   }
 
-  seleccionarTodos() {
-    this.products.forEach(producto => producto.seleccionado = true);
-  }
-
-  deseleccionarTodos() {
-    this.products.forEach(producto => producto.seleccionado = false);
+  toggleSeleccionTodos() {
+    const nuevoEstado = this.todosSeleccionados;
+    this.products.forEach(p => p.seleccionado = nuevoEstado);
   }
 
   obtenerProductosSeleccionados() {
@@ -518,5 +522,14 @@ export class EscaneoBoletaPage implements OnInit {
 
   obtenerColorCategoria(categoria: string): string {
     return 'success';
+  }
+
+  ngDoCheck() {
+    // Sincroniza el estado del checkbox con los productos seleccionados
+    if (this.products.length > 0) {
+      this.todosSeleccionados = this.products.every(p => p.seleccionado);
+    } else {
+      this.todosSeleccionados = false;
+    }
   }
 }
