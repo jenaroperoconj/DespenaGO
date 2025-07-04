@@ -128,36 +128,14 @@
     </div>
   </div>
 
-  <!-- Productos con bajo stock -->
-  <div class="section-container" *ngIf="productosBajoStock.length > 0">
-    <div class="section-header">
+  <!-- Mensaje de felicitación si no hay productos próximos a vencer ni vencidos -->
+  <div class="section-container felicitacion" *ngIf="productosProximosVencer.length === 0 && estadisticas.productosVencidos === 0 && estadisticas.totalProductos > 0">
+    <div class="section-header felicitacion">
       <h2>
-        <ion-icon name="warning-outline"></ion-icon>
-        Stock bajo
+        <ion-icon name="sparkles-outline"></ion-icon>
+        ¡Felicidades!
       </h2>
-      <p>Considera reponerlos</p>
-    </div>
-      <div class="carousel-container">
-      <swiper-container 
-        [slidesPerView]="2.5" 
-        [spaceBetween]="16"
-        [freeMode]="true"
-        class="productos-carousel">
-        <swiper-slide *ngFor="let producto of productosBajoStock">
-          <ion-card class="producto-card stock-bajo">
-            <ion-card-content>
-              <div class="producto-emoji">{{ getIconoCategoria(obtenerCategoriaProducto(producto)) }}</div>
-              <h4>{{ obtenerNombreProducto(producto) }}</h4>
-              <p class="despensa-name">{{ obtenerNombreDespensa(producto) }}</p>
-              <div class="producto-info">
-                <ion-chip color="warning" size="small">
-                  Quedan {{ producto.stock }}
-                </ion-chip>
-              </div>
-            </ion-card-content>
-          </ion-card>
-        </swiper-slide>
-      </swiper-container>
+      <p>🎉 Todos tus productos están en orden</p>
     </div>
   </div>
 
@@ -246,7 +224,7 @@
 
 <!-- FAB para agregar - Solo cuando no hay despensas -->
 <ion-fab vertical="bottom" horizontal="end" *ngIf="estadisticas.totalDespensas === 0">
-  <ion-fab-button color="primary" (click)="irADespensas()">
+  <ion-fab-button class='fab-principal'color="primary" (click)="irADespensas()">
     <ion-icon name="add-outline"></ion-icon>
   </ion-fab-button>
 </ion-fab>

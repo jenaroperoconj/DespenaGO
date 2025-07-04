@@ -30,6 +30,8 @@
   --ion-color-secondary: #F6E7A9;
   --ion-color-secondary-rgb: 246, 231, 169;
   --ion-color-secondary-contrast: #3E4C59;
+  --ion-color-secondary-shade: #E6D799;
+  --ion-color-secondary-tint: #F7EBB9;
 
   --ion-toolbar-background: #F2F7FA;
   --ion-item-background: #ffffff;
@@ -320,5 +322,40 @@ ion-modal.modal-centrado::part(content) {
   &.item-has-focus {
     border-color: var(--ion-color-primary);
     box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+}
+
+/* FAB principal reutilizable */
+.fab-principal {
+  --background: var(--ion-color-primary) !important;
+  --background-hover: var(--ion-color-primary-shade) !important;
+  --background-activated: var(--ion-color-primary-shade) !important;
+  --color: var(--ion-color-primary-contrast) !important;
+  --border-radius: 50% !important;
+  --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.4) !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  font-size: 1.6em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  &:hover {
+    --background: var(--ion-color-primary-shade) !important;
+    --box-shadow: 0 12px 32px rgba(var(--ion-color-primary-rgb), 0.5) !important;
+    transform: scale(1.05) translateY(-2px) !important;
+  }
+
+  &:active {
+    transform: scale(0.95) !important;
+    --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3) !important;
+  }
+
+  ion-icon {
+    color: var(--ion-color-primary-contrast) !important;
+    font-size: 1.6em !important;
   }
 }

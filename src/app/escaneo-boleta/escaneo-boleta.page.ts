@@ -34,10 +34,22 @@ import {
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { addIcons } from 'ionicons';
-import { cameraOutline, refreshOutline, checkmarkCircleOutline, addOutline, homeOutline, bagOutline, checkmarkCircle, closeOutline, warningOutline, informationCircleOutline, receiptOutline, hourglassOutline, checkmarkDoneOutline, pricetagOutline, checkmarkOutline, imagesOutline } from 'ionicons/icons';
+import { 
+  cameraOutline, 
+  refreshOutline, 
+  checkmarkCircleOutline, 
+  addOutline, homeOutline, 
+  bagOutline, checkmarkCircle, 
+  closeOutline, warningOutline, 
+  informationCircleOutline, receiptOutline, 
+  hourglassOutline, checkmarkDoneOutline, 
+  pricetagOutline, checkmarkOutline, 
+  imagesOutline, arrowForwardOutline, shieldOutline
+} from 'ionicons/icons';
 import { getApiUrl, API_ENDPOINTS } from '../core/api.config';
 import { SupabaseService } from '../core/supabase.service';
 import { AlertController, LoadingController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-escaneo-boleta',
@@ -91,9 +103,10 @@ export class EscaneoBoletaPage implements OnInit {
     private http: HttpClient,
     private supabaseService: SupabaseService,
     private alertController: AlertController,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private router: Router
   ) {
-    addIcons({receiptOutline,imagesOutline,refreshOutline,checkmarkDoneOutline,closeOutline,pricetagOutline,addOutline,informationCircleOutline,bagOutline,homeOutline,warningOutline,cameraOutline,checkmarkOutline,checkmarkCircleOutline,checkmarkCircle,hourglassOutline});
+    addIcons({receiptOutline,imagesOutline,refreshOutline,checkmarkDoneOutline,closeOutline,pricetagOutline,addOutline,informationCircleOutline,bagOutline,homeOutline,warningOutline,cameraOutline,checkmarkOutline,checkmarkCircleOutline,checkmarkCircle,hourglassOutline,arrowForwardOutline,shieldOutline});
   }
 
   ngOnInit() {
@@ -206,6 +219,13 @@ export class EscaneoBoletaPage implements OnInit {
     return 'Otros';
   }
 
+  // Función para convertir a InitCap
+  private toInitCap(texto: string): string {
+    return texto
+      .toLowerCase()
+      .replace(/\b([a-záéíóúñü])([a-záéíóúñü]*)/gi, (match, p1, p2) => p1.toUpperCase() + p2);
+  }
+
   extraerProductos(texto: string): { nombre: string }[] {
     const lineas = texto.split('\n');
     const productos: { nombre: string }[] = [];
@@ -260,14 +280,13 @@ export class EscaneoBoletaPage implements OnInit {
       // Patrón 1: código de 8+ dígitos seguido de nombre de producto
       const match = linea.match(/^\d{8,}\s+(.+)/);
       if (match) {
-        const nombre = match[1].trim();
+        let nombre = match[1].trim();
         
         // Filtrar nombres muy cortos o que parezcan códigos
         if (nombre.length > 2 && !/^\d+$/.test(nombre)) {
-          // Verificar que no sea información de la boleta
           if (!this.esInformacionBoleta(nombre)) {
-            // Verificar que no sea un duplicado
             if (!this.esDuplicado(nombre, productos)) {
+              nombre = this.toInitCap(nombre);
               productos.push({ nombre });
               console.log(`Producto detectado (patrón 1): "${nombre}"`);
             }
@@ -279,10 +298,11 @@ export class EscaneoBoletaPage implements OnInit {
       // (para casos donde no hay código)
       const nombreMatch = linea.match(/^([A-Za-zÁáÉéÍíÓóÚúÑñ\s]+)\s+\d+[,.]?\d*/);
       if (nombreMatch) {
-        const nombre = nombreMatch[1].trim();
+        let nombre = nombreMatch[1].trim();
         if (nombre.length > 3 && 
             !this.esInformacionBoleta(nombre) &&
             !this.esDuplicado(nombre, productos)) {
+          nombre = this.toInitCap(nombre);
           productos.push({ nombre });
           console.log(`Producto detectado (patrón 2): "${nombre}"`);
         }
@@ -294,8 +314,9 @@ export class EscaneoBoletaPage implements OnInit {
           !this.esInformacionBoleta(linea) &&
           linea.length > 5 &&
           !this.esDuplicado(linea, productos)) {
-        productos.push({ nombre: linea });
-        console.log(`Producto detectado (patrón 3): "${linea}"`);
+        const nombre = this.toInitCap(linea);
+        productos.push({ nombre });
+        console.log(`Producto detectado (patrón 3): "${nombre}"`);
       }
     }
     
@@ -465,13 +486,28 @@ export class EscaneoBoletaPage implements OnInit {
         message: `Se agregaron ${this.productosSeleccionados.length} productos a "${this.despensaSeleccionada.despensas.nombre}" exitosamente.`,
         buttons: [
           {
-            text: 'Continuar escaneando',
+            text: 'Ir a la despensa',
+            handler: () => {
+              this.limpiarProductos();
+              this.router.navigate(['/detalle-despensa', this.despensaSeleccionada.despensas.id]);
+            }
+          },
+          {
+            text: 'Escanear otra boleta',
             handler: () => {
               this.limpiarProductos();
             }
           }
-        ]
+        ],
+        backdropDismiss: true,
+        cssClass: 'alert-backdrop-dismiss'
       });
+      
+      // Manejar cuando se cierra el alert haciendo clic fuera
+      alert.onDidDismiss().then(() => {
+        this.limpiarProductos();
+      });
+      
       await alert.present();
 
     } catch (error: any) {

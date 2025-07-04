@@ -505,4 +505,10 @@ export class DetalleDespensaPage implements OnInit {
     // Implementar lógica para mostrar toast
     console.log(mensaje);
   }
+
+  public ionViewWillEnter() {
+    this.cargarProductos();
+    this.cargarNombreDespensa();
+    this.cargarPermisos();
+  }
 }

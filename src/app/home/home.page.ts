@@ -46,7 +46,9 @@ import {
   statsChartOutline, 
   listOutline, 
   refreshOutline, 
-  chevronForwardOutline 
+  chevronForwardOutline,
+  chevronDownCircleOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 
 @Component({
@@ -81,7 +83,6 @@ import {
 })
 export class HomePage implements OnInit, OnDestroy {
   productosProximosVencer: any[] = [];
-  productosBajoStock: any[] = [];
   estadisticas = {
     totalProductos: 0,
     totalDespensas: 0,
@@ -117,7 +118,9 @@ export class HomePage implements OnInit, OnDestroy {
       statsChartOutline,
       listOutline,
       refreshOutline,
-      chevronForwardOutline
+      chevronForwardOutline,
+      chevronDownCircleOutline,
+      sparklesOutline
     });
   }
 
@@ -166,9 +169,6 @@ export class HomePage implements OnInit, OnDestroy {
       // Cargar productos próximos a vencer
       this.productosProximosVencer = await this.supabaseService.obtenerProductosProximosAVencer();
 
-      // Cargar productos con bajo stock
-      this.productosBajoStock = await this.supabaseService.obtenerProductosBajoStock();
-
       // Cargar contador de invitaciones
       this.contadorInvitaciones = await this.supabaseService.contarInvitacionesPendientes();
 
@@ -203,7 +203,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   irAOcrBoleta() {
     console.log('Navegando a OCR boleta');
-    this.router.navigate(['/ocr-boleta'], { replaceUrl: false });
+    this.router.navigate(['/escaneo-boleta'], { replaceUrl: false });
   }
 
   irADespensa(despensaId: string) {
@@ -222,8 +222,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   getColorSegunDias(dias: number): string {
     if (dias <= 0) return 'danger';
-    if (dias <= 3) return 'warning';
-    if (dias <= 7) return 'tertiary';
+    if (dias <= 5) return 'warning';
     return 'success';
   }
 

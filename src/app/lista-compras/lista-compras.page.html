@@ -1,14 +1,10 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" [class.header-blurred]="mostrarFormularioAgregar || mostrarFormularioEditar">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/despensa"></ion-back-button>
     </ion-buttons>
     <ion-title>Lista de Compras</ion-title>
-    <ion-buttons slot="end">
-      <ion-button *ngIf="puedeEditar" (click)="abrirModalAgregarProducto()" fill="clear">
-        <ion-icon name="add"></ion-icon>
-      </ion-button>
-    </ion-buttons>
+
   </ion-toolbar>
 </ion-header>
 
@@ -31,7 +27,12 @@
           <span>{{ getTotalCantidad() }} unidades</span>
         </div>
         <div class="action-item">
-          <ion-button fill="clear" size="small" (click)="navegarADespensa()">
+          <ion-button 
+            fill="solid" 
+            size="small" 
+            color="primary"
+            class="ver-despensa-btn"
+            (click)="navegarADespensa()">
             <ion-icon name="home-outline" slot="start"></ion-icon>
             Ver despensa
           </ion-button>
@@ -140,27 +141,43 @@
     </ion-grid>
     <!-- Acciones de Lista -->
     <div *ngIf="puedeEditar && listaCompras.length > 0" class="list-actions">
-    </div>
-    <!-- Botón Limpiar Lista al final -->
-    <div *ngIf="puedeEditar && listaCompras.length > 0" class="limpiar-lista-container">
-      <ion-button (click)="confirmarLimpiarLista()" fill="solid" color="danger" expand="block">
-        <ion-icon name="trash-outline" slot="start"></ion-icon>
-        Limpiar Lista
-      </ion-button>
-    </div>
-    <div *ngIf="!loading && listaCompras.length > 0 && puedeEditar" class="agregar-todo-despensa-container">
-      <ion-button expand="block" color="success" (click)="moverTodoADespensa()">
-        <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-        Agregar todo a despensa
-      </ion-button>
+      <div class="action-buttons-container">
+        <div class="action-button-wrapper primary-action">
+          <ion-button 
+            (click)="moverTodoADespensa()" 
+            class="action-button primary-button"
+            expand="block">
+            <div class="button-content">
+              <div class="button-icon">
+                <ion-icon name="checkmark-done-outline"></ion-icon>
+              </div>
+              <div class="button-text">
+                <span class="button-title">Agregar todo a despensa</span>
+                <span class="button-subtitle">Mover {{ getTotalCantidad() }} productos</span>
+              </div>
+            </div>
+          </ion-button>
+        </div>
+        
+        <div class="action-button-wrapper secondary-action">
+          <ion-button 
+            (click)="confirmarLimpiarLista()" 
+            class="action-button secondary-button"
+            expand="block">
+            <div class="button-content">
+              <div class="button-icon">
+                <ion-icon name="trash-outline"></ion-icon>
+              </div>
+              <div class="button-text">
+                <span class="button-title">Limpiar lista</span>
+                <span class="button-subtitle">Eliminar todos los productos</span>
+              </div>
+            </div>
+          </ion-button>
+        </div>
+      </div>
     </div>
   </div>
-  <!-- FAB -->
-  <ion-fab *ngIf="puedeEditar" vertical="bottom" horizontal="end" slot="fixed" class="fab-button-visible" [class.fab-visible]="puedeEditar">
-    <ion-fab-button (click)="abrirModalAgregarProducto()" color="primary" [attr.aria-label]="'Agregar producto'" class="fab-primary">
-      <ion-icon name="add" aria-hidden="true"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 
   <!-- Overlay para agregar producto (como en detalle-despensa) -->
   <div class="overlay-blur" *ngIf="mostrarFormularioAgregar" (click)="onOverlayClick($event)">
@@ -232,13 +249,6 @@
                 <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
                 <span *ngIf="!guardando">Agregar a Lista</span>
                 <span *ngIf="guardando">Agregando...</span>
-              </ion-button>
-              <ion-button 
-                class="secondary-button" 
-                expand="block"
-                type="button"
-                (click)="cerrarFormularioAgregar()">
-                Cancelar
               </ion-button>
             </div>
           </form>
@@ -319,17 +329,17 @@
                 <span *ngIf="!guardandoEditar">Guardar Cambios</span>
                 <span *ngIf="guardandoEditar">Guardando...</span>
               </ion-button>
-              <ion-button 
-                class="secondary-button" 
-                expand="block"
-                type="button"
-                (click)="cerrarFormularioEditar()">
-                Cancelar
-              </ion-button>
             </div>
           </form>
         </div>
       </div>
     </div>
   </div>
+  
+  <!-- FAB -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" [class.fab-blurred]="mostrarFormularioAgregar || mostrarFormularioEditar">
+    <ion-fab-button class="fab-principal" (click)="abrirModalAgregarProducto()" color="primary">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

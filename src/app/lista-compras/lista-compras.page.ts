@@ -21,7 +21,12 @@ import {
   closeOutline,
   searchOutline,
   removeOutline,
-  addOutline
+  addOutline,
+  pricetagOutline,
+  cubeOutline,
+  checkmarkDoneOutline,
+  checkmarkCircleOutline,
+  saveOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -104,7 +109,12 @@ export class ListaComprasPage implements OnInit {
       closeOutline,
       searchOutline,
       removeOutline,
-      addOutline
+      addOutline,
+      pricetagOutline,
+      cubeOutline,
+      checkmarkDoneOutline,
+      checkmarkCircleOutline,
+      saveOutline
     });  }
   ngOnInit() {
     this.despensaId = this.route.snapshot.paramMap.get('id')!;

@@ -1,7 +1,7 @@
 // Lista de Compras - Ultra-optimizada <8KB
 :root{--sp:#2E7D32;--ss:#F1F8E9;--sc:#E8F5E8;--sa:#66BB6A;--se:#D32F2F;--sh:0 2px 8px rgba(46,125,50,0.1);--sr:16px;--st:all 0.3s ease}
 ion-icon{font-family:'Ionicons'!important;display:inline-block!important;opacity:1!important;font-style:normal!important;font-weight:normal!important}
-ion-content{--background:linear-gradient(135deg,#F1F8E9 0%,#E8F5E8 100%);--padding-bottom:80px!important}
+ion-content{--background:var(--ion-background-color);--padding-bottom:80px!important}
 .title-container{display:flex;align-items:center;gap:12px;font-weight:600;font-size:1.1em}
 .title-icon{font-size:1.4em;color:var(--sp);animation:bounce 2s infinite}
 @keyframes bounce{0%,20%,50%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}60%{transform:translateY(-2px)}}
@@ -49,22 +49,372 @@ ion-content{--background:linear-gradient(135deg,#F1F8E9 0%,#E8F5E8 100%);--paddi
 .item-actions{display:flex;flex-direction:column;gap:12px;align-items:center}
 .comprar-btn{--border-radius:20px;--padding-start:20px;--padding-end:20px;height:40px;font-weight:600}
 .list-actions{margin-top:32px;padding:0 16px}
+
+/* Acciones de Lista - Botones Modernos */
+.action-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px 24px;
+  margin-top: 24px;
+}
+
+.action-button-wrapper {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.action-button {
+  --border-radius: 20px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  height: 72px;
+  margin: 0;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &::part(native) {
+    padding: 0;
+    border-radius: 20px;
+  }
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 16px 20px;
+  gap: 16px;
+}
+
+.button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  
+  ion-icon {
+    font-size: 20px;
+    color: white;
+  }
+}
+
+.button-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.button-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.button-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.2;
+}
+
+/* Botón Primario - Agregar todo a despensa */
+.primary-action {
+  .action-button {
+    --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+    --background-hover: linear-gradient(135deg, var(--ion-color-primary-shade) 0%, var(--ion-color-primary) 100%);
+    --background-activated: linear-gradient(135deg, var(--ion-color-primary-shade) 0%, var(--ion-color-primary) 100%);
+    --color: white;
+    --color-activated: white;
+    --color-focused: white;
+    --color-hover: white;
+    
+    &::part(native) {
+      background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+      box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3);
+    }
+    
+    &:hover::part(native) {
+      background: linear-gradient(135deg, var(--ion-color-primary-shade) 0%, var(--ion-color-primary) 100%);
+      box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.4);
+    }
+  }
+  
+  .button-icon {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Botón Secundario - Limpiar lista */
+.secondary-action {
+  .action-button {
+    --background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+    --background-hover: linear-gradient(135deg, #FF5252 0%, #FF6B6B 100%);
+    --background-activated: linear-gradient(135deg, #FF5252 0%, #FF6B6B 100%);
+    --color: white;
+    --color-activated: white;
+    --color-focused: white;
+    --color-hover: white;
+    
+    &::part(native) {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+    }
+    
+    &:hover::part(native) {
+      background: linear-gradient(135deg, #FF5252 0%, #FF6B6B 100%);
+      box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+    }
+  }
+  
+  .button-icon {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+  .action-buttons-container {
+    padding: 0 12px 20px;
+    gap: 12px;
+  }
+  
+  .action-button {
+    height: 64px;
+  }
+  
+  .button-content {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .button-icon {
+    width: 36px;
+    height: 36px;
+    
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+  
+  .button-title {
+    font-size: 15px;
+  }
+  
+  .button-subtitle {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  .action-buttons-container {
+    padding: 0 8px 16px;
+  }
+  
+  .action-button {
+    height: 60px;
+  }
+  
+  .button-content {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .button-icon {
+    width: 32px;
+    height: 32px;
+    
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+}
 ion-item-options ion-item-option{display:flex;flex-direction:column;align-items:center;justify-content:center}
 ion-item-options ion-item-option ion-icon{color:white!important;font-size:1.2em!important}
-ion-fab,ion-fab[slot="fixed"]{position:fixed!important;bottom:20px!important;right:20px!important;z-index:9999!important;opacity:1!important;visibility:visible!important;display:block!important;margin:0!important}
-ion-fab-button{--background:var(--sp)!important;--background-hover:var(--sa)!important;--color:white!important;--border-radius:50%!important;--box-shadow:0 8px 24px rgba(46,125,50,0.4)!important;width:56px!important;height:56px!important;z-index:10000!important;opacity:1!important;visibility:visible!important;display:flex!important;transform:scale(1)!important;transition:all 0.3s ease!important}
-ion-fab-button:hover{--background:var(--sa)!important;--box-shadow:0 12px 32px rgba(46,125,50,0.5)!important;transform:scale(1.05) translateY(-2px)!important}
-ion-fab-button ion-icon{color:white!important;font-size:1.6em!important;opacity:1!important;visibility:visible!important;display:flex!important;font-family:'Ionicons'!important}
-ion-modal{--backdrop-opacity:0.5;z-index:10000!important}
+/* FAB Button - Debug y Simplificado */
+ion-fab {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 99999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+ion-fab-button {
+  --background: #7CA98D !important;
+  --color: white !important;
+  --border-radius: 50% !important;
+  --box-shadow: 0 8px 24px rgba(124, 169, 141, 0.4) !important;
+  width: 56px !important;
+  height: 56px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+}
+/* Estilos específicos para modales en lista de compras */
+ion-modal {
+  --backdrop-opacity: 0.5;
+  z-index: 99999 !important;
+}
+
+/* Asegurar que el overlay esté por encima del header */
+.overlay-blur {
+  z-index: 99998 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.form-modal {
+  z-index: 99999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.form-container {
+  z-index: 100000 !important;
+  position: relative !important;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Asegurar que el header no interfiera con el modal */
+ion-header {
+  z-index: 1000 !important;
+  transition: all 0.3s ease !important;
+}
+
+ion-toolbar {
+  z-index: 1000 !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Efecto de difuminado para el header cuando el modal está abierto */
+.header-blurred {
+  filter: blur(4px) !important;
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Efecto de difuminado para el FAB cuando el modal está abierto */
+.fab-blurred {
+  filter: blur(4px) !important;
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+  transform: scale(0.8) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Animación para el modal */
+.form-modal {
+  animation: modalFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes modalFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 .modal-wrapper{z-index:10001!important}
 ion-button ion-icon,ion-header ion-icon,ion-toolbar ion-icon,.info-chip ion-icon{opacity:1!important;display:inline-block!important}
 @keyframes slideInUp{0%{transform:translateY(20px);opacity:0}100%{transform:translateY(0);opacity:1}}
 @keyframes fab-appear{0%{opacity:0;transform:scale(0.8)}100%{opacity:1;transform:scale(1)}}
-.fab-button-visible,.fab-visible,.fab-primary{opacity:1!important;visibility:visible!important;display:block!important;position:fixed!important;z-index:9999!important}
-ion-fab.fab-button-visible{bottom:20px!important;right:20px!important}
-ion-fab:not([hidden]),ion-fab-button:not([hidden]){display:block!important}
-ion-fab-button:not([hidden]){display:flex!important}
-@media (max-width:768px){ion-fab{bottom:16px!important;right:16px!important}ion-fab-button{width:48px!important;height:48px!important}ion-fab-button ion-icon{font-size:1.4em!important}}
+
+/* Botón Ver Despensa - Más notorio */
+.ver-despensa-btn {
+  --background: var(--ion-color-primary) !important;
+  --background-hover: var(--ion-color-primary-shade) !important;
+  --background-activated: var(--ion-color-primary-shade) !important;
+  --color: var(--ion-color-primary-contrast) !important;
+  --border-radius: 20px !important;
+  --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3) !important;
+  --padding-start: 12px !important;
+  --padding-end: 12px !important;
+  --padding-top: 6px !important;
+  --padding-bottom: 6px !important;
+  height: auto !important;
+  min-height: 32px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  
+  &:hover {
+    --box-shadow: 0 6px 16px rgba(var(--ion-color-primary-rgb), 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  &:active {
+    transform: translateY(0) !important;
+    --box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.3) !important;
+  }
+  
+  ion-icon {
+    font-size: 14px !important;
+    margin-right: 4px !important;
+  }
+}
+
+/* Responsive FAB */
+@media (max-width: 768px) {
+  ion-fab, ion-fab[slot="fixed"] {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  
+  ion-fab-button {
+    width: 48px !important;
+    height: 48px !important;
+    
+    ion-icon {
+      font-size: 1.4em !important;
+    }
+  }
+}
 @media (max-width:576px){.stats-grid{grid-template-columns:1fr;gap:16px}.stat-item{justify-content:center;text-align:center;flex-direction:column;gap:12px}.card-main-content{flex-direction:column;gap:16px;padding:16px}.quantity-controls{flex-direction:row;min-width:auto;width:100%;justify-content:space-between}.item-actions{flex-direction:row;width:100%;justify-content:center}.quantity-display{order:1}.item-details h3{font-size:1.1rem}.circular-icon{width:48px!important;height:48px!important}}
 @media (max-width:320px){.content-container{padding:12px}.base-card{margin-bottom:12px}.card-main-content{padding:12px}.stats-grid{gap:12px}.stat-item h3{font-size:1.6em}}
 
@@ -312,21 +662,7 @@ ion-fab-button:not([hidden]){display:flex!important}
     --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
   }
 }
-// FAB Button
-ion-fab {
-  position: fixed !important;
-  bottom: 20px !important;
-  right: 20px !important;
-  z-index: 9999 !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: block !important;
-  margin: 0 !important;
-}
-ion-fab-button {
-  --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.4);
-  --border-radius: 16px;
-}
+
 // Responsividad
 @media (max-width: 768px) {
   .productos-container {

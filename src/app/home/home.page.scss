@@ -374,3 +374,40 @@ ion-fab-button {
 .producto-card .despensa-name{font-size:0.7rem}
 .producto-card .producto-emoji{font-size:1.6rem}
 }
+
+// Felicitación (estado en orden)
+.section-container.felicitacion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 2rem 1rem;
+  background: #f8fafc;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.section-header.felicitacion {
+  text-align: center;
+  width: 100%;
+}
+
+.section-header.felicitacion h2 {
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--ion-color-success);
+  margin-bottom: 0.5rem;
+}
+
+.section-header.felicitacion ion-icon {
+  font-size: 2.2em;
+  color: var(--ion-color-success);
+}
+
+.section-header.felicitacion p {
+  color: var(--ion-color-medium);
+  font-size: 1.1rem;
+  margin: 0;
+}

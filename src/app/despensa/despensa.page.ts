@@ -140,6 +140,10 @@ export class DespensaPage implements OnInit, OnDestroy {
     this.limpiarSuscripciones();
   }
 
+  public ionViewWillEnter() {
+    this.cargarDespensas();
+  }
+
   private limpiarSuscripciones() {
     if (this.despensasSub) {
       this.despensasSub.unsubscribe();

@@ -37,7 +37,12 @@
           <span>{{ productos.length }} productos</span>
         </div>
         <div class="action-item">
-          <ion-button fill="clear" size="small" (click)="irAListaCompras()">
+          <ion-button 
+            fill="solid" 
+            size="small" 
+            color="primary"
+            class="lista-compras-btn"
+            (click)="irAListaCompras()">
             <ion-icon name="list-outline" slot="start"></ion-icon>
             Lista de Compras
           </ion-button>
@@ -130,8 +135,9 @@
 
 <!-- FAB Button - Posición fija fuera del ion-content -->
 <ion-fab vertical="bottom" horizontal="end" *ngIf="puedeEditar">
-  <ion-fab-button color="primary" (click)="abrirFormularioAgregarProducto()">
-    <ion-icon name="add-outline"></ion-icon>  </ion-fab-button>
+  <ion-fab-button class="fab-principal" color="primary" (click)="abrirFormularioAgregarProducto()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
 </ion-fab>
 
 <!-- Formulario para agregar producto -->

@@ -172,7 +172,6 @@
                   <ion-card-content>
                     <div class="despensa-info">
                       <h3>{{ despensa.despensas.nombre }}</h3>
-                      <p>{{ despensa.despensas.descripcion || 'Sin descripción' }}</p>
                       <div class="despensa-meta">
                         <ion-badge [color]="getRoleColor(despensa.rol)">
                           <ion-icon [name]="getRoleIcon(despensa.rol)"></ion-icon>
@@ -189,23 +188,22 @@
 
         <!-- Botones de acción -->
         <div class="form-actions">
-          <ion-button 
-            expand="block" 
-            color="success"
-            (click)="agregarProductosADespensa()"
-            [disabled]="!despensaSeleccionada || agregandoProductos">
-            <ion-icon name="add-outline" slot="start"></ion-icon>
-            {{ agregandoProductos ? 'Agregando...' : 'Agregar Productos' }}
-          </ion-button>
-          <ion-button 
-            expand="block" 
-            fill="outline"
-            (click)="cancelarSeleccionDespensa()"
-            [disabled]="agregandoProductos">
-            Cancelar
-          </ion-button>
+          <!-- El botón se moverá a la barra flotante -->
         </div>
       </div>
+      
     </div>
   </div>
+</div>
+
+<!-- Botón flotante Agregar Productos fuera del modal -->
+<div class="add-products-floating-button" *ngIf="mostrarSelectorDespensa">
+  <ion-button 
+    color="success"
+    (click)="agregarProductosADespensa()"
+    [disabled]="!despensaSeleccionada || agregandoProductos"
+    class="add-products-button">
+    <ion-icon name="add-outline" slot="start"></ion-icon>
+    {{ agregandoProductos ? 'Agregando...' : 'Agregar Productos' }}
+  </ion-button>
 </div>

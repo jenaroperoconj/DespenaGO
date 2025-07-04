@@ -163,10 +163,10 @@ export class InvitacionesPendientesModal implements OnInit {
     const alert = await this.alertCtrl.create({
       header: '✅ Aceptar Invitación',
       message: `
-        <strong>¿Aceptar la invitación para colaborar en "${invitacion.despensa_nombre || invitacion.despensas?.nombre}"?</strong>
+        ¿Aceptar la invitación para colaborar en "${invitacion.despensa_nombre || invitacion.despensas?.nombre}"?
         <br><br>
-        <strong>Rol:</strong> ${this.getRoleLabel(invitacion.rol)}<br>
-        <strong>De:</strong> ${invitacion.propietario_nombre || invitacion.usuarios?.nombre}
+        ROL: ${this.getRoleLabel(invitacion.rol)}<br>
+        DE: ${invitacion.propietario_nombre || invitacion.usuarios?.nombre}
       `,
       buttons: [
         {
@@ -272,7 +272,7 @@ export class InvitacionesPendientesModal implements OnInit {
     const alert = await this.alertCtrl.create({
       header: '❌ Rechazar Invitación',
       message: `
-        <strong>¿Rechazar la invitación para colaborar en "${invitacion.despensa_nombre || invitacion.despensas?.nombre}"?</strong>
+        ¿Rechazar la invitación para colaborar en "${invitacion.despensa_nombre || invitacion.despensas?.nombre}"?
         <br><br>
         Esta acción no se puede deshacer.
       `,

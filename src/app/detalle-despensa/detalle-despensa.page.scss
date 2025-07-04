@@ -305,3 +305,52 @@ ion-fab-button {
   --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.4);
   --border-radius: 16px;
 }
+
+/* Botón Lista de Compras - Compacto y alineado */
+.lista-compras-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: unset !important;
+  max-width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  --background: var(--ion-color-primary) !important;
+  --background-hover: var(--ion-color-primary-shade) !important;
+  --background-activated: var(--ion-color-primary-shade) !important;
+  --color: var(--ion-color-primary-contrast) !important;
+  --border-radius: 20px !important;
+  --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3) !important;
+  --padding-start: 12px !important;
+  --padding-end: 12px !important;
+  --padding-top: 6px !important;
+  --padding-bottom: 6px !important;
+  height: auto !important;
+  min-height: 32px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  &:hover {
+    --box-shadow: 0 6px 16px rgba(var(--ion-color-primary-rgb), 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  &:active {
+    transform: translateY(0) !important;
+    --box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.3) !important;
+  }
+
+  ion-icon {
+    font-size: 14px !important;
+    margin-right: 4px !important;
+  }
+}
+
+/* Evitar que el contenedor expanda el botón */
+.hero-stats .action-item {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+}

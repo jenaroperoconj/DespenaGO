@@ -70,6 +70,7 @@ import {
 } from 'ionicons/icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Platform } from '@ionic/angular';
+import { App } from '@capacitor/app';
 
 @Component({
   selector: 'app-root',
@@ -202,6 +203,11 @@ export class AppComponent implements OnInit {
       this.setMenu();
     });
     this.configurarStatusBar();
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        this.refrescarDatosGlobales();
+      }
+    });
   }
 
   async obtenerDatosUsuario() {
@@ -331,5 +337,13 @@ export class AppComponent implements OnInit {
   async initializeApp() {
     await this.platform.ready();
     await StatusBar.setStyle({ style: Style.Dark });
+  }
+
+  async refrescarDatosGlobales() {
+    if (await this.supabaseService.isLoggedIn()) {
+      await this.obtenerDatosUsuario();
+      this.setMenu();
+      // Aquí puedes agregar más lógica para refrescar otros datos globales si es necesario
+    }
   }
 }

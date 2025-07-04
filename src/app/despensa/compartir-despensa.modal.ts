@@ -258,14 +258,11 @@ export class CompartirDespensaModal {
         const alert = await this.alertCtrl.create({
           header: '🔒 Políticas de Seguridad Activas',
           message: `
-            <strong>No se puede verificar directamente el usuario debido a las políticas de seguridad de la base de datos.</strong>
-            <br><br>
-            <strong>Esto significa:</strong><br>
-            • Las políticas RLS están activas (esto es normal)<br>
-            • El usuario debe estar registrado en DespensaGO<br>
-            • La invitación se enviará al correo especificado<br>
+            Texto: Las políticas RLS están activas (esto es normal)<br>
+            Texto: El usuario debe estar registrado en DespensaGO<br>
+            Texto: La invitación se enviará al correo especificado<br>
             <br>
-            <strong>Email a invitar:</strong> ${this.emailInvitacion.trim()}
+            Texto: Email a invitar: ${this.emailInvitacion.trim()}
           `,
           buttons: [
             {
@@ -378,7 +375,7 @@ export class CompartirDespensaModal {
         {
           name: 'rol',
           type: 'radio',
-          label: 'Visor (solo puede ver productos)',
+          label: 'Lector (solo puede ver productos)',
           value: 'viewer',
           checked: colaborador.rol === 'viewer'
         }
@@ -432,7 +429,7 @@ export class CompartirDespensaModal {
     try {
       const resultados = await this.supabase.diagnosticarConectividadRLS();
       
-      let mensaje = '<strong>📊 Resultados del diagnóstico:</strong><br><br>';
+      let mensaje = '📊 Resultados del diagnóstico:<br><br>';
       
       if (resultados.auth) {
         mensaje += '✅ Autenticación: OK<br>';
@@ -459,17 +456,17 @@ export class CompartirDespensaModal {
       }
       
       if (resultados.rlsActivo) {
-        mensaje += '<br><strong>🔒 Las políticas RLS están activas</strong><br>';
+        mensaje += '<br>🔒 Las políticas RLS están activas<br>';
         mensaje += '💡 Esto es normal para seguridad<br>';
       }
         if (resultados.errores.length > 0) {
-        mensaje += '<br><strong>⚠️ Errores detectados:</strong><br>';
+        mensaje += '<br>⚠️ Errores detectados:<br>';
         resultados.errores.forEach((error: string) => {
           mensaje += `• ${error}<br>`;
         });
       }
       
-      mensaje += '<br><strong>🔧 Soluciones recomendadas:</strong><br>';
+      mensaje += '<br>🔧 Soluciones recomendadas:<br>';
       
       if (!resultados.funcionesRPC) {
         mensaje += '• Desplegar funciones SQL en Supabase<br>';
@@ -561,7 +558,7 @@ export class CompartirDespensaModal {
       case 'editor':
         return 'Editor';
       case 'viewer':
-        return 'Visor';
+        return 'Lector';
       default:
         return 'Usuario';
     }
