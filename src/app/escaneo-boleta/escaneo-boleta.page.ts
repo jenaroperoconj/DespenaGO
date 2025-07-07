@@ -30,6 +30,8 @@ import {
   IonFab,
   IonFabList,
   IonFabButton,
+  IonBackdrop,
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
@@ -85,6 +87,8 @@ import { Router } from '@angular/router';
     IonFab,
     IonFabButton,
     IonFabList,
+    IonBackdrop,
+    IonSpinner,
     HttpClientModule
   ]
 })
@@ -98,6 +102,9 @@ export class EscaneoBoletaPage implements OnInit {
   despensaSeleccionada: any = null;
   agregandoProductos = false;
   todosSeleccionados: boolean = false;
+  loadingStep: number = 0;
+  loadingMessage: string = '';
+  mostrarLoading: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -124,67 +131,71 @@ export class EscaneoBoletaPage implements OnInit {
   async seleccionarImagen() {
     this.procesando = true;
     this.products = [];
-    
+    this.loadingStep = 0;
+    this.loadingMessage = 'Extrayendo imagen...';
+    this.mostrarLoading = true;
+
     try {
-      // Seleccionar desde galería PRIMERO
-      const image = await Camera.getPhoto({
-        quality: 85,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Photos
-      });
-      
-      if (!image || !image.dataUrl) {
-        throw new Error('No se seleccionó imagen');
-      }
+      // Paso 1: Extrayendo imagen
+      setTimeout(async () => {
+        this.loadingStep = 20;
+        this.loadingMessage = 'Procesando imagen...';
 
-      // MOSTRAR LOADING DESPUÉS de seleccionar imagen
-      const loading = await this.loadingController.create({
-        message: 'Procesando imagen...',
-        spinner: 'crescent'
-      });
-      await loading.present();
-
-      // Enviar al backend para OCR
-      const response: any = await this.http.post(getApiUrl(API_ENDPOINTS.OCR), { 
-        imageBase64: image.dataUrl 
-      }).toPromise();
-
-      if (response && response.text) {
-        const texto = response.text || '';
-        
-        console.log('Texto detectado:', texto);
-        
-        // Extraer productos del texto
-        const productos = this.extraerProductos(texto);
-        
-        if (productos.length === 0) {
-          throw new Error('No se detectaron productos en la boleta. Intenta con una imagen más clara.');
+        // Seleccionar desde galería PRIMERO
+        const image = await Camera.getPhoto({
+          quality: 85,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Photos
+        });
+        if (!image || !image.dataUrl) {
+          throw new Error('No se seleccionó imagen');
         }
 
-        // Asignar categorías localmente
-        this.products = productos.map(producto => ({
-          ...producto,
-          categoria: this.detectarCategoriaLocal(producto.nombre),
-          seleccionado: true // Por defecto todos seleccionados
-        }));
-        
-        console.log('Productos con categorías:', this.products);
-        
-        await loading.dismiss();
-      } else {
-        throw new Error('No se pudo extraer texto de la imagen');
-      }
+        // Paso 2: Enviando imagen al backend
+        this.loadingStep = 40;
+        this.loadingMessage = 'Extrayendo productos de la boleta...';
+
+        // Enviar al backend para OCR
+        const response: any = await this.http.post(getApiUrl(API_ENDPOINTS.OCR), { 
+          imageBase64: image.dataUrl 
+        }).toPromise();
+
+        if (response && response.text) {
+          const texto = response.text || '';
+          // Paso 3: Extrayendo productos
+          this.loadingStep = 60;
+          this.loadingMessage = 'Procesando productos...';
+
+          // Extraer productos del texto
+          const productos = this.extraerProductos(texto);
+          if (productos.length === 0) {
+            throw new Error('No se detectaron productos en la boleta. Intenta con una imagen más clara.');
+          }
+
+          // Paso 4: Asignando categorías
+          this.loadingStep = 80;
+          this.loadingMessage = 'Asignando categorías...';
+          setTimeout(() => {
+            // Asignar categorías localmente
+            this.products = productos.map(producto => ({
+              ...producto,
+              categoria: this.detectarCategoriaLocal(producto.nombre),
+              seleccionado: true // Por defecto todos seleccionados
+            }));
+            this.loadingStep = 100;
+            this.loadingMessage = '¡Listo!';
+            setTimeout(() => {
+              this.mostrarLoading = false;
+            }, 600);
+          }, 600);
+        } else {
+          throw new Error('No se pudo extraer texto de la imagen');
+        }
+      }, 600);
     } catch (error: any) {
-      console.error('Error al procesar imagen:', error);
-      
-      // Solo cerrar loading si existe
-      try {
-        await this.loadingController.dismiss();
-      } catch (e) {
-        // Loading no estaba abierto
-      }
-      
+      this.mostrarLoading = false;
+      this.procesando = false;
       const alert = await this.alertController.create({
         header: 'Error',
         message: error.message || 'No se pudo procesar la imagen. Intenta con otra imagen.',
@@ -192,7 +203,7 @@ export class EscaneoBoletaPage implements OnInit {
       });
       await alert.present();
     } finally {
-      this.procesando = false;
+      setTimeout(() => { this.procesando = false; }, 1200);
     }
   }
 

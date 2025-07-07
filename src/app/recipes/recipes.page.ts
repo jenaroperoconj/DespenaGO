@@ -20,7 +20,12 @@ import {
   IonChip,
   IonBadge,
   IonSpinner,
-  IonIcon
+  IonIcon,
+  IonFab,
+  IonFabButton,
+  IonFabList,
+  IonModal,
+  IonBackdrop
 } from '@ionic/angular/standalone';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { SupabaseService } from 'src/app/core/supabase.service';
@@ -30,9 +35,9 @@ import {
   restaurantOutline,
   bookOutline,
   checkmarkCircleOutline,
+  checkmarkCircle,
   alertCircleOutline,
-  refreshOutline
-} from 'ionicons/icons';
+  refreshOutline, closeOutline, copyOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-recipes',
@@ -61,7 +66,12 @@ import {
     IonChip,
     IonBadge,
     IonSpinner,
-    IonIcon
+    IonIcon,
+    IonFab,
+    IonFabButton,
+    IonFabList,
+    IonModal,
+    IonBackdrop
   ]
 })
 export class RecipesPage implements OnInit {
@@ -75,18 +85,16 @@ export class RecipesPage implements OnInit {
   errorCarga: string = '';
   recetaGenerada: string = '';
   productosSeleccionados: any[] = [];
+  mostrarModalReceta: boolean = false;
+  loadingStep: number = 0;
+  loadingMessage: string = '';
+  mostrarLoading: boolean = false;
 
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService
   ) {
-    addIcons({
-      restaurantOutline,
-      bookOutline,
-      checkmarkCircleOutline,
-      alertCircleOutline,
-      refreshOutline
-    });
+    addIcons({restaurantOutline,alertCircleOutline,refreshOutline,checkmarkCircle,checkmarkCircleOutline,copyOutline,closeOutline,bookOutline});
   }
 
   async ngOnInit() {
@@ -164,6 +172,15 @@ export class RecipesPage implements OnInit {
         }
       }
       
+      // Ordenar despensas alfabéticamente por nombre
+      this.despensas = this.despensas.sort((a, b) => {
+        const nombreA = (a.nombre || '').toLowerCase();
+        const nombreB = (b.nombre || '').toLowerCase();
+        if (nombreA < nombreB) return -1;
+        if (nombreA > nombreB) return 1;
+        return 0;
+      });
+      
       console.log('Carga de despensas completada');
       
     } catch (error) {
@@ -177,8 +194,21 @@ export class RecipesPage implements OnInit {
   onDespensaChange() {
     console.log('Despensa seleccionada:', this.despensaSeleccionada);
     if (this.despensaSeleccionada) {
-      this.productosDisponibles = this.despensaSeleccionada.productos || [];
-      console.log('Productos disponibles:', this.productosDisponibles);
+      this.productosDisponibles = (this.despensaSeleccionada.productos || []).slice();
+      // Ordenar por fecha de vencimiento y luego por categoría
+      this.productosDisponibles.sort((a, b) => {
+        // Primero por fecha de vencimiento (ascendente)
+        const fechaA = a.fecha_vencimiento ? new Date(a.fecha_vencimiento).getTime() : Infinity;
+        const fechaB = b.fecha_vencimiento ? new Date(b.fecha_vencimiento).getTime() : Infinity;
+        if (fechaA !== fechaB) return fechaA - fechaB;
+        // Luego por categoría (alfabéticamente)
+        const catA = (a.categoria || '').toLowerCase();
+        const catB = (b.categoria || '').toLowerCase();
+        if (catA < catB) return -1;
+        if (catA > catB) return 1;
+        return 0;
+      });
+      console.log('Productos disponibles ordenados:', this.productosDisponibles);
     } else {
       this.productosDisponibles = [];
     }
@@ -201,16 +231,29 @@ export class RecipesPage implements OnInit {
       return;
     }
 
-    // Solo los nombres de los productos seleccionados, separados por coma
-    const ingredientes = this.productosSeleccionados
-      .map(p => p.nombre)
-      .join(', ');
+    this.loadingStep = 0;
+    this.loadingMessage = 'Extrayendo productos...';
+    this.mostrarLoading = true;
 
-    this.cargando = true;
-    this.receta = '';
+    setTimeout(() => {
+      this.loadingStep = 30;
+      this.loadingMessage = 'Preparando ingredientes...';
 
-    // Prompt mejorado para formato móvil
-    const prompt = `Genera una receta usando estos ingredientes: ${ingredientes}.
+      setTimeout(() => {
+        this.loadingStep = 60;
+        this.loadingMessage = 'Generando receta con IA...';
+
+        // Solo los nombres de los productos seleccionados, separados por coma
+        const ingredientes = this.productosSeleccionados
+          .map(p => p.nombre)
+          .join(', ');
+
+        this.cargando = true;
+        this.receta = '';
+        this.mostrarModalReceta = false;
+
+        // Prompt mejorado para formato móvil
+        const prompt = `Genera una receta usando estos ingredientes: ${ingredientes}.
 
 Formato requerido (exactamente así):
 🍽️ NOMBRE DEL PLATO
@@ -229,37 +272,50 @@ ${this.condicionMedica !== 'none' ? `\n💡 CONSIDERACIÓN: ${this.getCondicionM
 
 Genera una receta simple, práctica y deliciosa. Usa solo los ingredientes mencionados más ingredientes básicos de cocina.`;
 
-    this.http
-      .post<any>(getApiUrl('/api/receta'), { 
-        prompt: prompt, 
-        condicionMedica: this.condicionMedica 
-      })
-      .subscribe({
-        next: (res) => {
-          console.log('Respuesta del servidor:', res);
-          this.receta = res.receta;
-          this.cargando = false;
-          this.recetaGenerada = res.receta;
-        },
-        error: (err) => {
-          console.error('Error completo al generar receta:', err);
-          console.error('Status:', err.status);
-          console.error('Error message:', err.error);
-          
-          let errorMessage = 'Ocurrió un error al generar la receta.';
-          
-          if (err.status === 0) {
-            errorMessage = 'No se puede conectar al servidor. Verifica tu conexión a internet.';
-          } else if (err.status === 500) {
-            errorMessage = `Error del servidor: ${err.error?.error || err.error?.details || 'Error interno'}`;
-          } else if (err.status === 404) {
-            errorMessage = 'El endpoint de recetas no se encontró.';
-          }
-          
-          this.receta = errorMessage;
-          this.cargando = false;
-        }
-      });
+        this.http
+          .post<any>(getApiUrl('/api/receta'), { 
+            prompt: prompt, 
+            condicionMedica: this.condicionMedica 
+          })
+          .subscribe({
+            next: (res) => {
+              this.loadingStep = 90;
+              this.loadingMessage = 'Receta generada, mostrando resultado...';
+              setTimeout(() => {
+                this.cargando = false;
+                this.receta = res.receta;
+                this.recetaGenerada = res.receta;
+                this.mostrarLoading = false;
+                this.loadingStep = 100;
+                this.mostrarModalReceta = true;
+              }, 700);
+            },
+            error: (err) => {
+              this.loadingStep = 90;
+              this.loadingMessage = 'Ocurrió un error, mostrando mensaje...';
+              setTimeout(() => {
+                let errorMessage = 'Ocurrió un error al generar la receta.';
+                if (err.status === 0) {
+                  errorMessage = 'No se puede conectar al servidor. Verifica tu conexión a internet.';
+                } else if (err.status === 500) {
+                  errorMessage = `Error del servidor: ${err.error?.error || err.error?.details || 'Error interno'}`;
+                } else if (err.status === 404) {
+                  errorMessage = 'El endpoint de recetas no se encontró.';
+                }
+                this.receta = errorMessage;
+                this.cargando = false;
+                this.mostrarLoading = false;
+                this.loadingStep = 100;
+                this.mostrarModalReceta = true;
+              }, 700);
+            }
+          });
+      }, 900);
+    }, 700);
+  }
+
+  cerrarModalReceta() {
+    this.mostrarModalReceta = false;
   }
 
   private getCondicionMedicaText(): string {
@@ -295,5 +351,29 @@ Genera una receta simple, práctica y deliciosa. Usa solo los ingredientes menci
       'Otro': 'light'
     };
     return colores[categoria] || 'light';
+  }
+
+  copiarReceta() {
+    if (!this.receta) return;
+    if (navigator && navigator.clipboard) {
+      navigator.clipboard.writeText(this.receta).then(() => {
+        alert('¡Receta copiada al portapapeles!');
+      }, () => {
+        alert('No se pudo copiar la receta.');
+      });
+    } else {
+      // Fallback para navegadores antiguos
+      const textarea = document.createElement('textarea');
+      textarea.value = this.receta;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        alert('¡Receta copiada al portapapeles!');
+      } catch (err) {
+        alert('No se pudo copiar la receta.');
+      }
+      document.body.removeChild(textarea);
+    }
   }
 }

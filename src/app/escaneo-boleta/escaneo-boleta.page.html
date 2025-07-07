@@ -4,7 +4,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding" [ngClass]="{'custom-loading-blur': mostrarLoading}">
   <div class="scan-container">
     <!-- Hero Section -->
     <div class="hero-section">
@@ -206,4 +206,18 @@
     <ion-icon name="add-outline" slot="start"></ion-icon>
     {{ agregandoProductos ? 'Agregando...' : 'Agregar Productos' }}
   </ion-button>
+</div>
+
+<!-- Overlay de loading con barra de progreso y mensaje -->
+<ion-backdrop *ngIf="mostrarLoading" class="custom-loading-backdrop"></ion-backdrop>
+<div *ngIf="mostrarLoading" class="custom-loading-overlay">
+  <div class="custom-loading-box">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <div class="custom-loading-message">{{ loadingMessage }}</div>
+    <div class="custom-loading-progress-bar">
+      <div class="custom-loading-progress" [style.width]="loadingStep + '%'">
+        <span *ngIf="loadingStep > 10">{{ loadingStep }}%</span>
+      </div>
+    </div>
+  </div>
 </div>
