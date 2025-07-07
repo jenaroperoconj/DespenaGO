@@ -53,6 +53,13 @@ import { SupabaseService } from '../core/supabase.service';
 import { AlertController, LoadingController } from '@ionic/angular';
 import { Router } from '@angular/router';
 
+interface EscaneoState {
+  estado: 'inicial' | 'tomando_foto' | 'procesando_imagen' | 'extrayendo_texto' | 'detectando_categorias' | 'completado' | 'error';
+  mensaje: string;
+  progreso: number;
+  icono: string;
+}
+
 @Component({
   selector: 'app-escaneo-boleta',
   templateUrl: './escaneo-boleta.page.html',
@@ -105,6 +112,57 @@ export class EscaneoBoletaPage implements OnInit {
   loadingStep: number = 0;
   loadingMessage: string = '';
   mostrarLoading: boolean = false;
+  estadoEscaneo: EscaneoState = {
+    estado: 'inicial',
+    mensaje: 'Listo para escanear',
+    progreso: 0,
+    icono: 'camera-outline'
+  };
+
+  private readonly estadosEscaneo: { [key: string]: EscaneoState } = {
+    inicial: {
+      estado: 'inicial',
+      mensaje: 'Listo para escanear',
+      progreso: 0,
+      icono: 'camera-outline'
+    },
+    tomando_foto: {
+      estado: 'tomando_foto',
+      mensaje: 'Tomando foto de la boleta...',
+      progreso: 20,
+      icono: 'camera-outline'
+    },
+    procesando_imagen: {
+      estado: 'procesando_imagen',
+      mensaje: 'Procesando imagen...',
+      progreso: 40,
+      icono: 'image-outline'
+    },
+    extrayendo_texto: {
+      estado: 'extrayendo_texto',
+      mensaje: 'Extrayendo texto de la boleta...',
+      progreso: 60,
+      icono: 'document-text-outline'
+    },
+    detectando_categorias: {
+      estado: 'detectando_categorias',
+      mensaje: 'Detectando categorías de productos...',
+      progreso: 80,
+      icono: 'pricetag-outline'
+    },
+    completado: {
+      estado: 'completado',
+      mensaje: '¡Escaneo completado!',
+      progreso: 100,
+      icono: 'checkmark-circle-outline'
+    },
+    error: {
+      estado: 'error',
+      mensaje: 'Error en el escaneo',
+      progreso: 0,
+      icono: 'warning-outline'
+    }
+  };
 
   constructor(
     private http: HttpClient,
@@ -128,82 +186,110 @@ export class EscaneoBoletaPage implements OnInit {
     }
   }
 
-  async seleccionarImagen() {
+  async escanearBoleta() {
     this.procesando = true;
     this.products = [];
-    this.loadingStep = 0;
-    this.loadingMessage = 'Extrayendo imagen...';
-    this.mostrarLoading = true;
+    this.actualizarEstado('tomando_foto');
 
     try {
-      // Paso 1: Extrayendo imagen
-      setTimeout(async () => {
-        this.loadingStep = 20;
-        this.loadingMessage = 'Procesando imagen...';
-
-        // Seleccionar desde galería PRIMERO
-        const image = await Camera.getPhoto({
-          quality: 85,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Photos
-        });
-        if (!image || !image.dataUrl) {
-          throw new Error('No se seleccionó imagen');
-        }
-
-        // Paso 2: Enviando imagen al backend
-        this.loadingStep = 40;
-        this.loadingMessage = 'Extrayendo productos de la boleta...';
-
-        // Enviar al backend para OCR
-        const response: any = await this.http.post(getApiUrl(API_ENDPOINTS.OCR), { 
-          imageBase64: image.dataUrl 
-        }).toPromise();
-
-        if (response && response.text) {
-          const texto = response.text || '';
-          // Paso 3: Extrayendo productos
-          this.loadingStep = 60;
-          this.loadingMessage = 'Procesando productos...';
-
-          // Extraer productos del texto
-          const productos = this.extraerProductos(texto);
-          if (productos.length === 0) {
-            throw new Error('No se detectaron productos en la boleta. Intenta con una imagen más clara.');
-          }
-
-          // Paso 4: Asignando categorías
-          this.loadingStep = 80;
-          this.loadingMessage = 'Asignando categorías...';
-          setTimeout(() => {
-            // Asignar categorías localmente
-            this.products = productos.map(producto => ({
-              ...producto,
-              categoria: this.detectarCategoriaLocal(producto.nombre),
-              seleccionado: true // Por defecto todos seleccionados
-            }));
-            this.loadingStep = 100;
-            this.loadingMessage = '¡Listo!';
-            setTimeout(() => {
-              this.mostrarLoading = false;
-            }, 600);
-          }, 600);
-        } else {
-          throw new Error('No se pudo extraer texto de la imagen');
-        }
-      }, 600);
-    } catch (error: any) {
-      this.mostrarLoading = false;
-      this.procesando = false;
-      const alert = await this.alertController.create({
-        header: 'Error',
-        message: error.message || 'No se pudo procesar la imagen. Intenta con otra imagen.',
-        buttons: ['Entendido']
+      // Tomar foto
+      const image = await Camera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
       });
-      await alert.present();
+
+      if (!image || !image.dataUrl) {
+        throw new Error('No se obtuvo imagen de la cámara');
+      }
+
+      this.actualizarEstado('procesando_imagen');
+      await this.delay(500); // Simular procesamiento
+
+      this.actualizarEstado('extrayendo_texto');
+
+      // Enviar al backend para OCR
+      const response: any = await this.http.post(getApiUrl(API_ENDPOINTS.OCR), {
+        imageBase64: image.dataUrl
+      }).toPromise();
+
+      const texto = response.text || '';
+      const labels = response.labels || [];
+
+      // Extraer productos del texto
+      const productos = this.extraerProductos(texto);
+
+      if (productos.length === 0) {
+        this.actualizarEstado('error', 'No se detectaron productos en la boleta. Intenta con una imagen más clara.');
+        this.procesando = false;
+        return;
+      }
+
+      this.actualizarEstado('detectando_categorias');
+
+      // Detectar categorías usando la nueva API (si existe)
+      let categoriaResponse: any = { productos: [] };
+      try {
+        categoriaResponse = await this.http.post(getApiUrl(API_ENDPOINTS.DETECTAR_CATEGORIA), {
+          productos: productos,
+          labels: labels
+        }).toPromise();
+      } catch (e) {
+        // Si falla, asignar categoría localmente
+        categoriaResponse.productos = productos.map((producto: any) => ({
+          ...producto,
+          categoria: this.detectarCategoriaLocal(producto.nombre)
+        }));
+      }
+
+      // Agregar propiedad seleccionado a cada producto
+      this.products = categoriaResponse.productos.map((producto: any) => ({
+        ...producto,
+        seleccionado: true // Por defecto todos seleccionados
+      }));
+
+      this.actualizarEstado('completado', `Se detectaron ${this.products.length} productos exitosamente`);
+
+      // Resetear estado después de 2 segundos
+      setTimeout(() => {
+        if (this.estadoEscaneo.estado === 'completado') {
+          this.estadoEscaneo = this.estadosEscaneo['inicial'];
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      this.actualizarEstado('error', this.obtenerMensajeError(error));
     } finally {
-      setTimeout(() => { this.procesando = false; }, 1200);
+      this.procesando = false;
+    }
+  }
+
+  actualizarEstado(nuevoEstado: string, mensajePersonalizado?: string) {
+    const estado = this.estadosEscaneo[nuevoEstado];
+    if (estado) {
+      this.estadoEscaneo = {
+        ...estado,
+        mensaje: mensajePersonalizado || estado.mensaje
+      };
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private obtenerMensajeError(error: any): string {
+    if (error.message?.includes('camera')) {
+      return 'Error al acceder a la cámara. Verifica los permisos.';
+    } else if (error.message?.includes('network')) {
+      return 'Error de conexión. Verifica tu internet.';
+    } else if (error.status === 413) {
+      return 'La imagen es demasiado grande. Intenta con una resolución menor.';
+    } else if (error.status === 500) {
+      return 'Error del servidor. Intenta nuevamente en unos momentos.';
+    } else {
+      return 'Error inesperado. Intenta nuevamente.';
     }
   }
 
@@ -499,8 +585,11 @@ export class EscaneoBoletaPage implements OnInit {
           {
             text: 'Ir a la despensa',
             handler: () => {
+              const id = this.despensaSeleccionada?.despensas?.id;
               this.limpiarProductos();
-              this.router.navigate(['/detalle-despensa', this.despensaSeleccionada.despensas.id]);
+              if (id) {
+                this.router.navigate(['/despensa', id]);
+              }
             }
           },
           {

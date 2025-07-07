@@ -4,7 +4,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" [ngClass]="{'custom-loading-blur': mostrarLoading}">
+<ion-content class="ion-padding" [ngClass]="{'custom-loading-blur': estadoEscaneo.estado !== 'inicial' && estadoEscaneo.estado !== 'completado' && estadoEscaneo.estado !== 'error'}">
   <div class="scan-container">
     <!-- Hero Section -->
     <div class="hero-section">
@@ -28,7 +28,7 @@
     <div class="scan-action-section">
       <ion-button 
         expand="block" 
-        (click)="seleccionarImagen()" 
+        (click)="escanearBoleta()" 
         [disabled]="procesando"
         class="scan-button"
         color="primary"
@@ -209,14 +209,15 @@
 </div>
 
 <!-- Overlay de loading con barra de progreso y mensaje -->
-<ion-backdrop *ngIf="mostrarLoading" class="custom-loading-backdrop"></ion-backdrop>
-<div *ngIf="mostrarLoading" class="custom-loading-overlay">
+<ion-backdrop *ngIf="estadoEscaneo.estado !== 'inicial' && estadoEscaneo.estado !== 'completado' && estadoEscaneo.estado !== 'error'" class="custom-loading-backdrop"></ion-backdrop>
+<div *ngIf="estadoEscaneo.estado !== 'inicial' && estadoEscaneo.estado !== 'completado' && estadoEscaneo.estado !== 'error'" class="custom-loading-overlay">
   <div class="custom-loading-box">
+    <ion-icon [name]="estadoEscaneo.icono" size="large" color="primary" style="font-size: 3rem;"></ion-icon>
     <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <div class="custom-loading-message">{{ loadingMessage }}</div>
+    <div class="custom-loading-message">{{ estadoEscaneo.mensaje }}</div>
     <div class="custom-loading-progress-bar">
-      <div class="custom-loading-progress" [style.width]="loadingStep + '%'">
-        <span *ngIf="loadingStep > 10">{{ loadingStep }}%</span>
+      <div class="custom-loading-progress" [style.width]="estadoEscaneo.progreso + '%'">
+        <span *ngIf="estadoEscaneo.progreso > 10">{{ estadoEscaneo.progreso }}%</span>
       </div>
     </div>
   </div>
