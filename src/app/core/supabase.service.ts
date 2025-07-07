@@ -46,7 +46,7 @@ export class SupabaseService {
       email, 
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        emailRedirectTo: 'https://guonejo.github.io/Despensago-verif/',
         data: {
           nombre: nombre
         }
@@ -90,7 +90,7 @@ export class SupabaseService {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/login?verified=true`
+        emailRedirectTo: 'https://guonejo.github.io/Despensago-verif/'
       }
     });
 
