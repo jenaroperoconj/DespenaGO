@@ -619,7 +619,7 @@ app.post('/api/receta', async (req, res) => {
 });
 
 // Iniciar servidor
-const PORT = config.port;
+const PORT = process.env.PORT || config.port || 3001;
 app.listen(PORT, () => {
   console.log(`Backend DespenaGO corriendo en http://localhost:${PORT}`);
   console.log(`- Endpoint OCR: http://localhost:${PORT}/ocr`);
