@@ -13,6 +13,7 @@ import { InvitacionesPendientesModal } from './invitaciones/invitaciones-pendien
 import { IonApp, IonSplitPane, IonMenu, IonContent, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet, IonAvatar } from '@ionic/angular/standalone';
 import { ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { SplashScreenComponent } from './splash-screen/splash-screen.component';
 import { 
   homeOutline, 
   personOutline, 
@@ -90,7 +91,8 @@ import { App } from '@capacitor/app';
     IonLabel,
     IonRouterLink,
     IonRouterOutlet,
-    IonAvatar
+    IonAvatar,
+    SplashScreenComponent
   ],
 })
 export class AppComponent implements OnInit {
@@ -99,6 +101,7 @@ export class AppComponent implements OnInit {
   public nombreUsuario: string = '';
   public correoUsuario: string = '';
   public avatarUsuario: string = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+  showSplash = true;
   constructor(
     private platform: Platform,
     private supabaseService: SupabaseService,
@@ -208,6 +211,9 @@ export class AppComponent implements OnInit {
         this.refrescarDatosGlobales();
       }
     });
+    setTimeout(() => {
+      this.showSplash = false;
+    }, 2500); // 2.5 segundos
   }
 
   async obtenerDatosUsuario() {
