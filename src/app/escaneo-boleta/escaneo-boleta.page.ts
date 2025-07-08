@@ -192,12 +192,12 @@ export class EscaneoBoletaPage implements OnInit {
     this.actualizarEstado('tomando_foto');
 
     try {
-      // Tomar foto
+      // Abrir galería
       const image = await Camera.getPhoto({
         quality: 85,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera
+        source: CameraSource.Photos
       });
 
       if (!image || !image.dataUrl) {
